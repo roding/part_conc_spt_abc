@@ -14,15 +14,15 @@ y2 = lognrnd(2, 0.01, [n2, 1]);
 d = 0;
 
 for i = 1:n1
-    e1 = sum( x1 <= x1(i) & y1 <= y1(i) ) / n1;
-    e2 = sum( x2 <= x1(i) & y2 <= y1(i) ) / n2;
+    e1 = sum( x1 <= x1(i) & y1 <= y1(i) );
+    e2 = sum( x2 <= x1(i) & y2 <= y1(i) );
     
     d = d + (e1-e2)^2;
 end
 
 for i = 1:n2
-    e1 = sum( x1 <= x2(i) & y1 <= y2(i) ) / n1;
-    e2 = sum( x2 <= x2(i) & y2 <= y2(i) ) / n2;
+    e1 = sum( x1 <= x2(i) & y1 <= y2(i) );
+    e2 = sum( x2 <= x2(i) & y2 <= y2(i) );
     
     d = d + (e1-e2)^2;
 end
