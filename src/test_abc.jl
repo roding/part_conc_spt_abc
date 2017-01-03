@@ -34,15 +34,15 @@ function test_abc()
 	ub_az::Float64 = 0.0
 		
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 100000
+	number_of_abc_samples::Int64 = 1000
 
 	mu_sim::Float64 = 0.0
 	sigma_sim::Float64 = 0.0
 	c_sim::Float64 = 0.0
 	az_sim::Float64 = 0.0
 	
-	fileNameRes = join(["abc_sample_", data_file[1:end-4], "_", string(SEED), ".dat"])  
-	fileStreamRes = open(fileNameRes,"w")
+	file_name_output = join(("abc_sample_", string(random_seed), ".dat"))  
+	file_stream_output = open(file_name_output, "w")
 	
 	for current_abc_sample = 1:number_of_abc_samples
 		println(current_abc_sample)
@@ -54,11 +54,11 @@ function test_abc()
 		
 		(K_sim, RSQ_sim) = simulate_system(mu_sim, sigma_sim, c_sim, ax, ay, az_sim, L, number_of_frames, deltat, kmin)
 		
-		d = distance(K_real, RSQ_real, K_sim, RSQ_sim)
+		dist = distance(K_real, RSQ_real, K_sim, RSQ_sim)
 
-		write(fileStreamRes, mu, sigma, a, c, criterion1, criterion2)
+		write(file_stream_output, mu, sigma, c, az, dist)
 	end
-	close(fileStreamRes)
+	close(file_stream_output)
 
 	nothing
 end
