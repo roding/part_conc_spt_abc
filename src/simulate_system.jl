@@ -1,4 +1,4 @@
-function simulate_system(mu::Float64, sigma::Float64, c::Float64, ax::Float64, ay::Float64, az::Float64, L::Float64, number_of_frames::Array{Int64, 1})
+function simulate_system(mu::Float64, sigma::Float64, c::Float64, ax::Float64, ay::Float64, az::Float64, L::Float64, number_of_frames::Array{Int64, 1}, deltat::Float64)
 	
 	#kmax::Int64 = maximum(nFrames)
 	#H::Array{Int64,1} = zeros(kmax)
@@ -42,26 +42,29 @@ function simulate_system(mu::Float64, sigma::Float64, c::Float64, ax::Float64, a
 			end
 			
 			# Generate random diffusion coefficent from distribution.
+			D = exp(mu + sigma * rand())
+			s = sqrt(2 * D * deltat)
 			
-			
+			# Let particle diffuse through remainder of video.
 			for current_frame = 2:number_of_frames[current_video]
-				x = x + sigma*randn()
-				y += sigma*randn()
-				z += sigma*randn()
-				if x > A_corr
-					x -= A_corr
+				x = x + s * randn()
+				y = y + s * randn()
+				z = z + s * randn()
+				
+				if x > L
+					x -= L
 				elseif x < 0.0
-					x += A_corr
+					x += L
 				end
-				if y > A_corr
-					y -= A_corr
+				if y > L
+					y -= L
 				elseif y < 0.0
-					y += A_corr
+					y += L
 				end
-				if z > A_corr
-					z -= A_corr
+				if z > L
+					z -= L
 				elseif z < 0.0
-					z += A_corr
+					z += L
 				end
 				if (lbz <= z) & (z <= ubz) & (lbx <= x) & (x <= ubx) & (lby <= y) & (y <= uby)
 					count += 1
