@@ -41,7 +41,7 @@ function test_abc()
 	ub_az::Float64 = 2.1
 		
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 1
+	number_of_abc_samples::Int64 = 1000000
 
 	mu_sim::Float64 = 0.0
 	sigma_sim::Float64 = 0.0
@@ -63,11 +63,11 @@ function test_abc()
 		az_sim = lb_az + (ub_az - lb_az) * rand()
 		
 		(K_sim, RSQ_sim) = simulate_system(mu_sim, sigma_sim, c_sim, ax, ay, az_sim, L, number_of_frames, deltat, kmin)
-		
+		#@time 
 		#println(length(K_sim))
 		
 		dist = distance(K_real, RSQ_real, K_sim, RSQ_sim)
-
+		#@time 
 		write(file_stream_output, mu_sim, sigma_sim, c_sim, az_sim, dist)
 	end
 	close(file_stream_output)
@@ -76,3 +76,5 @@ function test_abc()
 end
 
 test_abc()
+#@profile test_abc()
+#Profile.print()
