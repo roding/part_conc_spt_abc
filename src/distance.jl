@@ -22,6 +22,6 @@ function distance(K1::Array{Int64, 1}, RSQ1::Array{Float64, 1}, K2::Array{Int64,
 		d = d + (p1 - p2)^2
 	end
 	
-	#d = d / convert(Float64, n1*n2)
+	d = d / convert(Float64, n1*n2)
 	return d
 end
