@@ -1,3 +1,5 @@
+workspace()
+
 include("simulate_system.jl")
 include("distance.jl")
 
@@ -18,20 +20,20 @@ function test_abc()
 	# Simulate true system.
 	mu_real::Float64 = 1.0 # µm^2/s.
 	sigma_real::Float64 = 1.0 # µm^2/s.
-	c_real::Float64 = 1e10 # part/ml.
-	az_real::Float64 = 5.0 # µm.
+	c_real::Float64 = 1e7 # part/ml.
+	az_real::Float64 = 2.0 # µm.
 	
 	(K_real, RSQ_real) = simulate_system(mu_real, sigma_real, c_real, ax, ay, az_real, L, number_of_frames, deltat, kmin)
 	
 	# Parameter bounds for inference.
-	lb_mu::Float64 = 0.0
-	ub_mu::Float64 = 0.0
-	lb_sigma::Float64 = 0.0
-	ub_sigma::Float64 = 0.0
-	lb_c::Float64 = 0.0
-	ub_c::Float64 = 0.0
-	lb_az::Float64 = 0.0
-	ub_az::Float64 = 0.0
+	lb_mu::Float64 = 0.5
+	ub_mu::Float64 = 1.5
+	lb_sigma::Float64 = 0.5
+	ub_sigma::Float64 = 1.5
+	lb_c::Float64 = 5e6
+	ub_c::Float64 = 5e7
+	lb_az::Float64 = 1.5
+	ub_az::Float64 = 2.5
 		
 	# Inference parameters.
 	number_of_abc_samples::Int64 = 1000
@@ -56,7 +58,7 @@ function test_abc()
 		
 		dist = distance(K_real, RSQ_real, K_sim, RSQ_sim)
 
-		write(file_stream_output, mu, sigma, c, az, dist)
+		write(file_stream_output, mu_sim, sigma_sim, c_sim, az_sim, dist)
 	end
 	close(file_stream_output)
 
