@@ -43,7 +43,8 @@ function test_abc()
 	c_sim::Float64 = 0.0
 	az_sim::Float64 = 0.0
 	
-	file_name_output = join(("abc_sample_", string(random_seed), ".dat"))  
+	#file_name_output = join(("abc_sample_", string(random_seed), ".dat"))
+	file_name_output = "abc_sample.dat" 
 	file_stream_output = open(file_name_output, "w")
 	
 	for current_abc_sample = 1:number_of_abc_samples
