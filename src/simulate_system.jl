@@ -1,5 +1,5 @@
-function simulate_system(mu::Float64, sigma::Float64, c::Float64, ax::Float64, ay::Float64, az::Float64, L::Float64, number_of_frames::Array{Int64, 1}, deltat::Float64)
-	# Convert concentration to a number of particles. The factor 1e12 takes into account
+function simulate_system(mu::Float64, sigma::Float64, c::Float64, ax::Float64, ay::Float64, az::Float64, L::Float64, number_of_frames::Array{Int64, 1}, deltat::Float64, kmin::Int64)
+	# Convert concentration to a number of particles. The factor 1e12 takes into ack
 	# that concentration is specified in particles/ml. Also enlarge simulation domain
 	# to accomodate an integer number of particle while maintaining correct concentration.
 	number_of_particles_temp::Float64 = c * L^3 / 1e12
@@ -15,8 +15,8 @@ function simulate_system(mu::Float64, sigma::Float64, c::Float64, ax::Float64, a
 	ubz::Float64 = 0.5 * (L + az)
 	
 	# Simulate.
-	count::Int64 = 0
-	r2::Float64 = 0.0
+	k::Int64 = 0
+	rsq::Float64 = 0.0
 	x::Float64 = 0.0
 	y::Float64 = 0.0
 	z::Float64 = 0.0
@@ -28,7 +28,7 @@ function simulate_system(mu::Float64, sigma::Float64, c::Float64, ax::Float64, a
 	number_of_videos::Int64 = length(number_of_frames)
 	
 	K::Array{Int64, 1} = zeros(0)
-	R2::Array{Float64, 1} = zeros(0)
+	RSQ::Array{Float64, 1} = zeros(0)
 	
 	for current_video = 1:number_of_videos
 		for current_particle = 1:number_of_particles
@@ -37,14 +37,14 @@ function simulate_system(mu::Float64, sigma::Float64, c::Float64, ax::Float64, a
 			y = L * rand()
 			z = L * rand()
 			
-			# Reset r2.
-			r2 = 0.0
+			# Reset rsq.
+			rsq = 0.0
 			
 			# In detection region or not? Check z limits first because they are more restrictive.
 			if (lbz <= z <= ubz) & (lbx <= x <= ubx) & (lby <= y <= uby)
-				count = 1
+				k = 1
 			else
-				count = 0
+				k = 0
 			end
 			
 			# Generate random diffusion coefficent from distribution.
@@ -79,19 +79,20 @@ function simulate_system(mu::Float64, sigma::Float64, c::Float64, ax::Float64, a
 				end
 				
 				if (lbz <= z <= ubz) & (lbx <= x <= ubx) & (lby <= y <= uby)
-					count = count + 1
-					r2 = r2 + deltax^2 + deltay^2 # Only in x-y plane.
-				elseif count > 0
-					push!(K, count)
-					count = 0
-					
-					push!(R2, r2)
-					r2 = 0.0
+					k = k + 1
+					rsq = rsq + deltax^2 + deltay^2 # Only in x-y plane.
+				elseif k > 0
+					if k >= kmin
+						push!(K, k)
+						push!(RSQ, rsq)
+					end
+					k = 0
+					rsq = 0.0
 				end
 			end
 		end
 	end
 	
-	return (K, R2)
+	return (K, RSQ)
 end
 

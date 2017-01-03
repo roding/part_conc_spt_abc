@@ -10,11 +10,12 @@ function test_simulate_system()
 	L::Float64 = 100.0 # µm.
 	number_of_frames::Array{Int64, 1} = [1000]
 	deltat::Float64 = 0.05 # seconds
+	kmin::Int64 = 3
 	
-	(K, R2) = simulate_system(mu, sigma, c, ax, ay, az, L, number_of_frames, deltat)
+	(K, RSQ) = simulate_system(mu, sigma, c, ax, ay, az, L, number_of_frames, deltat, kmin)
 	
 	println(K)
-	println(R2)
+	println(RSQ)
 	
 end
 
