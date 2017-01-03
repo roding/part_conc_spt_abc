@@ -12,7 +12,7 @@ function test_abc()
 	# Experimental parameters.
 	ax::Float64 = 40.0 # µm.
 	ay::Float64 = 40.0 # µm.
-	L::Float64 = 100.0 # µm.
+	L::Float64 = 50.0#100.0 # µm.
 	number_of_frames::Array{Int64, 1} = 250 * ones(40)
 	deltat::Float64 = 0.05 # seconds
 	kmin::Int64 = 3
@@ -20,7 +20,7 @@ function test_abc()
 	# Simulate true system.
 	mu_real::Float64 = 1.0 # µm^2/s.
 	sigma_real::Float64 = 1.0 # µm^2/s.
-	c_real::Float64 = 1e7 # part/ml.
+	c_real::Float64 = 5e6 # part/ml.
 	az_real::Float64 = 2.0 # µm.
 	
 	(K_real, RSQ_real) = simulate_system(mu_real, sigma_real, c_real, ax, ay, az_real, L, number_of_frames, deltat, kmin)
@@ -30,13 +30,13 @@ function test_abc()
 	ub_mu::Float64 = 1.5
 	lb_sigma::Float64 = 0.5
 	ub_sigma::Float64 = 1.5
-	lb_c::Float64 = 5e6
-	ub_c::Float64 = 5e7
+	lb_c::Float64 = 1e6
+	ub_c::Float64 = 1e7
 	lb_az::Float64 = 1.5
 	ub_az::Float64 = 2.5
 		
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 1000
+	number_of_abc_samples::Int64 = 1000000
 
 	mu_sim::Float64 = 0.0
 	sigma_sim::Float64 = 0.0
@@ -48,7 +48,7 @@ function test_abc()
 	file_stream_output = open(file_name_output, "w")
 	
 	for current_abc_sample = 1:number_of_abc_samples
-		println(current_abc_sample)
+		println(current_abc_sample/number_of_abc_samples)
 		
 		mu_sim = lb_mu + (ub_mu - lb_mu) * rand()
 		sigma_sim = lb_sigma + (ub_sigma - lb_sigma) * rand()
