@@ -25,7 +25,7 @@ dist  = data(:, 5);
 clear data
 
 %% Try inference.
-p = 0.001;
+p = 0.01;
 epsilon = prctile(dist, p * 100);
 index = dist <= epsilon;
 

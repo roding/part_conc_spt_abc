@@ -5,7 +5,7 @@ function simulate_system(mu::Float64, sigma::Float64, c::Float64, ax::Float64, a
 	number_of_particles_temp::Float64 = c * L^3 / 1e12
 	number_of_particles::Int64 = convert(Int64, ceil(number_of_particles_temp))
 	L = (convert(Float64, number_of_particles) / number_of_particles_temp)^(1.0/3.0) * L
-	
+	#println((number_of_particles_temp, number_of_particles))
 	# Define lower and upper bounds for the detection region.
 	lbx::Float64 = 0.5 * (L - ax)
 	ubx::Float64 = 0.5 * (L + ax)
