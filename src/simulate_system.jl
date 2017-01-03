@@ -11,12 +11,12 @@ function simulate_system(mu::Float64, sigma::Float64, c::Float64, ax::Float64, a
 	A = (convert(Float64, number_of_particles) / number_of_particles_temp)^(1.0/3.0) * A
 	
 	# Define lower and upper bounds for the detection region.
-	xlo::Float64 = 0.5 * (A - ax)
-	xhi::Float64 = 0.5 * (A + ax)
-	ylo::Float64 = 0.5 * (A - ay)
-	yhi::Float64 = 0.5 * (A + ay)
-	zlo::Float64 = 0.5 * (A - az)
-	zhi::Float64 = 0.5 * (A + az)
+	lbx::Float64 = 0.5 * (A - ax)
+	ubx::Float64 = 0.5 * (A + ax)
+	lby::Float64 = 0.5 * (A - ay)
+	uby::Float64 = 0.5 * (A + ay)
+	lbz::Float64 = 0.5 * (A - az)
+	ubz::Float64 = 0.5 * (A + az)
 	
 	
 		count = 0
