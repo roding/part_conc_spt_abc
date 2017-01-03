@@ -12,7 +12,6 @@ function test_simulate_system()
 	deltat::Float64 = 0.05 # seconds
 	kmin::Int64 = 3
 	
-	
 	(K, RSQ) = simulate_system(mu, sigma, c, ax, ay, az, L, number_of_frames, deltat, kmin)
 	
 	println(K)
