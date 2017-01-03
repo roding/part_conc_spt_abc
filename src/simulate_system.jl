@@ -20,9 +20,13 @@ function simulate_system(mu::Float64, sigma::Float64, c::Float64, ax::Float64, a
 	
 	# Simulate.
 	count::Int64 = 0
+	r2::Float64 = 0.0
 	x::Float64 = 0.0
 	y::Float64 = 0.0
 	z::Float64 = 0.0
+	deltax::Float64 = 0.0
+	deltay::Float64 = 0.0
+	deltaz::Float64 = 0.0
 	D::Float64 = 0.0
 	s::Float64 = 0.0
 	number_of_videos::Int64 = length(number_of_frames)
@@ -34,8 +38,11 @@ function simulate_system(mu::Float64, sigma::Float64, c::Float64, ax::Float64, a
 			y = L * rand()
 			z = L * rand()
 			
-			# In detection region or not?
-			if (lbz <= z) & (z <= ubz) & (lbx <= x) & (x <= ubx) & (lby <= y) & (y <= uby)
+			# Reset r2.
+			r2 = 0.0
+			
+			# In detection region or not? Check z limits first because they are more restrictive.
+			if (lbz <= z <= ubz) & (lbx <= x <= ubx) & (lby <= y <= uby)
 				count = 1
 			else
 				count = 0
@@ -47,27 +54,34 @@ function simulate_system(mu::Float64, sigma::Float64, c::Float64, ax::Float64, a
 			
 			# Let particle diffuse through remainder of video.
 			for current_frame = 2:number_of_frames[current_video]
-				x = x + s * randn()
-				y = y + s * randn()
-				z = z + s * randn()
+				deltax  = s * randn()
+				deltay  = s * randn()
+				deltaz  = s * randn()
+				x = x + deltax
+				y = y + deltay
+				z = z + deltaz
 				
 				if x > L
 					x -= L
 				elseif x < 0.0
 					x += L
 				end
+				
 				if y > L
 					y -= L
 				elseif y < 0.0
 					y += L
 				end
+				
 				if z > L
 					z -= L
 				elseif z < 0.0
 					z += L
 				end
-				if (lbz <= z) & (z <= ubz) & (lbx <= x) & (x <= ubx) & (lby <= y) & (y <= uby)
-					count += 1
+				
+				if (lbz <= z <= ubz) & (lbx <= x <= ubx) & (lby <= y <= uby)
+					count = count + 1
+					r2 = r2 + 
 				elseif count > 0
 					Hsim[count] += 1
 					count = 0
