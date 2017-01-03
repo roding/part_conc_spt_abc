@@ -2,7 +2,7 @@ function simulate_system(mu::Float64, sigma::Float64, c::Float64, ax::Float64, a
 	# Convert concentration to a number of particles. The factor 1e12 takes into account
 	# that concentration is specified in particles/ml. Also enlarge simulation domain
 	# to accomodate an integer number of particle while maintaining correct concentration.
-	number_of_particles_temp::Float64 = convert(Int64, c * L^3 / 1e12)
+	number_of_particles_temp::Float64 = c * L^3 / 1e12
 	number_of_particles::Int64 = convert(Int64, ceil(number_of_particles_temp))
 	L = (convert(Float64, number_of_particles) / number_of_particles_temp)^(1.0/3.0) * L
 	
