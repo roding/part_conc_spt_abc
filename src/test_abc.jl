@@ -1,7 +1,7 @@
 workspace()
 
 include("simulate_system.jl")
-include("distance.jl")
+include("distance2.jl")
 include("rand_poisson.jl")
 
 function test_abc()
@@ -26,19 +26,19 @@ function test_abc()
 	println(mu_real)
 	println(sigma_real)
 	c_real::Float64 = 1e9 # part/ml.
-	az_real::Float64 = 10.0 # µm.
+	az_real::Float64 = 2.0 # µm.
 	
 	(K_real, RSQ_real) = simulate_system(mu_real, sigma_real, c_real, ax, ay, az_real, L, number_of_frames, deltat, kmin)
 	#println(K_real)
 	# Parameter bounds for inference.
-	lb_mu::Float64 = - 0.2
-	ub_mu::Float64 = 0.0
-	lb_sigma::Float64 = 0.4
-	ub_sigma::Float64 = 0.6
-	lb_c::Float64 = 0.9e9
-	ub_c::Float64 = 1.1e9
-	lb_az::Float64 = 1.9
-	ub_az::Float64 = 2.1
+	lb_mu::Float64 = - 0.6
+	ub_mu::Float64 = 0.2
+	lb_sigma::Float64 = 0.0
+	ub_sigma::Float64 = 1.0
+	lb_c::Float64 = 0.5e9
+	ub_c::Float64 = 1.5e9
+	lb_az::Float64 = 1.0
+	ub_az::Float64 = 3.0
 		
 	# Inference parameters.
 	number_of_abc_samples::Int64 = 1000000
@@ -66,12 +66,14 @@ function test_abc()
 		#@time 
 		#println(length(K_sim))
 		
-		dist = distance(K_real, RSQ_real, K_sim, RSQ_sim)
+		dist = distance2(K_real, RSQ_real, K_sim, RSQ_sim)
 		#@time 
 		write(file_stream_output, mu_sim, sigma_sim, c_sim, az_sim, dist)
 	end
 	close(file_stream_output)
-
+	
+	t_exec::Int64 = convert(Int64, time_ns()) - t_start
+	println(t_exec/1e9)
 	nothing
 end
 
