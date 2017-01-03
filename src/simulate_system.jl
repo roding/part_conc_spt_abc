@@ -61,21 +61,21 @@ function simulate_system(mu::Float64, sigma::Float64, c::Float64, ax::Float64, a
 				z = z + deltaz
 				
 				if x > L
-					x -= L
+					x = x - L
 				elseif x < 0.0
-					x += L
+					x = x + L
 				end
 				
 				if y > L
-					y -= L
+					y = y - L
 				elseif y < 0.0
-					y += L
+					y = y + L
 				end
 				
 				if z > L
-					z -= L
+					z = z - L
 				elseif z < 0.0
-					z += L
+					z = z + L
 				end
 				
 				if (lbz <= z <= ubz) & (lbx <= x <= ubx) & (lby <= y <= uby)
