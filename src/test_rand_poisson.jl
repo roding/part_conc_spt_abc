@@ -1,15 +1,17 @@
+workspace()
+
 include("rand_poisson.jl")
 
 function test_rand_poisson()
-	lambda::Float64 = 10.0
+	lambda::Float64 = 2.5
 	
-	x = Array(Int64, 1000)
-	
-	for i = 1:length(x)
-		x[i] = rand_poisson(lambda)
+	x::Int64 = 0
+	n::Int64 = 100000000
+	for i = 1:n
+		x = x + rand_poisson(lambda)
 	end
 	
-	println(mean(x))
+	println(x / convert(Float64, n))
 	
 	nothing
 end

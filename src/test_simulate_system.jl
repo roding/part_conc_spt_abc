@@ -1,4 +1,7 @@
+workspace()
+
 include("simulate_system.jl")
+include("rand_poisson.jl")
 
 function test_simulate_system()
 	mu::Float64 = 1.0 # µm^2/s.
