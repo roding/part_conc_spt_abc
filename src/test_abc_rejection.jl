@@ -41,7 +41,7 @@ function test_abc_rejection()
 	ub_az::Float64 = 3.0
 		
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 10000
+	number_of_abc_samples::Int64 = 10000000
 
 	mu_sim::Float64 = 0.0
 	sigma_sim::Float64 = 0.0
@@ -53,7 +53,7 @@ function test_abc_rejection()
 	file_stream_output = open(file_name_output, "w")
 	
 	for current_abc_sample = 1:number_of_abc_samples
-		if mod(current_abc_sample, 100) == 0
+		if mod(current_abc_sample, 1000) == 0
 			println(current_abc_sample)
 		end
 		
