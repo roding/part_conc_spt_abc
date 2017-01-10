@@ -28,7 +28,7 @@ function test_abc_rejection()
 	az_real::Float64 = 2.0 # µm.
 	
 	(K_real, RSQ_real) = simulate_system(mu_real, sigma_real, c_real, ax, ay, az_real, L, number_of_frames, deltat, kmin)
-	println(mean(K_real))
+	#println(mean(K_real))
 	# Parameter bounds for inference.
 	lb_mu::Float64 = - 0.6
 	ub_mu::Float64 = 0.2
@@ -39,11 +39,11 @@ function test_abc_rejection()
 	lb_az::Float64 = 1.0
 	ub_az::Float64 = 3.0
 		
-        sleep(3)
+        #sleep(3)
         
         
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 5#1_000_000
+	number_of_abc_samples::Int64 = 1_000_000
 
 	mu_sim::Float64 = 0.0
 	sigma_sim::Float64 = 0.0
@@ -70,7 +70,7 @@ function test_abc_rejection()
 		
 		(K_sim, RSQ_sim) = simulate_system(mu_sim, sigma_sim, c_sim, ax, ay, az_sim, L, number_of_frames, deltat, kmin)
 		#@time 
-		println(mean(K_sim))
+		#println(mean(K_sim))
 		
 		dist = distance2(K_real, RSQ_real, K_sim, RSQ_sim)
 		#@time 
@@ -83,6 +83,8 @@ function test_abc_rejection()
 	nothing
 end
 
-test_abc_rejection()
+while true
+    test_abc_rejection()
+end
 #@profile test_abc_rejection()
 #Profile.print()
