@@ -82,8 +82,8 @@ function simulate_system_monodisperse(D::Float64, c::Float64, ax::Float64, ay::F
 				elseif k > 0
 					if k >= kmin
 						push!(K, k)
-						if k <= 2
-							de = de / (convert(Float64, k-1) * 2 * deltat)
+						if k >= 2
+							de = de / (convert(Float64, k-1) * 4 * deltat) # The '4' comes from the 2-D obs.
 						else
 							de = 0
 						end
