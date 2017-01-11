@@ -1,13 +1,14 @@
 include("rand_poisson.jl")
 
 function simulate_system_monodisperse(D::Float64, c::Float64, ax::Float64, ay::Float64, az::Float64, L::Float64, number_of_frames::Array{Int64, 1}, deltat::Float64, kmin::Int64)
+	
+	# THIS COMMENT IS INCORRECT!!!!!!!!!
 	# Convert concentration to a number of particles. The factor 1e12 takes into ack
 	# that concentration is specified in particles/ml. Also enlarge simulation domain
 	# to accomodate an integer number of particle while maintaining correct concentration.
-	number_of_particles_temp::Float64 = c * L^3 / 1e12
+	lambda::Float64 = c * L^3 / 1e12
 	number_of_particles::Int64 = 0
-	#L = (convert(Float64, number_of_particles) / number_of_particles_temp)^(1.0/3.0) * L
-	#println((number_of_particles_temp, number_of_particles))
+
 	# Define lower and upper bounds for the detection region.
 	lbx::Float64 = 0.5 * (L - ax)
 	ubx::Float64 = 0.5 * (L + ax)
@@ -33,7 +34,8 @@ function simulate_system_monodisperse(D::Float64, c::Float64, ax::Float64, ay::F
 	DE::Array{Float64, 1} = zeros(0)
 	
 	for current_video = 1:number_of_videos
-		number_of_particles = rand_poisson(number_of_particles_temp)
+		number_of_particles = rand_poisson(lambda)
+		
 		for current_particle = 1:number_of_particles
 			# Random initial position.
 			x = L * rand()
