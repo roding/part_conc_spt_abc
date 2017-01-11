@@ -28,7 +28,7 @@ function test_simulate_system()
 	kmin::Int64 = 2
 	
 	# Simulate system.
-	(K, DE) = simulate_system(distribution_class, distribution_parameters::Array{Float64, 1}, c, ax, ay, az, L, number_of_frames, deltat, kmin)
+	(K, DE) = simulate_system(distribution_class, distribution_parameters, c, ax, ay, az, L, number_of_frames, deltat, kmin)
 	
 	# Save results.
 	file_name_output = "simulated_system.dat"
