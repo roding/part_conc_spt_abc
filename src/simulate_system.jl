@@ -48,7 +48,7 @@ function simulate_system(distribution_class::String, distribution_parameters::Ar
 		for current_particle = 1:number_of_particles
 			# Generate random diffusion coefficent from distribution.
 			if distribution_class == "monodisperse"
-				s = distribution_parameters[1]
+				s = sqrt(2 * distribution_parameters[1] * deltat)
 			elseif distribution_class == "lognormal"
 				s = sqrt(2 * exp(distribution_parameters[1] + distribution_parameters[2] * rand()) * deltat)
 			end

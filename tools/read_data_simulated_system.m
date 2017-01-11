@@ -1,13 +1,11 @@
 clear
-clc
+% clc
 close all hidden
 
 %% Read data.
-file_name = 'simulated_system.dat';
+file_name = '../test/simulated_system.dat';
 
 data = dlmread(file_name, ',');
-
-% data = data';
 
 K = data(:, 1);
 DE = data(:, 2);
@@ -16,6 +14,11 @@ clear data
 
 %% Analyze.
 
-hist(DE, 1000)
+figure
+hist(DE, 1000);
+
+figure
+hist(K, 1:100);
 
 mean(DE)
+std(DE)
