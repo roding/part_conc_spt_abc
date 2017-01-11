@@ -1,3 +1,5 @@
+include("rand_poisson.jl")
+
 function simulate_system_monodisperse(D::Float64, c::Float64, ax::Float64, ay::Float64, az::Float64, L::Float64, number_of_frames::Array{Int64, 1}, deltat::Float64, kmin::Int64)
 	# Convert concentration to a number of particles. The factor 1e12 takes into ack
 	# that concentration is specified in particles/ml. Also enlarge simulation domain
