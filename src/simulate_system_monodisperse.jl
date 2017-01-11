@@ -1,4 +1,4 @@
-function simulate_system(mu::Float64, sigma::Float64, c::Float64, ax::Float64, ay::Float64, az::Float64, L::Float64, number_of_frames::Array{Int64, 1}, deltat::Float64, kmin::Int64)
+function simulate_system_monodisperse(D::Float64, c::Float64, ax::Float64, ay::Float64, az::Float64, L::Float64, number_of_frames::Array{Int64, 1}, deltat::Float64, kmin::Int64)
 	# Convert concentration to a number of particles. The factor 1e12 takes into ack
 	# that concentration is specified in particles/ml. Also enlarge simulation domain
 	# to accomodate an integer number of particle while maintaining correct concentration.
@@ -23,9 +23,9 @@ function simulate_system(mu::Float64, sigma::Float64, c::Float64, ax::Float64, a
 	deltax::Float64 = 0.0
 	deltay::Float64 = 0.0
 	deltaz::Float64 = 0.0
-	D::Float64 = 0.0
-	s::Float64 = 0.0
 	number_of_videos::Int64 = length(number_of_frames)
+	
+	s::Float64 = sqrt(2 * D * deltat) # Standard deviation of random displacements.
 	
 	K::Array{Int64, 1} = zeros(0)
 	RSQ::Array{Float64, 1} = zeros(0)
@@ -46,10 +46,6 @@ function simulate_system(mu::Float64, sigma::Float64, c::Float64, ax::Float64, a
 			else
 				k = 0
 			end
-			
-			# Generate random diffusion coefficent from distribution.
-			D = exp(mu + sigma * rand())
-			s = sqrt(2 * D * deltat)
 			
 			# Let particle diffuse through remainder of video.
 			for current_frame = 2:number_of_frames[current_video]
