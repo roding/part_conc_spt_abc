@@ -16,4 +16,6 @@ clear data
 
 %% Analyze.
 
-hist(DE, 100)
+hist(DE, 1000)
+
+mean(DE)

@@ -51,9 +51,9 @@ function simulate_system_monodisperse(D::Float64, c::Float64, ax::Float64, ay::F
 			
 			# Let particle diffuse through remainder of video.
 			for current_frame = 2:number_of_frames[current_video]
-				deltax  = s * randn()
-				deltay  = s * randn()
-				deltaz  = s * randn()
+				deltax = s * randn()
+				deltay = s * randn()
+				deltaz = s * randn()
 				x = x + deltax
 				y = y + deltay
 				z = z + deltaz
@@ -78,14 +78,16 @@ function simulate_system_monodisperse(D::Float64, c::Float64, ax::Float64, ay::F
 				
 				if (lbz <= z <= ubz) & (lbx <= x <= ubx) & (lby <= y <= uby)
 					k = k + 1
-					de = de + deltax^2 + deltay^2 # Only in x-y plane.
+					if k >= 2 # The first point inside the detection region does not contributed toward the estimated diffusion coefficient.
+						de = de + deltax^2 + deltay^2 # Only in x-y plane.
+					end
 				elseif k > 0
 					if k >= kmin
 						push!(K, k)
 						if k >= 2
-							de = de / (convert(Float64, k-1) * 4 * deltat) # The '4' comes from the 2-D obs.
+							de = de / (convert(Float64, k - 1) * 4.0 * deltat) # The '4' comes from the 2-D obs.
 						else
-							de = 0
+							de = 0.0
 						end
 						push!(DE, de)
 					end
