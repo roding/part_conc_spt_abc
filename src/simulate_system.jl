@@ -46,7 +46,8 @@ function simulate_system(distribution_class::String, distribution_parameters::Ar
 		number_of_particles = rand_poisson(lambda)
 		
 		for current_particle = 1:number_of_particles
-			# Generate random diffusion coefficent from distribution.
+			# Generate random diffusion coefficent from distribution, or more precisely,
+			# a random standard deviation for the displacements.
 			if distribution_class == "monodisperse"
 				s = sqrt(2 * distribution_parameters[1] * deltat)
 			elseif distribution_class == "lognormal"
