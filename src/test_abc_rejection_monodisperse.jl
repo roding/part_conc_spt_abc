@@ -32,7 +32,7 @@ function test_abc_rejection_monodisperse()
 	ub_az::Float64 = 3.0
         
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 100000
+	number_of_abc_samples::Int64 = 10000
 
 	D_sim::Float64 = 0.0
 	c_sim::Float64 = 0.0
