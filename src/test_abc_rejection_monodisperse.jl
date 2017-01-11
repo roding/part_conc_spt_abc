@@ -21,7 +21,7 @@ function test_abc_rejection_monodisperse()
 	c_real::Float64 = 1e10 # part/ml.
 	az_real::Float64 = 2.0 # µm.
 	
-	(K_real, RSQ_real) = simulate_system_monodisperse(D_real, c_real, ax, ay, az_real, L, number_of_frames, deltat, kmin)
+	(K_real, DE_real) = simulate_system_monodisperse(D_real, c_real, ax, ay, az_real, L, number_of_frames, deltat, kmin)
 	#println(mean(K_real))
 	# Parameter bounds for inference.
 	lb_D::Float64 = 0.0
@@ -30,9 +30,6 @@ function test_abc_rejection_monodisperse()
 	ub_c::Float64 = 1.5e10
 	lb_az::Float64 = 1.0
 	ub_az::Float64 = 3.0
-		
-        #sleep(3)
-        
         
 	# Inference parameters.
 	number_of_abc_samples::Int64 = 100000
@@ -58,11 +55,11 @@ function test_abc_rejection_monodisperse()
 		c_sim = lb_c + (ub_c - lb_c) * rand()
 		az_sim = lb_az + (ub_az - lb_az) * rand()
 		
-		(K_sim, RSQ_sim) = simulate_system_monodisperse(D_sim, c_sim, ax, ay, az_sim, L, number_of_frames, deltat, kmin)
+		(K_sim, DE_sim) = simulate_system_monodisperse(D_sim, c_sim, ax, ay, az_sim, L, number_of_frames, deltat, kmin)
 		#@time 
 		#println(mean(K_sim))
 		
-		dist = distance2(K_real, RSQ_real, K_sim, RSQ_sim)
+		dist = distance2(K_real, DE_real, K_sim, DE_sim)
 		#@time 
 		write(file_stream_output, D_sim, c_sim, az_sim, dist)
 	end

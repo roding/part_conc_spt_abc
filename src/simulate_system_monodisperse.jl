@@ -18,7 +18,7 @@ function simulate_system_monodisperse(D::Float64, c::Float64, ax::Float64, ay::F
 	
 	# Simulate.
 	k::Int64 = 0
-	rsq::Float64 = 0.0
+	de::Float64 = 0.0
 	x::Float64 = 0.0
 	y::Float64 = 0.0
 	z::Float64 = 0.0
@@ -30,7 +30,7 @@ function simulate_system_monodisperse(D::Float64, c::Float64, ax::Float64, ay::F
 	s::Float64 = sqrt(2 * D * deltat) # Standard deviation of random displacements.
 	
 	K::Array{Int64, 1} = zeros(0)
-	RSQ::Array{Float64, 1} = zeros(0)
+	DE::Array{Float64, 1} = zeros(0)
 	
 	for current_video = 1:number_of_videos
 		for current_particle = 1:number_of_particles
@@ -39,8 +39,8 @@ function simulate_system_monodisperse(D::Float64, c::Float64, ax::Float64, ay::F
 			y = L * rand()
 			z = L * rand()
 			
-			# Reset rsq.
-			rsq = 0.0
+			# Reset empirical diffusion coefficient.
+			de = 0.0
 			
 			# In detection region or not? Check z limits first because they are more restrictive.
 			if (lbz <= z <= ubz) & (lbx <= x <= ubx) & (lby <= y <= uby)
@@ -78,19 +78,24 @@ function simulate_system_monodisperse(D::Float64, c::Float64, ax::Float64, ay::F
 				
 				if (lbz <= z <= ubz) & (lbx <= x <= ubx) & (lby <= y <= uby)
 					k = k + 1
-					rsq = rsq + deltax^2 + deltay^2 # Only in x-y plane.
+					de = de + deltax^2 + deltay^2 # Only in x-y plane.
 				elseif k > 0
 					if k >= kmin
 						push!(K, k)
-						push!(RSQ, rsq)
+						if k <= 2
+							de = de / (convert(Float64, k-1) * 2 * deltat)
+						else
+							de = 0
+						end
+						push!(DE, de)
 					end
 					k = 0
-					rsq = 0.0
+					de = 0.0
 				end
 			end
 		end
 	end
 	
-	return (K, RSQ)
+	return (K, DE)
 end
 
