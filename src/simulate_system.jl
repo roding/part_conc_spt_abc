@@ -41,9 +41,7 @@ function simulate_system(distribution_class::String, distribution_parameters::Ar
 	
 	# Standard deviation of random displacements.
 	s::Float64 = 0.0 
-		
-	
-	
+
 	for current_video = 1:number_of_videos
 		number_of_particles = rand_poisson(lambda)
 		
@@ -80,23 +78,9 @@ function simulate_system(distribution_class::String, distribution_parameters::Ar
 				y = y + deltay
 				z = z + deltaz
 				
-				if x > L
-					x = x - L
-				elseif x < 0.0
-					x = x + L
-				end
-				
-				if y > L
-					y = y - L
-				elseif y < 0.0
-					y = y + L
-				end
-				
-				if z > L
-					z = z - L
-				elseif z < 0.0
-					z = z + L
-				end
+				x = periodic(x, L)
+				y = periodic(y, L)
+				z = periodic(z, L)
 				
 				if (lbz <= z <= ubz) & (lbx <= x <= ubx) & (lby <= y <= uby)
 					k = k + 1
