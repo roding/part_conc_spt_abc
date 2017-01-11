@@ -1,6 +1,6 @@
 include("rand_poisson.jl")
 
-function simulate_system(D::Float64, c::Float64, ax::Float64, ay::Float64, az::Float64, L::Float64, number_of_frames::Array{Int64, 1}, deltat::Float64, kmin::Int64)
+function simulate_system(distribution_class::Symbol, distribution_parameters::Array{Float64, 1}, c::Float64, ax::Float64, ay::Float64, az::Float64, L::Float64, number_of_frames::Array{Int64, 1}, deltat::Float64, kmin::Int64)
 	
 	# Intensity of Poisson distribution of the number of particles. The factor 
 	# 1e12 takes into account that concentration is specified in particles/ml.
@@ -8,6 +8,9 @@ function simulate_system(D::Float64, c::Float64, ax::Float64, ay::Float64, az::F
 	
 	# Number of particles in simulated system, which varies between videos.
 	number_of_particles::Int64 = 0
+	
+	# Number of videos to be simulated.
+	number_of_videos::Int64 = length(number_of_frames)
 	
 	# Lower and upper bounds for the detection region.
 	lbx::Float64 = 0.5 * (L - ax)
@@ -17,16 +20,18 @@ function simulate_system(D::Float64, c::Float64, ax::Float64, ay::Float64, az::F
 	lbz::Float64 = 0.5 * (L - az)
 	ubz::Float64 = 0.5 * (L + az)
 	
-	# Simulate.
-	k::Int64 = 0
-	de::Float64 = 0.0
+	# Variables for storing positions and displacements.
 	x::Float64 = 0.0
 	y::Float64 = 0.0
 	z::Float64 = 0.0
 	deltax::Float64 = 0.0
 	deltay::Float64 = 0.0
 	deltaz::Float64 = 0.0
-	number_of_videos::Int64 = length(number_of_frames)
+	
+	
+	# Simulate.
+	k::Int64 = 0
+	de::Float64 = 0.0
 	
 	s::Float64 = sqrt(2 * D * deltat) # Standard deviation of random displacements.
 	
