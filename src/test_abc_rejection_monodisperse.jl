@@ -9,9 +9,9 @@ function test_abc_rejection_monodisperse()
 	srand(1)
 	
 	# Experimental parameters.
-	ax::Float64 = 10.0 # µm.
-	ay::Float64 = 10.0 # µm.
-	L::Float64 = 15.0#100.0 # µm.
+	ax::Float64 = 40.0 # µm.
+	ay::Float64 = 40.0 # µm.
+	L::Float64 = 100.0 # µm.
 	number_of_frames::Array{Int64, 1} = 250 * ones(40)
 	deltat::Float64 = 0.05 # seconds
 	kmin::Int64 = 3
@@ -32,7 +32,7 @@ function test_abc_rejection_monodisperse()
 	ub_az::Float64 = 3.0
         
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 10000
+	number_of_abc_samples::Int64 = 100000
 
 	D_sim::Float64 = 0.0
 	c_sim::Float64 = 0.0

@@ -3,7 +3,7 @@ clc
 close all hidden
 
 %% Read data.
-file_name = 'abc_sample_monodisperse_89824843469366.dat';
+file_name = 'abc_sample_monodisperse_2584265668649.dat';
 file_info = dir(file_name);
 file_size = file_info.bytes;
 number_of_columns = 4;
