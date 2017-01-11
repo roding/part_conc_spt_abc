@@ -1,6 +1,7 @@
 include("rand_poisson.jl")
+include("periodic.jl")
 
-function simulate_system(distribution_class::Symbol, distribution_parameters::Array{Float64, 1}, c::Float64, ax::Float64, ay::Float64, az::Float64, L::Float64, number_of_frames::Array{Int64, 1}, deltat::Float64, kmin::Int64)
+function simulate_system(distribution_class::String, distribution_parameters::Array{Float64, 1}, c::Float64, ax::Float64, ay::Float64, az::Float64, L::Float64, number_of_frames::Array{Int64, 1}, deltat::Float64, kmin::Int64)
 	
 	# Intensity of Poisson distribution of the number of particles. The factor 
 	# 1e12 takes into account that concentration is specified in particles/ml.
@@ -28,20 +29,32 @@ function simulate_system(distribution_class::Symbol, distribution_parameters::Ar
 	deltay::Float64 = 0.0
 	deltaz::Float64 = 0.0
 	
-	
-	# Simulate.
+	# Number of positions and estimated diffusion coefficient of 
+	# current trajectory.
 	k::Int64 = 0
 	de::Float64 = 0.0
 	
-	s::Float64 = sqrt(2 * D * deltat) # Standard deviation of random displacements.
-	
+	# Number of positions and estimated diffusion coefficient of all 
+	# recorded trajectories.
 	K::Array{Int64, 1} = zeros(0)
 	DE::Array{Float64, 1} = zeros(0)
+	
+	# Standard deviation of random displacements.
+	s::Float64 = 0.0 
+		
+	
 	
 	for current_video = 1:number_of_videos
 		number_of_particles = rand_poisson(lambda)
 		
 		for current_particle = 1:number_of_particles
+			# Generate random diffusion coefficent from distribution.
+			if distribution_class == "monodisperse"
+				s = distribution_parameters[1]
+			elseif distribution_class == "lognormal"
+				s = sqrt(2 * exp(distribution_parameters[1] + distribution_parameters[2] * rand()) * deltat)
+			end
+			
 			# Random initial position.
 			x = L * rand()
 			y = L * rand()
@@ -62,6 +75,7 @@ function simulate_system(distribution_class::Symbol, distribution_parameters::Ar
 				deltax = s * randn()
 				deltay = s * randn()
 				deltaz = s * randn()
+				
 				x = x + deltax
 				y = y + deltay
 				z = z + deltaz
