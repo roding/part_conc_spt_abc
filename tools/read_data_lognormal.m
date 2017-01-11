@@ -3,7 +3,7 @@ clc
 close all hidden
 
 %% Read data.
-file_name = 'abc_sample.dat';
+file_name = '../test/abc_sample_lognormal_6056697316905.dat';
 file_info = dir(file_name);
 file_size = file_info.bytes;
 number_of_columns = 5;
@@ -25,7 +25,7 @@ dist  = data(:, 5);
 clear data
 
 %% Try inference.
-p = 0.00005;
+p = 0.005;
 epsilon = prctile(dist, p * 100);
 index = dist <= epsilon;
 
@@ -34,7 +34,12 @@ sigma = sigma(index);
 c = c(index);
 az = az(index);
 
+m = exp(mu + 0.5*sigma.^2);
+s = m .* sqrt(exp(sigma.^2) - 1);
+
 figure, hold on, hist(mu), title('mu'), hold off
 figure, hold on, hist(sigma), title('sigma'), hold off
+figure, hold on, hist(m), title('m'), hold off
+figure, hold on, hist(s), title('s'), hold off
 figure, hold on, hist(c), title('c'), hold off
 figure, hold on, hist(az), title('az'), hold off

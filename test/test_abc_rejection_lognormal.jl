@@ -12,7 +12,7 @@ function test_abc_rejection_lognormal()
 	ax::Float64 = 40.0 # µm.
 	ay::Float64 = 40.0 # µm.
 	L::Float64 = 100.0 # µm.
-	number_of_frames::Array{Int64, 1} = 100 * ones(20000)
+	number_of_frames::Array{Int64, 1} = 250 * ones(40)
 	deltat::Float64 = 0.05 # seconds
 	kmin::Int64 = 2
 	
@@ -39,10 +39,13 @@ function test_abc_rejection_lognormal()
 	ub_c::Float64 = 2.0 * c_real
 	lb_az::Float64 = 0.5 * az_real
 	ub_az::Float64 = 2.0 * az_real
-		
+#	lb::Array{Float64, 1} = [0.5 * mu_real, 0.5 * sigma_real, 0.5 * c_real, 0.5 * az_real]
+#	ub::Array{Float64, 1} = [2.0 * mu_real, 2.0 * sigma_real, 2.0 * c_real, 2.0 * az_real]
+			
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 1_000_000
+	number_of_abc_samples::Int64 = 1000
 
+	# Variables for candidate parameter values.
 	mu_sim::Float64 = 0.0
 	sigma_sim::Float64 = 0.0
 	c_sim::Float64 = 0.0
@@ -55,7 +58,6 @@ function test_abc_rejection_lognormal()
 	#file_name_output = "abc_sample.dat" 
 	file_stream_output = open(file_name_output, "w")
 	
-	distribution_parameters_sim::
 	for current_abc_sample = 1:number_of_abc_samples
 		if mod(current_abc_sample, 100) == 0
 			println(current_abc_sample)
@@ -66,9 +68,8 @@ function test_abc_rejection_lognormal()
 		c_sim = lb_c + (ub_c - lb_c) * rand()
 		az_sim = lb_az + (ub_az - lb_az) * rand()
 		
-		(K_sim, DE_sim) = simulate_system(distribution_class, mu_sim, sigma_sim, c_sim, ax, ay, az_sim, L, number_of_frames, deltat, kmin)
+		(K_sim, DE_sim) = simulate_system(distribution_class, [mu_sim, sigma_sim], c_sim, ax, ay, az_sim, L, number_of_frames, deltat, kmin)
 
-		
 		dist = distance(K_real, DE_real, K_sim, DE_sim)
 		#@time 
 		write(file_stream_output, mu_sim, sigma_sim, c_sim, az_sim, dist)
