@@ -1,8 +1,8 @@
 workspace()
 
-include("simulate_system_monodisperse.jl")
+include("../src/simulate_system.jl")
 
-function test_simulate_system_monodisperse()
+function test_simulate_system()
 	D::Float64 = 1.0 # µm^2/s.
 	c::Float64 = 1e10 # part/ml.
 	ax::Float64 = 80.0 # µm.
@@ -25,4 +25,4 @@ function test_simulate_system_monodisperse()
 	nothing
 end
 
-test_simulate_system_monodisperse()
+test_simulate_system()
