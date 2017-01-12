@@ -22,6 +22,7 @@ function test_abc_rejection_lognormal()
 	s_real::Float64 = 0.5 # µm^2/s.
 	mu_real::Float64 = log(m_real) - 0.5 * log(1 + s_real^2/m_real^2)
 	sigma_real::Float64 = sqrt(log(1 + s_real^2/m_real^2))
+	println((mu_real, sigma_real))
 	distribution_parameters_real::Array{Float64, 1} = [mu_real, sigma_real]
 	
 	c_real::Float64 = 1e10 # part/ml.
