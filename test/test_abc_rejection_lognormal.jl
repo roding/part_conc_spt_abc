@@ -22,9 +22,8 @@ function test_abc_rejection_lognormal()
 	s_real::Float64 = 0.5 # µm^2/s.
 	mu_real::Float64 = log(m_real) - 0.5 * log(1 + s_real^2/m_real^2)
 	sigma_real::Float64 = sqrt(log(1 + s_real^2/m_real^2))
-	println((mu_real, sigma_real))
+	#println((mu_real, sigma_real))
 	distribution_parameters_real::Array{Float64, 1} = [mu_real, sigma_real]
-	
 	c_real::Float64 = 1e10 # part/ml.
 	az_real::Float64 = 2.0 # µm.
 	
@@ -32,14 +31,14 @@ function test_abc_rejection_lognormal()
 	(K_real, DE_real) = simulate_system(distribution_class, distribution_parameters_real, c_real, ax, ay, az_real, L, number_of_frames, deltat, kmin)
 
 	# Parameter bounds for inference.
-	lb_mu::Float64 = 0.5 * mu_real
-	ub_mu::Float64 = 2.0 * mu_real
-	lb_sigma::Float64 = 0.5 * sigma_real
-	ub_sigma::Float64 = 2.0 * sigma_real
-	lb_c::Float64 = 0.5 * c_real
-	ub_c::Float64 = 2.0 * c_real
-	lb_az::Float64 = 0.5 * az_real
-	ub_az::Float64 = 2.0 * az_real
+	lb_mu::Float64 = 0.25 * mu_real
+	ub_mu::Float64 = 4.0 * mu_real
+	lb_sigma::Float64 = 0.25 * sigma_real
+	ub_sigma::Float64 = 4.0 * sigma_real
+	lb_c::Float64 = 0.25 * c_real
+	ub_c::Float64 = 4.0 * c_real
+	lb_az::Float64 = 0.25 * az_real
+	ub_az::Float64 = 4.0 * az_real
 #	lb::Array{Float64, 1} = [0.5 * mu_real, 0.5 * sigma_real, 0.5 * c_real, 0.5 * az_real]
 #	ub::Array{Float64, 1} = [2.0 * mu_real, 2.0 * sigma_real, 2.0 * c_real, 2.0 * az_real]
 			
