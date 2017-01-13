@@ -5,7 +5,7 @@ close all hidden
 number_of_columns = 5;
 precision_in_bytes = 8;
     
-folder = '../test/res';
+folder = '../test/res2';
 files = dir([folder '/' '*.dat']);
 number_of_files = numel(files);
 
@@ -30,18 +30,6 @@ for current_file = 1:number_of_files
 
     data = data';
 
-%     mu{current_file} = data(:, 1);
-%     sigma{current_file} = data(:, 2);
-%     c{current_file} = data(:, 3);
-%     az{current_file} = data(:, 4);
-%     dist{current_file}  = data(:, 5);
-    
-%     mu = [mu ; data(:, 1)];
-%     sigma =  [sigma ; data(:, 2)];
-%     c = [c ; data(:, 3)];
-%     az = [az ; data(:, 4)];
-%     dist = [dist ; data(:, 5)];
-    
     mu = cat(1, mu, data(:, 1));
     sigma = cat(1, sigma, data(:, 2)); 
     c = cat(1, c, data(:, 3));
@@ -50,7 +38,7 @@ for current_file = 1:number_of_files
 end
 
 %% Try inference.
-p = 0.005;
+p = 0.0001;
 epsilon = prctile(dist, p * 100);
 index = dist <= epsilon;
 

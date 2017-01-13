@@ -9,9 +9,9 @@ function test_abc_rejection_lognormal()
 	srand(1)
 	
 	# Acquisition parameters.
-	ax::Float64 = 20.0 # µm.
-	ay::Float64 = 20.0 # µm.
-	L::Float64 = 25.0 # µm.
+	ax::Float64 = 40.0 # µm.
+	ay::Float64 = 40.0 # µm.
+	L::Float64 = 100.0 # µm.
 	number_of_frames::Array{Int64, 1} = 250 * ones(40)
 	deltat::Float64 = 0.05 # seconds
 	kmin::Int64 = 2
@@ -43,7 +43,7 @@ function test_abc_rejection_lognormal()
 #	ub::Array{Float64, 1} = [2.0 * mu_real, 2.0 * sigma_real, 2.0 * c_real, 2.0 * az_real]
 			
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 10000
+	number_of_abc_samples::Int64 = 100000
 
 	# Variables for candidate parameter values.
 	mu_sim::Float64 = 0.0
