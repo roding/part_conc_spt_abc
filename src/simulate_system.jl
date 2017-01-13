@@ -5,7 +5,7 @@ function simulate_system(distribution_class::String, distribution_parameters::Ar
 	
 	# Intensity of Poisson distribution of the number of particles. The factor 
 	# 1e12 takes into account that concentration is specified in particles/ml.
-	lambda::Float64 = c * L^3 / 1e12
+	lambda::Float64 = c * Lx * Ly * Lz / 1e12
 	
 	# Number of particles in simulated system, which varies between videos.
 	number_of_particles::Int64 = 0

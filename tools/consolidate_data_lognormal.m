@@ -5,13 +5,13 @@ close all hidden
 number_of_columns = 5;
 precision_in_bytes = 8;
     
-folder = '../test/res2';
+folder = '../test/res_large_system_m_s_20170113';
 files = dir([folder '/' '*.dat']);
 number_of_files = numel(files);
 
 
-mu = [];
-sigma = [];
+m = [];
+s = [];
 c = [];
 az = [];
 dist = [];
@@ -30,28 +30,23 @@ for current_file = 1:number_of_files
 
     data = data';
 
-    mu = cat(1, mu, data(:, 1));
-    sigma = cat(1, sigma, data(:, 2)); 
+    m = cat(1, m, data(:, 1));
+    s = cat(1, s, data(:, 2)); 
     c = cat(1, c, data(:, 3));
     az = cat(1, az, data(:, 4));
     dist = cat(1, dist, data(:, 5));
 end
 
 %% Try inference.
-p = 0.0001;
+p = 0.001;
 epsilon = prctile(dist, p * 100);
 index = dist <= epsilon;
 
-mu = mu(index);
-sigma = sigma(index);
+m = m(index);
+s = s(index);
 c = c(index);
 az = az(index);
 
-m = exp(mu + 0.5*sigma.^2);
-s = m .* sqrt(exp(sigma.^2) - 1);
-
-figure, hold on, hist(mu, 50), title('mu'), hold off
-figure, hold on, hist(sigma, 50), title('sigma'), hold off
 figure, hold on, hist(m, 50), title('m'), hold off
 figure, hold on, hist(s, 50), title('s'), hold off
 figure, hold on, hist(c, 50, 100), title('c'), hold off

@@ -32,17 +32,17 @@ function test_abc_rejection_lognormal()
 	(K_real, DE_real) = simulate_system(distribution_class, [m_real, s_real], c_real, ax, ay, az_real, Lx, Ly, Lz, number_of_frames, deltat, kmin)
 
 	# Parameter bounds for inference.
-	lb_m::Float64 = 0.25 * m_real
-	ub_m::Float64 = 4.0 * m_real
-	lb_s::Float64 = 0.25 * s_real
-	ub_s::Float64 = 4.0 * s_real
+	lb_m::Float64 = 0.0
+	ub_m::Float64 = 10.0
+	lb_s::Float64 = 0.0
+	ub_s::Float64 = 10.0
 	lb_c::Float64 = 0.25 * c_real
 	ub_c::Float64 = 4.0 * c_real
 	lb_az::Float64 = 0.25 * az_real
 	ub_az::Float64 = 4.0 * az_real
 			
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 100
+	number_of_abc_samples::Int64 = 100000
 
 	# Variables for candidate parameter values.
 	m_sim::Float64 = 0.0
