@@ -40,7 +40,7 @@ function simulate_system(distribution_class::String, distribution_parameters::Ar
 	DE::Array{Float64, 1} = zeros(0)
 	
 	# Standard deviation of random displacements.
-	s::Float64 = 0.0 
+	std_dev_random_walk::Float64 = 0.0
 
 	for current_video = 1:number_of_videos
 		number_of_particles = rand_poisson(lambda)
@@ -49,9 +49,10 @@ function simulate_system(distribution_class::String, distribution_parameters::Ar
 			# Generate random diffusion coefficent from distribution, or more precisely,
 			# a random standard deviation for the displacements.
 			if distribution_class == "monodisperse"
-				s = sqrt(2 * distribution_parameters[1] * deltat)
+				std_dev_random_walk = sqrt(2 * distribution_parameters[1] * deltat)
 			elseif distribution_class == "lognormal"
-				s = sqrt(2 * exp(distribution_parameters[1] + distribution_parameters[2] * rand()) * deltat)
+				#std_dev_random_walk = sqrt(2 * exp(distribution_parameters[1] + distribution_parameters[2] * rand()) * deltat)
+				std_dev_random_walk = sqrt(2 * exp(log(distribution_parameters[1]) - 0.5 * log(1 + distribution_parameters[2]^2/distribution_parameters[1]^2) + (sqrt(log(1 + distribution_parameters[2]^2/distribution_parameters[1]^2))) * rand()) * deltat)
 			end
 			
 			# Random initial position.
@@ -71,9 +72,9 @@ function simulate_system(distribution_class::String, distribution_parameters::Ar
 			
 			# Let particle diffuse through remainder of video.
 			for current_frame = 2:number_of_frames[current_video]
-				deltax = s * randn()
-				deltay = s * randn()
-				deltaz = s * randn()
+				deltax = std_dev_random_walk * randn()
+				deltay = std_dev_random_walk * randn()
+				deltaz = std_dev_random_walk * randn()
 				
 				x = x + deltax
 				y = y + deltay
