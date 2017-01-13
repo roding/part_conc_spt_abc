@@ -1,7 +1,7 @@
 include("rand_poisson.jl")
 include("periodic.jl")
 
-function simulate_system(distribution_class::String, distribution_parameters::Array{Float64, 1}, c::Float64, ax::Float64, ay::Float64, az::Float64, L::Float64, number_of_frames::Array{Int64, 1}, deltat::Float64, kmin::Int64)
+function simulate_system(distribution_class::String, distribution_parameters::Array{Float64, 1}, c::Float64, ax::Float64, ay::Float64, az::Float64, Lx::Float64, Ly::Float64, Lz::Float64, number_of_frames::Array{Int64, 1}, deltat::Float64, kmin::Int64)
 	
 	# Intensity of Poisson distribution of the number of particles. The factor 
 	# 1e12 takes into account that concentration is specified in particles/ml.
@@ -14,12 +14,12 @@ function simulate_system(distribution_class::String, distribution_parameters::Ar
 	number_of_videos::Int64 = length(number_of_frames)
 	
 	# Lower and upper bounds for the detection region.
-	lbx::Float64 = 0.5 * (L - ax)
-	ubx::Float64 = 0.5 * (L + ax)
-	lby::Float64 = 0.5 * (L - ay)
-	uby::Float64 = 0.5 * (L + ay)
-	lbz::Float64 = 0.5 * (L - az)
-	ubz::Float64 = 0.5 * (L + az)
+	lbx::Float64 = 0.5 * (Lx - ax)
+	ubx::Float64 = 0.5 * (Lx + ax)
+	lby::Float64 = 0.5 * (Ly - ay)
+	uby::Float64 = 0.5 * (Ly + ay)
+	lbz::Float64 = 0.5 * (Lz - az)
+	ubz::Float64 = 0.5 * (Lz + az)
 	
 	# Variables for storing positions and displacements.
 	x::Float64 = 0.0
@@ -55,9 +55,9 @@ function simulate_system(distribution_class::String, distribution_parameters::Ar
 			end
 			
 			# Random initial position.
-			x = L * rand()
-			y = L * rand()
-			z = L * rand()
+			x = Lx * rand()
+			y = Ly * rand()
+			z = Lz * rand()
 			
 			# Reset empirical diffusion coefficient.
 			de = 0.0
@@ -79,9 +79,9 @@ function simulate_system(distribution_class::String, distribution_parameters::Ar
 				y = y + deltay
 				z = z + deltaz
 				
-				x = periodic(x, L)
-				y = periodic(y, L)
-				z = periodic(z, L)
+				x = periodic(x, Lx)
+				y = periodic(y, Ly)
+				z = periodic(z, Lz)
 				
 				if (lbz <= z <= ubz) & (lbx <= x <= ubx) & (lby <= y <= uby)
 					k = k + 1
