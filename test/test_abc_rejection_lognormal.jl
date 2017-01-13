@@ -11,7 +11,9 @@ function test_abc_rejection_lognormal()
 	# Acquisition parameters.
 	ax::Float64 = 40.0 # µm.
 	ay::Float64 = 40.0 # µm.
-	L::Float64 = 100.0 # µm.
+	Lx::Float64 = 100.0 # µm.
+	Ly::Float64 = 100.0 # µm.
+	Lz::Float64 = 50.0 # µm.
 	number_of_frames::Array{Int64, 1} = 250 * ones(40)
 	deltat::Float64 = 0.05 # seconds
 	kmin::Int64 = 2
@@ -28,7 +30,7 @@ function test_abc_rejection_lognormal()
 	az_real::Float64 = 2.0 # µm.
 	
 	# Simulate system.
-	(K_real, DE_real) = simulate_system(distribution_class, distribution_parameters_real, c_real, ax, ay, az_real, L, number_of_frames, deltat, kmin)
+	(K_real, DE_real) = simulate_system(distribution_class, distribution_parameters_real, c_real, ax, ay, az_real, Lx, Ly, Lz, number_of_frames, deltat, kmin)
 
 	# Parameter bounds for inference.
 	lb_mu::Float64 = 0.25 * mu_real
@@ -68,7 +70,7 @@ function test_abc_rejection_lognormal()
 		c_sim = lb_c + (ub_c - lb_c) * rand()
 		az_sim = lb_az + (ub_az - lb_az) * rand()
 		
-		(K_sim, DE_sim) = simulate_system(distribution_class, [mu_sim, sigma_sim], c_sim, ax, ay, az_sim, L, number_of_frames, deltat, kmin)
+		(K_sim, DE_sim) = simulate_system(distribution_class, [mu_sim, sigma_sim], c_sim, ax, ay, az_sim, Lx, Ly, Lz, number_of_frames, deltat, kmin)
 
 		dist = distance(K_real, DE_real, K_sim, DE_sim)
 		#@time 
