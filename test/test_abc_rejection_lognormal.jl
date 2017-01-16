@@ -35,7 +35,7 @@ function test_abc_rejection_lognormal()
 	lb_m::Float64 = 0.0
 	ub_m::Float64 = 10.0
 	lb_s::Float64 = 0.0
-	ub_s::Float64 = 10.0
+	ub_s::Float64 = 5.0
 	lb_c::Float64 = 0.25 * c_real
 	ub_c::Float64 = 4.0 * c_real
 	lb_az::Float64 = 0.25 * az_real

@@ -5,10 +5,9 @@ close all hidden
 number_of_columns = 5;
 precision_in_bytes = 8;
     
-folder = '../test/res_large_system_m_s_20170113';
+folder = '../test/res_large_system_m_s_20170116';
 files = dir([folder '/' '*.dat']);
 number_of_files = numel(files);
-
 
 m = [];
 s = [];
@@ -38,7 +37,7 @@ for current_file = 1:number_of_files
 end
 
 %% Try inference.
-p = 0.001;
+p = 0.0001;
 epsilon = prctile(dist, p * 100);
 index = dist <= epsilon;
 
