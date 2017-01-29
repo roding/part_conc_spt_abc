@@ -12,6 +12,7 @@ number_of_abc_samples = file_size / number_of_columns / precision_in_bytes;
 
 file_id = fopen(file_name);
 data = fread(file_id, [number_of_columns, number_of_abc_samples], 'float64');
+% data = fread(file_id, [number_of_abc_samples, number_of_columns], 'float64');
 fclose(file_id);
 
 data = data';
@@ -20,9 +21,13 @@ m = data(:, 1);
 s = data(:, 2);
 c = data(:, 3);
 az = data(:, 4);
+% m = data(1, :);
+% s = data(2, :);
+% c = data(3, :);
+% az = data(4, :);
 % dist  = data(:, 5);
 
-clear data
+% clear data
 
 %% Try inference.
 % p = 0.005;
