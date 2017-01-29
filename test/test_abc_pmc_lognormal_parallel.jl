@@ -1,9 +1,9 @@
 workspace()
 
-include("../src/simulate_system.jl")
-include("../src/distance.jl")
+@everywhere include("../src/simulate_system.jl")
+@everywhere include("../src/distance.jl")
 
-function test_abc_pmc_lognormal()
+function test_abc_pmc_lognormal_parallel()
 	#Inititalization.
 	srand(1)
 	t_start::Int64 = convert(Int64, time_ns())
@@ -52,10 +52,10 @@ function test_abc_pmc_lognormal()
 	c::Array{Float64, 1} = zeros(number_of_abc_samples)
 	az::Array{Float64, 1} = zeros(number_of_abc_samples)
 	
-	m_star::Array{Float64, 1} = zeros(number_of_abc_samples)
-	s_star::Array{Float64, 1} = zeros(number_of_abc_samples)
-	c_star::Array{Float64, 1} = zeros(number_of_abc_samples)
-	az_star::Array{Float64, 1} = zeros(number_of_abc_samples)
+	m_star::SharedArray{Float64, 1} = zeros(number_of_abc_samples)
+	s_star::SharedArray{Float64, 1} = zeros(number_of_abc_samples)
+	c_star::SharedArray{Float64, 1} = zeros(number_of_abc_samples)
+	az_star::SharedArray{Float64, 1} = zeros(number_of_abc_samples)
 	
 	# First iteration, assuming epsilon = inf so everything is accepted.
 	m = lb_m + (ub_m - lb_m) * rand(number_of_abc_samples)
@@ -71,29 +71,29 @@ function test_abc_pmc_lognormal()
 	tau_c::Float64 = sqrt( 2.0 * var(c, corrected = false) )
 	tau_az::Float64 = sqrt( 2.0 * var(az, corrected = false) )
 	
-	m_prim::Float64 = 0.0
-	s_prim::Float64 = 0.0
-	c_prim::Float64 = 0.0
-	az_prim::Float64 = 0.0
+#	m_prim::Float64 = 0.0
+#	s_prim::Float64 = 0.0
+#	c_prim::Float64 = 0.0
+#	az_prim::Float64 = 0.0
+#	
+#	m_bis::Float64 = 0.0
+#	s_bis::Float64 = 0.0
+#	c_bis::Float64 = 0.0
+#	az_bis::Float64 = 0.0
+#	
+#	delta_m::Float64 = 0.0
+#	delta_s::Float64 = 0.0
+#	delta_c::Float64 = 0.0
+#	delta_az::Float64 = 0.0
 	
-	m_bis::Float64 = 0.0
-	s_bis::Float64 = 0.0
-	c_bis::Float64 = 0.0
-	az_bis::Float64 = 0.0
-	
-	delta_m::Float64 = 0.0
-	delta_s::Float64 = 0.0
-	delta_c::Float64 = 0.0
-	delta_az::Float64 = 0.0
-	
-	dist::Float64 = 0.0
-	idx::Int64 = 0
+#	dist::Float64 = 0.0
+#	idx::Int64 = 0
 	
 	# The rest of the iterations.
 	epsilon = 1e6
 	for current_iteration = 1:number_of_iterations
 		epsilon = 0.99 * epsilon		
-		for current_abc_sample = 1:number_of_abc_samples
+		@sync @parallel for current_abc_sample = 1:number_of_abc_samples
 			println((current_iteration, epsilon, current_abc_sample, tau_m, tau_s, tau_c, tau_az))
 			idx = findfirst(cumsum(w) .>= rand())
 			
@@ -101,6 +101,11 @@ function test_abc_pmc_lognormal()
 			s_prim = s[idx]
 			c_prim = c[idx]
 			az_prim = az[idx]
+			
+			m_bis = 0.0
+			s_bis = 0.0
+			c_bis = 0.0
+			az_bis = 0.0
 
 			dist = Inf
 			while dist > epsilon
@@ -144,7 +149,7 @@ function test_abc_pmc_lognormal()
 					delta_az = az_bis - az_prim
 				end
 				
-			
+				
 				(K_sim, DE_sim) = simulate_system(distribution_class, [m_bis, s_bis], c_bis, ax, ay, az_bis, Lx, Ly, Lz, number_of_frames, deltat, kmin)
 
 				dist = distance(K_real, DE_real, K_sim, DE_sim)
@@ -196,4 +201,4 @@ function normpdf(x, mu, sigma)
 	return 1.0 / ( sqrt(2.0 * pi) * sigma) * exp( - 0.5 * (x - mu)^2 / sigma^2 )
 end	
 
-test_abc_pmc_lognormal()
+test_abc_pmc_lognormal_parallel()
