@@ -3,7 +3,7 @@ workspace()
 include("../src/simulate_system.jl")
 include("../src/distance.jl")
 
-function test_abc_rejection_lognormal()
+function test_abc_pmc_lognormal()
 	#Inititalization.
 	const t_start::Int64 = convert(Int64, time_ns())
 	srand(1)
@@ -80,6 +80,4 @@ function test_abc_rejection_lognormal()
 	nothing
 end
 
-while true
-	test_abc_rejection_lognormal()
-end
+test_abc_pmc_lognormal()

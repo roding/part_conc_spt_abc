@@ -46,7 +46,7 @@ function test_abc_rejection()
 	end
 	
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 1_000_000
+	number_of_abc_samples::Int64 = 1000
 
 	mu_sim::Float64 = 0.0
 	sigma_sim::Float64 = 0.0
