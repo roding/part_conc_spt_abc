@@ -179,7 +179,7 @@ function test_abc_pmc_lognormal()
 		tau_az = sqrt( 2.0 * var(az, corrected = false) )
 		
 	end
-	file_name_output = join(("abc_sample_lognormal_", string(random_seed), ".dat"))
+	file_name_output = join(("abc_pmc_sample_lognormal_", string(random_seed), ".dat"))
 	file_stream_output = open(file_name_output, "w")
 	write(file_stream_output, m, s, c, az)
 	close(file_stream_output)
