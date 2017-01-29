@@ -44,7 +44,7 @@ function test_abc_pmc_lognormal()
 			
 	# Inference parameters.
 	number_of_abc_samples::Int64 = 100
-	number_of_iterations:.Int64 = 10
+	number_of_iterations::Int64 = 10
 
 	# Variables for population parameter values.
 	m::Array{Float64, 1} = zeros(number_of_abc_samples)
@@ -66,10 +66,10 @@ function test_abc_pmc_lognormal()
 	w::Array{Float64, 1} = ones(number_of_abc_samples) / convert(Float64, number_of_abc_samples)
 	w_star::Array{Float64, 1} = zeros(number_of_abc_samples)
 	
-	tau_m::Float64 = sqrt( 2.0 * var(m, 1, corrected = false) )
-	tau_s::Float64 = sqrt( 2.0 * var(s, 1, corrected = false) )
-	tau_c::Float64 = sqrt( 2.0 * var(c, 1, corrected = false) )
-	tau_az::Float64 = sqrt( 2.0 * var(az, 1, corrected = false) )
+	tau_m::Float64 = sqrt( 2.0 * var(m, corrected = false) )
+	tau_s::Float64 = sqrt( 2.0 * var(s, corrected = false) )
+	tau_c::Float64 = sqrt( 2.0 * var(c, corrected = false) )
+	tau_az::Float64 = sqrt( 2.0 * var(az, corrected = false) )
 	
 	m_prim::Float64 = 0.0
 	s_prim::Float64 = 0.0
@@ -173,10 +173,10 @@ function test_abc_pmc_lognormal()
 		c = c_star
 		az = az_star
 		
-		tau_m = sqrt( 2.0 * var(m, 1, corrected = false) )
-		tau_s = sqrt( 2.0 * var(s, 1, corrected = false) )
-		tau_c = sqrt( 2.0 * var(c, 1, corrected = false) )
-		tau_az = sqrt( 2.0 * var(az, 1, corrected = false) )
+		tau_m = sqrt( 2.0 * var(m, corrected = false) )
+		tau_s = sqrt( 2.0 * var(s, corrected = false) )
+		tau_c = sqrt( 2.0 * var(c, corrected = false) )
+		tau_az = sqrt( 2.0 * var(az, corrected = false) )
 		
 	end
 	#file_name_output = join(("abc_sample_lognormal_", string(random_seed), ".dat"))
