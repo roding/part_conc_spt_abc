@@ -43,7 +43,7 @@ function test_abc_pmc_lognormal_parallel()
 	ub_az::Float64 = 4.0 * az_real
 			
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 64
+	number_of_abc_samples::Int64 = 32
 	number_of_iterations::Int64 = 500
 
 	# Variables for population parameter values.
@@ -90,11 +90,22 @@ function test_abc_pmc_lognormal_parallel()
 #	idx::Int64 = 0
 	
 	# The rest of the iterations.
-	epsilon = 1e6
+	gamma = 6.0
+	delta_gamma = 0.01
+	epsilon::Float64 = 1e6
+	trial_count::SharedArray{Int64, 1} = [0]
+	trial_count_target::Int64 = 10 * number_of_abc_samples
 	for current_iteration = 1:number_of_iterations
-		epsilon = 0.99 * epsilon		
+	
+		trial_count[1] = 0
+		#println(trial_count[1])
+	
+		gamma = gamma - delta_gamma
+		epsilon = 10^gamma
+		#epsilon = 0.99 * epsilon
 		@sync @parallel for current_abc_sample = 1:number_of_abc_samples
-			println((current_iteration, epsilon, current_abc_sample, tau_m, tau_s, tau_c, tau_az))
+			#println((current_iteration, current_abc_sample, gamma, delta_gamma, tau_m, tau_s, tau_c, tau_az))
+			#println((current_iteration, current_abc_sample, gamma, delta_gamma))
 			idx = findfirst(cumsum(w) .>= rand())
 			
 			m_prim = m[idx]
@@ -108,6 +119,8 @@ function test_abc_pmc_lognormal_parallel()
 			az_bis = 0.0
 
 			dist = Inf
+			
+			
 			while dist > epsilon
 				delta_m = tau_m * randn()
 				m_bis = m_prim + delta_m
@@ -154,13 +167,24 @@ function test_abc_pmc_lognormal_parallel()
 
 				dist = distance(K_real, DE_real, K_sim, DE_sim)
 				#println(dist)
+				trial_count[1] = trial_count[1] + 1
 			end
+			
 			
 			m_star[current_abc_sample] = m_bis
 			s_star[current_abc_sample] = s_bis
 			c_star[current_abc_sample] = c_bis
 			az_star[current_abc_sample] = az_bis
 		end
+		
+		println((current_iteration, trial_count[1], gamma, delta_gamma))
+		
+		if trial_count[1] > trial_count_target
+			delta_gamma = 0.75 * delta_gamma
+		else
+			delta_gamma = 1.25 * delta_gamma
+		end
+		#println(trial_count[1])
 		
 		
 		for current_abc_sample = 1:number_of_abc_samples
