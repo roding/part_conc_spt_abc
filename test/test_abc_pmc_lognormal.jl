@@ -103,7 +103,7 @@ function test_abc_pmc_lognormal()
 			c_prim = m[idx]
 			az_prim = s[idx]
 
-			dist = inf
+			dist = Inf
 			while dist > epsilon
 				delta_m = tau_m * randn()
 				m_bis = m_prim + delta_m
