@@ -6,6 +6,7 @@ include("../src/distance.jl")
 function test_abc_pmc_lognormal()
 	#Inititalization.
 	srand(1)
+	t_start::Int64 = convert(Int64, time_ns())
 	
 	# Acquisition parameters.
 	ax::Float64 = 40.0 # µm.
@@ -28,9 +29,8 @@ function test_abc_pmc_lognormal()
 	(K_real, DE_real) = simulate_system(distribution_class, [m_real, s_real], c_real, ax, ay, az_real, Lx, Ly, Lz, number_of_frames, deltat, kmin)
 
 	# Inference starts.
-	const random_seed::Int64 = convert(Int64, time_ns())
+	random_seed::Int64 = 1#convert(Int64, time_ns())
 	srand(random_seed)
-	t_start::Int64 = convert(Int64, time_ns())
 		
 	# Parameter bounds for inference.
 	lb_m::Float64 = 0.01
@@ -43,8 +43,8 @@ function test_abc_pmc_lognormal()
 	ub_az::Float64 = 4.0 * az_real
 			
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 100
-	number_of_iterations::Int64 = 10
+	number_of_abc_samples::Int64 = 32
+	number_of_iterations::Int64 = 50
 
 	# Variables for population parameter values.
 	m::Array{Float64, 1} = zeros(number_of_abc_samples)
@@ -87,21 +87,20 @@ function test_abc_pmc_lognormal()
 	delta_az::Float64 = 0.0
 	
 	dist::Float64 = 0.0
+	idx::Int64 = 0
 	
 	# The rest of the iterations.
-	epsilon = 1000.0
+	epsilon = 1e6
 	for current_iteration = 1:number_of_iterations
-		epsilon = 0.9 * epsilon
-		println((current_iteration, epsilon))
-		
+		epsilon = 0.99 * epsilon		
 		for current_abc_sample = 1:number_of_abc_samples
-			
+			println((current_iteration, epsilon, current_abc_sample, tau_m, tau_s, tau_c, tau_az))
 			idx = findfirst(cumsum(w) .>= rand())
 			
 			m_prim = m[idx]
 			s_prim = s[idx]
-			c_prim = m[idx]
-			az_prim = s[idx]
+			c_prim = c[idx]
+			az_prim = az[idx]
 
 			dist = Inf
 			while dist > epsilon
@@ -149,6 +148,7 @@ function test_abc_pmc_lognormal()
 				(K_sim, DE_sim) = simulate_system(distribution_class, [m_bis, s_bis], c_bis, ax, ay, az_bis, Lx, Ly, Lz, number_of_frames, deltat, kmin)
 
 				dist = distance(K_real, DE_real, K_sim, DE_sim)
+				#println(dist)
 			end
 			
 			m_star[current_abc_sample] = m_bis
@@ -161,7 +161,7 @@ function test_abc_pmc_lognormal()
 		for current_abc_sample = 1:number_of_abc_samples
 			w_star[current_abc_sample] = 0.0
 			for i = 1:number_of_abc_samples
-				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] *normpdf(m_star[current_particle] - m[i], 0.0, tau_m) * normpdf(s_star[current_particle] - s[i], 0.0, tau_s) * normpdf(c_star[current_particle] - c[i], 0.0, tau_c) * normpdf(az_star[current_particle] - az[i], 0.0, tau_az)
+				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] *normpdf(m_star[current_abc_sample] - m[i], 0.0, tau_m) * normpdf(s_star[current_abc_sample] - s[i], 0.0, tau_s) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
 			end
 			w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
 		end
@@ -179,11 +179,10 @@ function test_abc_pmc_lognormal()
 		tau_az = sqrt( 2.0 * var(az, corrected = false) )
 		
 	end
-	#file_name_output = join(("abc_sample_lognormal_", string(random_seed), ".dat"))
-	#write(file_stream_output, m_sim, s_sim, c_sim, az_sim, dist)
-	#file_name_output = "abc_sample.dat" 
-	#file_stream_output = open(file_name_output, "w")
-	#close(file_stream_output)
+	file_name_output = join(("abc_sample_lognormal_", string(random_seed), ".dat"))
+	file_stream_output = open(file_name_output, "w")
+	write(file_stream_output, m, s, c, az)
+	close(file_stream_output)
 	
 	t_exec::Int64 = convert(Int64, time_ns()) - t_start
 	println(t_exec/1e9)
@@ -191,7 +190,7 @@ function test_abc_pmc_lognormal()
 end
 
 function normpdf(x, mu, sigma)
-	return 1.0 / ( sqrt(2*pi) * sigma) * exp( - 0.5 * (x - mu)^2 / sigma^2 )
+	return 1.0 / ( sqrt(2.0 * pi) * sigma) * exp( - 0.5 * (x - mu)^2 / sigma^2 )
 end	
 
 test_abc_pmc_lognormal()
