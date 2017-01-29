@@ -91,7 +91,7 @@ function test_abc_pmc_lognormal_parallel()
 	
 	# The rest of the iterations.
 	gamma = 6.0
-	delta_gamma = 0.01
+	delta_gamma = 0.0005
 	epsilon::Float64 = 1e6
 	trial_count::SharedArray{Int64, 1} = [0]
 	trial_count_target::Int64 = 10 * number_of_abc_samples
@@ -180,9 +180,9 @@ function test_abc_pmc_lognormal_parallel()
 		println((current_iteration, trial_count[1], gamma, delta_gamma))
 		
 		if trial_count[1] > trial_count_target
-			delta_gamma = 0.75 * delta_gamma
+			delta_gamma = 0.99 * delta_gamma
 		else
-			delta_gamma = 1.25 * delta_gamma
+			delta_gamma = min(1.01 * delta_gamma, 0.005)
 		end
 		#println(trial_count[1])
 		
