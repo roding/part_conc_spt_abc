@@ -131,7 +131,7 @@ function test_abc_pmc_lognormal_parallel()
 				(K_sim, DE_sim) = simulate_system(distribution_class, [D_bis], c_bis, ax, ay, az_bis, Lx, Ly, Lz, number_of_frames, deltat, kmin)
 
 				dist = distance(K_real, DE_real, K_sim, DE_sim)
-				println(dist)
+				#println(dist)
 				
 				trial_count[1] = trial_count[1] + 1
 
@@ -157,7 +157,7 @@ function test_abc_pmc_lognormal_parallel()
 		for current_abc_sample = 1:number_of_abc_samples
 			w_star[current_abc_sample] = 0.0
 			for i = 1:number_of_abc_samples
-				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] *normpdf(D_star[current_abc_sample] - D[i], 0.0, tau_m) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
+				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] *normpdf(D_star[current_abc_sample] - D[i], 0.0, tau_D) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
 			end
 			w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
 		end
