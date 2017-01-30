@@ -85,13 +85,11 @@ function test_abc_pmc_lognormal_parallel()
 		@sync @parallel for current_abc_sample = 1:number_of_abc_samples
 			idx = findfirst(cumsum(w) .>= rand())
 			
-			m_prim = m[idx]
-			s_prim = s[idx]
+			D_prim = D[idx]
 			c_prim = c[idx]
 			az_prim = az[idx]
 			
-			m_bis = 0.0
-			s_bis = 0.0
+			D_bis = 0.0
 			c_bis = 0.0
 			az_bis = 0.0
 
@@ -99,26 +97,16 @@ function test_abc_pmc_lognormal_parallel()
 			
 			
 			while dist > epsilon 
-				delta_m = tau_m * randn()
-				m_bis = m_prim + delta_m
-				if m_bis < lb_m
-					m_bis = lb_m
-					delta_m = m_bis - m_prim
-				elseif m_bis > ub_m
-					m_bis = ub_m
-					delta_m = m_bis - m_prim
+				delta_D = tau_D * randn()
+				D_bis = D_prim + delta_D
+				if D_bis < lb_D
+					D_bis = lb_D
+					delta_D = D_bis - D_prim
+				elseif D_bis > ub_D
+					D_bis = ub_D
+					delta_D = D_bis - D_prim
 				end
-				
-				delta_s = tau_s * randn()
-				s_bis = s_prim + delta_s
-				if s_bis < lb_s
-					s_bis = lb_s
-					delta_s = s_bis - s_prim
-				elseif s_bis > ub_s
-					s_bis = ub_s
-					delta_s = s_bis - s_prim
-				end
-				
+							
 				delta_c = tau_c * randn()
 				c_bis = c_prim + delta_c
 				if c_bis < lb_c
@@ -140,7 +128,7 @@ function test_abc_pmc_lognormal_parallel()
 				end
 				
 				
-				(K_sim, DE_sim) = simulate_system(distribution_class, [m_bis, s_bis], c_bis, ax, ay, az_bis, Lx, Ly, Lz, number_of_frames, deltat, kmin)
+				(K_sim, DE_sim) = simulate_system(distribution_class, [D_bis], c_bis, ax, ay, az_bis, Lx, Ly, Lz, number_of_frames, deltat, kmin)
 
 				dist = distance(K_real, DE_real, K_sim, DE_sim)
 				println(dist)
@@ -151,13 +139,12 @@ function test_abc_pmc_lognormal_parallel()
 			end
 			
 			
-			m_star[current_abc_sample] = m_bis
-			s_star[current_abc_sample] = s_bis
+			D_star[current_abc_sample] = D_bis
 			c_star[current_abc_sample] = c_bis
 			az_star[current_abc_sample] = az_bis
 		end
 		
-		println((current_iteration, trial_count[1], gamma, delta_gamma, tau_m, tau_s, tau_c, tau_az))
+		println((current_iteration, trial_count[1], gamma, delta_gamma, tau_D, tau_c, tau_az))
 		
 		#if trial_count[1] > trial_count_target
 		#	delta_gamma = 0.99 * delta_gamma
@@ -170,38 +157,29 @@ function test_abc_pmc_lognormal_parallel()
 		for current_abc_sample = 1:number_of_abc_samples
 			w_star[current_abc_sample] = 0.0
 			for i = 1:number_of_abc_samples
-				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] *normpdf(m_star[current_abc_sample] - m[i], 0.0, tau_m) * normpdf(s_star[current_abc_sample] - s[i], 0.0, tau_s) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
+				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] *normpdf(D_star[current_abc_sample] - D[i], 0.0, tau_m) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
 			end
 			w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
 		end
 		
 		w = w_star / sum(w_star)
 		
-		m = m_star
-		s = s_star
+		D = D_star
 		c = c_star
 		az = az_star
 		
-		tau_m = sqrt( 2.0 * var(m, corrected = false) )
-		tau_s = sqrt( 2.0 * var(s, corrected = false) )
+		tau_D = sqrt( 2.0 * var(D, corrected = false) )
 		tau_c = sqrt( 2.0 * var(c, corrected = false) )
 		tau_az = sqrt( 2.0 * var(az, corrected = false) )
 		
 		# Write intermediate result to file.
-		file_name_output = join((output_dir, "/", "abc_pmc_logn_par_it_", string(current_iteration), ".dat"))
+		file_name_output = join((output_dir, "/", "abc_pmc_md_par_it_", string(current_iteration), ".dat"))
 		file_stream_output = open(file_name_output, "w")
 		for current_abc_sample = 1:number_of_abc_samples
-			write(file_stream_output, m[current_abc_sample], s[current_abc_sample], c[current_abc_sample], az[current_abc_sample])
+			write(file_stream_output, D[current_abc_sample], c[current_abc_sample], az[current_abc_sample])
 		end
 		close(file_stream_output)
 	end
-	
-	#file_name_output = join(("abc_pmc_sample_lognormal_", string(random_seed), ".dat"))
-	#file_stream_output = open(file_name_output, "w")
-	#for current_abc_sample = 1:number_of_abc_samples
-	#	write(file_stream_output, m[current_abc_sample], s[current_abc_sample], c[current_abc_sample], az[current_abc_sample])
-	#end
-	#close(file_stream_output)
 	
 	t_exec::Int64 = convert(Int64, time_ns()) - t_start
 	println(t_exec/1e9)
