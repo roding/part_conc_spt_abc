@@ -43,8 +43,8 @@ function test_abc_pmc_lognormal_parallel()
 	ub_az::Float64 = 4.0 * az_real
 			
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 32
-	number_of_iterations::Int64 = 500
+	number_of_abc_samples::Int64 = 256
+	number_of_iterations::Int64 = 5000
 
 	# Variables for population parameter values.
 	m::Array{Float64, 1} = zeros(number_of_abc_samples)
@@ -177,7 +177,7 @@ function test_abc_pmc_lognormal_parallel()
 			az_star[current_abc_sample] = az_bis
 		end
 		
-		println((current_iteration, trial_count[1], gamma, delta_gamma))
+		println((current_iteration, trial_count[1], gamma, delta_gamma, tau_m, tau_s, tau_c, tau_az))
 		
 		if trial_count[1] > trial_count_target
 			delta_gamma = 0.99 * delta_gamma
