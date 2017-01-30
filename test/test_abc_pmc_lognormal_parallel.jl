@@ -7,13 +7,18 @@ function test_abc_pmc_lognormal_parallel()
 	#Inititalization.
 	srand(1)
 	t_start::Int64 = convert(Int64, time_ns())
+
+	output_dir::String = "output"
+	if !isdir(output_dir)
+		mkdir(output_dir)
+	end
 	
 	# Acquisition parameters.
 	ax::Float64 = 40.0 # µm.
 	ay::Float64 = 40.0 # µm.
-	Lx::Float64 = 50.0#100.0 # µm.
-	Ly::Float64 = 50.0#100.0 # µm.
-	Lz::Float64 = 10.0#50.0 # µm.
+	Lx::Float64 = 100.0 # µm.
+	Ly::Float64 = 100.0 # µm.
+	Lz::Float64 = 50.0 # µm.
 	number_of_frames::Array{Int64, 1} = 250 * ones(40)
 	deltat::Float64 = 0.05 # seconds
 	kmin::Int64 = 2
@@ -91,7 +96,7 @@ function test_abc_pmc_lognormal_parallel()
 	
 	# The rest of the iterations.
 	gamma = 6.0
-	delta_gamma = 0.0005
+	delta_gamma = 0.005
 	epsilon::Float64 = 1e6
 	trial_count::SharedArray{Int64, 1} = [0]
 	trial_count_target::Int64 = 10 * number_of_abc_samples
@@ -165,6 +170,7 @@ function test_abc_pmc_lognormal_parallel()
 				(K_sim, DE_sim) = simulate_system(distribution_class, [m_bis, s_bis], c_bis, ax, ay, az_bis, Lx, Ly, Lz, number_of_frames, deltat, kmin)
 
 				dist = distance(K_real, DE_real, K_sim, DE_sim)
+				println(dist)
 				
 				trial_count[1] = trial_count[1] + 1
 
@@ -180,11 +186,11 @@ function test_abc_pmc_lognormal_parallel()
 		
 		println((current_iteration, trial_count[1], gamma, delta_gamma, tau_m, tau_s, tau_c, tau_az))
 		
-		if trial_count[1] > trial_count_target
-			delta_gamma = 0.99 * delta_gamma
-		else
-			delta_gamma = min(1.01 * delta_gamma, 0.005)
-		end
+		#if trial_count[1] > trial_count_target
+		#	delta_gamma = 0.99 * delta_gamma
+		#else
+		#	delta_gamma = 1.01 * delta_gamma
+		#end
 		#println(trial_count[1])
 		
 		
@@ -209,7 +215,7 @@ function test_abc_pmc_lognormal_parallel()
 		tau_az = sqrt( 2.0 * var(az, corrected = false) )
 		
 		# Write intermediate result to file.
-		file_name_output = join(("abc_pmc_sample_lognormal_parallel_iteration_", string(current_iteration), ".dat"))
+		file_name_output = join((output_dir, "/", "abc_pmc_logn_par_it_", string(current_iteration), ".dat"))
 		file_stream_output = open(file_name_output, "w")
 		for current_abc_sample = 1:number_of_abc_samples
 			write(file_stream_output, m[current_abc_sample], s[current_abc_sample], c[current_abc_sample], az[current_abc_sample])
