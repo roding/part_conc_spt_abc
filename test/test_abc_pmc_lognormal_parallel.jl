@@ -95,11 +95,10 @@ function test_abc_pmc_lognormal_parallel()
 	epsilon::Float64 = 1e6
 	trial_count::SharedArray{Int64, 1} = [0]
 	trial_count_target::Int64 = 10 * number_of_abc_samples
+	t_start_iteration::Int64 = 0 
 	for current_iteration = 1:number_of_iterations
-	
-		trial_count[1] = 0
-		#println(trial_count[1])
-	
+		t_start_iteration = convert(Int64, time_ns())
+		trial_count[1] = 0	
 		gamma = gamma - delta_gamma
 		epsilon = 10^gamma
 		#epsilon = 0.99 * epsilon
@@ -121,7 +120,7 @@ function test_abc_pmc_lognormal_parallel()
 			dist = Inf
 			
 			
-			while dist > epsilon
+			while dist > epsilon 
 				delta_m = tau_m * randn()
 				m_bis = m_prim + delta_m
 				if m_bis < lb_m
@@ -166,8 +165,10 @@ function test_abc_pmc_lognormal_parallel()
 				(K_sim, DE_sim) = simulate_system(distribution_class, [m_bis, s_bis], c_bis, ax, ay, az_bis, Lx, Ly, Lz, number_of_frames, deltat, kmin)
 
 				dist = distance(K_real, DE_real, K_sim, DE_sim)
-				#println(dist)
+				
 				trial_count[1] = trial_count[1] + 1
+
+				#convert(Int64, time_ns()) - t_start_iteration < 
 			end
 			
 			
@@ -207,14 +208,21 @@ function test_abc_pmc_lognormal_parallel()
 		tau_c = sqrt( 2.0 * var(c, corrected = false) )
 		tau_az = sqrt( 2.0 * var(az, corrected = false) )
 		
+		# Write intermediate result to file.
+		file_name_output = join(("abc_pmc_sample_lognormal_parallel_iteration_", string(current_iteration), ".dat"))
+		file_stream_output = open(file_name_output, "w")
+		for current_abc_sample = 1:number_of_abc_samples
+			write(file_stream_output, m[current_abc_sample], s[current_abc_sample], c[current_abc_sample], az[current_abc_sample])
+		end
+		close(file_stream_output)
 	end
 	
-	file_name_output = join(("abc_pmc_sample_lognormal_", string(random_seed), ".dat"))
-	file_stream_output = open(file_name_output, "w")
-	for current_abc_sample = 1:number_of_abc_samples
-		write(file_stream_output, m[current_abc_sample], s[current_abc_sample], c[current_abc_sample], az[current_abc_sample])
-	end
-	close(file_stream_output)
+	#file_name_output = join(("abc_pmc_sample_lognormal_", string(random_seed), ".dat"))
+	#file_stream_output = open(file_name_output, "w")
+	#for current_abc_sample = 1:number_of_abc_samples
+	#	write(file_stream_output, m[current_abc_sample], s[current_abc_sample], c[current_abc_sample], az[current_abc_sample])
+	#end
+	#close(file_stream_output)
 	
 	t_exec::Int64 = convert(Int64, time_ns()) - t_start
 	println(t_exec/1e9)
