@@ -45,7 +45,7 @@ function test_abc_pmc_lognormal_parallel()
 	ub_az::Float64 = 4.0 * az_real
 			
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 256
+	number_of_abc_samples::Int64 = 512
 	number_of_iterations::Int64 = 5000
 
 	# Variables for population parameter values.
