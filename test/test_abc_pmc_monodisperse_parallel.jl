@@ -52,11 +52,13 @@ function test_abc_pmc_lognormal_parallel()
 	D::Array{Float64, 1} = zeros(number_of_abc_samples)
 	c::Array{Float64, 1} = zeros(number_of_abc_samples)
 	az::Array{Float64, 1} = zeros(number_of_abc_samples)
+	dist::Array{Float64, 1} = zeros(number_of_abc_samples)
 	
 	D_star::SharedArray{Float64, 1} = zeros(number_of_abc_samples)
 	c_star::SharedArray{Float64, 1} = zeros(number_of_abc_samples)
 	az_star::SharedArray{Float64, 1} = zeros(number_of_abc_samples)
-	
+	dist_star::SharedArray{Float64, 1} = zeros(number_of_abc_samples)
+
 	# First iteration, assuming epsilon = inf so everything is accepted.
 	D = lb_D + (ub_D - lb_D) * rand(number_of_abc_samples)
 	c = lb_c + (ub_c - lb_c) * rand(number_of_abc_samples)
@@ -70,9 +72,9 @@ function test_abc_pmc_lognormal_parallel()
 	tau_az::Float64 = sqrt( 2.0 * var(az, corrected = false) )
 	
 	# The rest of the iterations.
-	gamma = 6.0
-	delta_gamma = 0.0025
-	epsilon::Float64 = 1e6
+	gamma = 5.0
+	delta_gamma = 0.001
+	epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = [0]
 	trial_count_target::Int64 = 10 * number_of_abc_samples
 	t_start_iteration::Int64 = 0 
@@ -93,10 +95,10 @@ function test_abc_pmc_lognormal_parallel()
 			c_bis = 0.0
 			az_bis = 0.0
 
-			dist = Inf
+			dist_bis = Inf
 			
 			
-			while dist > epsilon 
+			while dist_bis > epsilon 
 				delta_D = tau_D * randn()
 				D_bis = D_prim + delta_D
 				if D_bis < lb_D
@@ -127,10 +129,9 @@ function test_abc_pmc_lognormal_parallel()
 					delta_az = az_bis - az_prim
 				end
 				
-				
 				(K_sim, DE_sim) = simulate_system(distribution_class, [D_bis], c_bis, ax, ay, az_bis, Lx, Ly, Lz, number_of_frames, deltat, kmin)
 
-				dist = distance(K_real, DE_real, K_sim, DE_sim)
+				dist_bis = distance(K_real, DE_real, K_sim, DE_sim)
 				#println(dist)
 				
 				trial_count[1] = trial_count[1] + 1
@@ -142,6 +143,7 @@ function test_abc_pmc_lognormal_parallel()
 			D_star[current_abc_sample] = D_bis
 			c_star[current_abc_sample] = c_bis
 			az_star[current_abc_sample] = az_bis
+			dist_star[current_abc_sample] = dist_bis
 		end
 		
 		println((current_iteration, trial_count[1], gamma, delta_gamma, tau_D, tau_c, tau_az))
@@ -167,6 +169,7 @@ function test_abc_pmc_lognormal_parallel()
 		D = D_star
 		c = c_star
 		az = az_star
+		dist = dist_star 
 		
 		tau_D = sqrt( 2.0 * var(D, corrected = false) )
 		tau_c = sqrt( 2.0 * var(c, corrected = false) )
@@ -176,7 +179,7 @@ function test_abc_pmc_lognormal_parallel()
 		file_name_output = join((output_dir, "/", "abc_pmc_md_par_it_", string(current_iteration), ".dat"))
 		file_stream_output = open(file_name_output, "w")
 		for current_abc_sample = 1:number_of_abc_samples
-			write(file_stream_output, D[current_abc_sample], c[current_abc_sample], az[current_abc_sample])
+			write(file_stream_output, D[current_abc_sample], c[current_abc_sample], az[current_abc_sample], dist[current_abc_sample])
 		end
 		close(file_stream_output)
 	end
