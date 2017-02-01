@@ -44,7 +44,7 @@ function simulate_system(distribution_class::String, distribution_parameters::Ar
 
 	for current_video = 1:number_of_videos
 		number_of_particles = rand_poisson(lambda)
-		println(number_of_particles)
+		#println(number_of_particles)
 		
 		for current_particle = 1:number_of_particles
 			# Generate random diffusion coefficent from distribution, or more precisely,
