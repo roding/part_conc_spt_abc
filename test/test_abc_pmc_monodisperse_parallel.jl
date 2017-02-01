@@ -179,7 +179,7 @@ function test_abc_pmc_lognormal_parallel()
 		file_name_output = join((output_dir, "/", "abc_pmc_md_par_it_", string(current_iteration), ".dat"))
 		file_stream_output = open(file_name_output, "w")
 		for current_abc_sample = 1:number_of_abc_samples
-			write(file_stream_output, D[current_abc_sample], c[current_abc_sample], az[current_abc_sample], dist[current_abc_sample])
+			write(file_stream_output, D[current_abc_sample], c[current_abc_sample], az[current_abc_sample], dist[current_abc_sample], w[current_abc_sample])
 		end
 		close(file_stream_output)
 	end
