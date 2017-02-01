@@ -14,11 +14,11 @@ function test_abc_pmc_lognormal_parallel()
 	end
 	
 	# Acquisition parameters.
-	ax::Float64 = 40.0 # µm.
-	ay::Float64 = 40.0 # µm.
-	Lx::Float64 = 100.0 # µm.
-	Ly::Float64 = 100.0 # µm.
-	Lz::Float64 = 50.0 # µm.
+	ax::Float64 = 5.0 # µm.
+	ay::Float64 = 5.0 # µm.
+	Lx::Float64 = 10.0 # µm.
+	Ly::Float64 = 10.0 # µm.
+	Lz::Float64 = 10.0 # µm.
 	number_of_frames::Array{Int64, 1} = 250 * ones(40)
 	deltat::Float64 = 0.05 # seconds
 	kmin::Int64 = 2
@@ -26,7 +26,7 @@ function test_abc_pmc_lognormal_parallel()
 	# True system parameters.
 	distribution_class::String = "monodisperse"
 	D_real::Float64 = 2.5 # µm^2/s.
-	c_real::Float64 = 1e9#1e10 # part/ml.
+	c_real::Float64 = 1e10 # part/ml.
 	az_real::Float64 = 2.0 # µm.
 	
 	# Simulate system.
@@ -45,7 +45,7 @@ function test_abc_pmc_lognormal_parallel()
 	ub_az::Float64 = 4.0 * az_real
 			
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 512
+	number_of_abc_samples::Int64 = 128
 	number_of_iterations::Int64 = 5000
 
 	# Variables for population parameter values.
