@@ -39,10 +39,10 @@ function test_abc_pmc_monodisperse_parallel_single_param()
 	srand(random_seed)
 		
 	# Parameter bounds for inference.
-	lb_D::Float64 = D_real # 0.01
-	ub_D::Float64 = D_real # 10.0
-	lb_c::Float64 = c_real
-	ub_c::Float64 = c_real
+	lb_D::Float64 = 0.01
+	ub_D::Float64 = 10.0
+	lb_c::Float64 = 0.25 * c_real
+	ub_c::Float64 = 4.0 * c_real
 	lb_az::Float64 = 0.25 * az_real
 	ub_az::Float64 = 4.0 * az_real
 			
@@ -166,8 +166,8 @@ function test_abc_pmc_monodisperse_parallel_single_param()
 		for current_abc_sample = 1:number_of_abc_samples
 			w_star[current_abc_sample] = 0.0
 			for i = 1:number_of_abc_samples
-				#w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(D_star[current_abc_sample] - D[i], 0.0, tau_D) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
-				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
+				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(D_star[current_abc_sample] - D[i], 0.0, tau_D) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
+				#w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
 			end
 			w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
 		end
