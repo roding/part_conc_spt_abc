@@ -39,12 +39,12 @@ function test_abc_pmc_monodisperse_parallel_single_param()
 	srand(random_seed)
 		
 	# Parameter bounds for inference.
-	lb_D::Float64 = 0.01
-	ub_D::Float64 = 10.0
+	lb_D::Float64 = D_real # 0.01
+	ub_D::Float64 = D_real # 10.0
 	lb_c::Float64 = c_real
 	ub_c::Float64 = c_real
-	lb_az::Float64 = az_real
-	ub_az::Float64 = az_real
+	lb_az::Float64 = 0.25 * az_real
+	ub_az::Float64 = 4.0 * az_real
 			
 	# Inference parameters.
 	number_of_abc_samples::Int64 = 128
@@ -74,7 +74,7 @@ function test_abc_pmc_monodisperse_parallel_single_param()
 	tau_az::Float64 = sqrt( 2.0 * var(az, corrected = false) )
 	
 	# The rest of the iterations.
-	gamma = 1.0#5.0
+	gamma = 0.5#5.0
 	delta_gamma = 0.01
 	epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = [0]
@@ -137,7 +137,7 @@ function test_abc_pmc_monodisperse_parallel_single_param()
 				#println(c_bis)
 				#println(az_bis)
 				(K_sim, DE_sim) = simulate_system(distribution_class, [D_bis], c_bis, ax, ay, az_bis, Lx, Ly, Lz, number_of_frames, deltat, kmin)
-				println(length(DE_sim))
+				#println(length(DE_sim))
 				dist_bis = distance(K_real, DE_real, K_sim, DE_sim)
 				#println(dist_bis)
 				
@@ -167,7 +167,7 @@ function test_abc_pmc_monodisperse_parallel_single_param()
 			w_star[current_abc_sample] = 0.0
 			for i = 1:number_of_abc_samples
 				#w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(D_star[current_abc_sample] - D[i], 0.0, tau_D) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
-				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(D_star[current_abc_sample] - D[i], 0.0, tau_D)
+				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
 			end
 			w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
 		end
