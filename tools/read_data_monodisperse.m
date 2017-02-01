@@ -3,10 +3,10 @@ clc
 close all hidden
 
 %% Read data.
-file_name = '../test/output/abc_pmc_md_par_it_1.dat';
+file_name = '../test/output/abc_pmc_md_par_it_30.dat';
 file_info = dir(file_name);
 file_size = file_info.bytes;
-number_of_columns = 4;
+number_of_columns = 5;
 precision_in_bytes = 8;
 number_of_abc_samples = file_size / number_of_columns / precision_in_bytes;
 
@@ -20,6 +20,7 @@ D = data(:, 1);
 c = data(:, 2);
 az = data(:, 3);
 dist  = data(:, 4);
+w  = data(:, 5);
 
 clear data
 
@@ -35,6 +36,7 @@ clear data
 figure, hold on, hist(D), title('D'), hold off
 figure, hold on, hist(c), title('c'), hold off
 figure, hold on, hist(az), title('az'), hold off
+figure, hold on, scatter(az, dist)
 %mean(D)
 %mean(c)
 %mean(az)

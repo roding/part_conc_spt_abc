@@ -33,7 +33,7 @@ function test_abc_pmc_lognormal_parallel()
 	(K_real, DE_real) = simulate_system(distribution_class, [D_real], c_real, ax, ay, az_real, Lx, Ly, Lz, number_of_frames, deltat, kmin)
 
 	# Inference starts.
-	random_seed::Int64 = 1#convert(Int64, time_ns())
+	random_seed::Int64 = convert(Int64, time_ns())
 	srand(random_seed)
 		
 	# Parameter bounds for inference.
@@ -45,7 +45,7 @@ function test_abc_pmc_lognormal_parallel()
 	ub_az::Float64 = 4.0 * az_real
 			
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 128
+	number_of_abc_samples::Int64 = 512
 	number_of_iterations::Int64 = 5000
 
 	# Variables for population parameter values.
@@ -159,7 +159,7 @@ function test_abc_pmc_lognormal_parallel()
 		for current_abc_sample = 1:number_of_abc_samples
 			w_star[current_abc_sample] = 0.0
 			for i = 1:number_of_abc_samples
-				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] *normpdf(D_star[current_abc_sample] - D[i], 0.0, tau_D) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
+				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(D_star[current_abc_sample] - D[i], 0.0, tau_D) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
 			end
 			w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
 		end
@@ -190,7 +190,7 @@ function test_abc_pmc_lognormal_parallel()
 end
 
 function normpdf(x, mu, sigma)
-	return 1.0 / ( sqrt(2.0 * pi) * sigma) * exp( - 0.5 * (x - mu)^2 / sigma^2 )
+	return 1.0 / ( sqrt(2.0 * pi) * sigma ) * exp( - 0.5 * (x - mu)^2 / sigma^2 )
 end	
 
 test_abc_pmc_lognormal_parallel()
