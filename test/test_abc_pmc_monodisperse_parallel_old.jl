@@ -1,11 +1,9 @@
 workspace()
 
-#@everywhere include("../src/simulate_system.jl")
-#@everywhere include("../src/distance.jl")
-include("../src/simulate_system.jl")
-include("../src/distance.jl")
+@everywhere include("../src/simulate_system.jl")
+@everywhere include("../src/distance.jl")
 
-function test_abc_pmc_monodisperse_parallel_single_param()
+function test_abc_pmc_lognormal_parallel()
 	#Inititalization.
 	srand(1)
 	t_start::Int64 = convert(Int64, time_ns())
@@ -28,27 +26,27 @@ function test_abc_pmc_monodisperse_parallel_single_param()
 	# True system parameters.
 	distribution_class::String = "monodisperse"
 	D_real::Float64 = 2.5 # µm^2/s.
-	c_real::Float64 = 5e9 # part/ml.
+	c_real::Float64 = 1e10 # part/ml.
 	az_real::Float64 = 2.0 # µm.
 	
 	# Simulate system.
 	(K_real, DE_real) = simulate_system(distribution_class, [D_real], c_real, ax, ay, az_real, Lx, Ly, Lz, number_of_frames, deltat, kmin)
-	println( (length(K_real), length(DE_real)) )
+
 	# Inference starts.
 	random_seed::Int64 = convert(Int64, time_ns())
 	srand(random_seed)
 		
 	# Parameter bounds for inference.
-	lb_D::Float64 = 0.25 * D_real
-	ub_D::Float64 = 4.0 * D_real
+	lb_D::Float64 = 0.01
+	ub_D::Float64 = 10.0
 	lb_c::Float64 = 0.25 * c_real
 	ub_c::Float64 = 4.0 * c_real
-	lb_az::Float64 = 0.25 * az_real#az_real
-	ub_az::Float64 = 4.0 * az_real#az_real
+	lb_az::Float64 = 0.25 * az_real
+	ub_az::Float64 = 4.0 * az_real
 			
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 128
-	number_of_iterations::Int64 = 500
+	number_of_abc_samples::Int64 = 512
+	number_of_iterations::Int64 = 5000
 
 	# Variables for population parameter values.
 	D::Array{Float64, 1} = zeros(number_of_abc_samples)
@@ -74,8 +72,8 @@ function test_abc_pmc_monodisperse_parallel_single_param()
 	tau_az::Float64 = sqrt( 2.0 * var(az, corrected = false) )
 	
 	# The rest of the iterations.
-	gamma = 6.0#5.0
-	delta_gamma = 0.01
+	gamma = 5.0
+	delta_gamma = 0.001
 	epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = [0]
 	trial_count_target::Int64 = 10 * number_of_abc_samples
@@ -86,11 +84,8 @@ function test_abc_pmc_monodisperse_parallel_single_param()
 		gamma = gamma - delta_gamma
 		epsilon = 10^gamma
 		#epsilon = 0.99 * epsilon
-		#@sync @parallel for current_abc_sample = 1:number_of_abc_samples
-		for current_abc_sample = 1:number_of_abc_samples
+		@sync @parallel for current_abc_sample = 1:number_of_abc_samples
 			idx = findfirst(cumsum(w) .>= rand())
-			#println(w[1])
-			#println(idx)
 			
 			D_prim = D[idx]
 			c_prim = c[idx]
@@ -133,13 +128,11 @@ function test_abc_pmc_monodisperse_parallel_single_param()
 					az_bis = ub_az
 					delta_az = az_bis - az_prim
 				end
-				#println(D_bis)
-				#println(c_bis)
-				#println(az_bis)
+				
 				(K_sim, DE_sim) = simulate_system(distribution_class, [D_bis], c_bis, ax, ay, az_bis, Lx, Ly, Lz, number_of_frames, deltat, kmin)
-				#println(length(DE_sim))
+
 				dist_bis = distance(K_real, DE_real, K_sim, DE_sim)
-				#println(dist_bis)
+				#println(dist)
 				
 				trial_count[1] = trial_count[1] + 1
 
@@ -167,8 +160,6 @@ function test_abc_pmc_monodisperse_parallel_single_param()
 			w_star[current_abc_sample] = 0.0
 			for i = 1:number_of_abc_samples
 				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(D_star[current_abc_sample] - D[i], 0.0, tau_D) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
-				#w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
-				#w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c)
 			end
 			w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
 		end
@@ -202,4 +193,4 @@ function normpdf(x, mu, sigma)
 	return 1.0 / ( sqrt(2.0 * pi) * sigma ) * exp( - 0.5 * (x - mu)^2 / sigma^2 )
 end	
 
-test_abc_pmc_monodisperse_parallel_single_param()
+test_abc_pmc_lognormal_parallel()
