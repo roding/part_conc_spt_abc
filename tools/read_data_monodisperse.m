@@ -3,7 +3,7 @@ clc
 close all hidden
 
 %% Read data.
-file_name = '../test/output/abc_pmc_md_par_it_28.dat';
+file_name = '../test/output/abc_pmc_md_par_it_288.dat';
 file_info = dir(file_name);
 file_size = file_info.bytes;
 number_of_columns = 5;
