@@ -16,11 +16,11 @@ function test_abc_pmc_monodisperse_parallel()
 	end
 	
 	# Acquisition parameters.
-	ax::Float64 = 5.0 # µm.
-	ay::Float64 = 5.0 # µm.
-	Lx::Float64 = 10.0 # µm.
-	Ly::Float64 = 10.0 # µm.
-	Lz::Float64 = 10.0 # µm.
+	ax::Float64 = 40.0#5.0 # µm.
+	ay::Float64 = 40.0#5.0 # µm.
+	Lx::Float64 = 100.0#10.0 # µm.
+	Ly::Float64 = 100.0#10.0 # µm.
+	Lz::Float64 = 100.0#10.0 # µm.
 	number_of_frames::Array{Int64, 1} = 250 * ones(40)
 	deltat::Float64 = 0.05 # seconds
 	kmin::Int64 = 2
@@ -33,7 +33,7 @@ function test_abc_pmc_monodisperse_parallel()
 	
 	# Simulate system.
 	(K_real, DE_real) = simulate_system(distribution_class, [D_real], c_real, ax, ay, az_real, Lx, Ly, Lz, number_of_frames, deltat, kmin)
-	#println( (length(K_real), length(DE_real)) )
+	println( (length(K_real), length(DE_real)) )
 	# Inference starts.
 	random_seed::Int64 = convert(Int64, time_ns())
 	srand(random_seed)
