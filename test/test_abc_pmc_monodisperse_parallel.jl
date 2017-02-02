@@ -1,9 +1,9 @@
 workspace()
 
-#@everywhere include("../src/simulate_system.jl")
-#@everywhere include("../src/distance.jl")
-include("../src/simulate_system.jl")
-include("../src/distance.jl")
+@everywhere include("../src/simulate_system.jl")
+@everywhere include("../src/distance.jl")
+#include("../src/simulate_system.jl")
+#include("../src/distance.jl")
 
 function test_abc_pmc_monodisperse_parallel_single_param()
 	#Inititalization.
@@ -86,8 +86,8 @@ function test_abc_pmc_monodisperse_parallel_single_param()
 		gamma = gamma - delta_gamma
 		epsilon = 10^gamma
 		#epsilon = 0.99 * epsilon
-		#@sync @parallel for current_abc_sample = 1:number_of_abc_samples
-		for current_abc_sample = 1:number_of_abc_samples
+		@sync @parallel for current_abc_sample = 1:number_of_abc_samples
+		#for current_abc_sample = 1:number_of_abc_samples
 			idx = findfirst(cumsum(w) .>= rand())
 			#println(w[1])
 			#println(idx)
