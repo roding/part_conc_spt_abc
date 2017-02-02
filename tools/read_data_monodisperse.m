@@ -3,7 +3,7 @@ clc
 close all hidden
 
 %% Read data.
-file_name = '../test/output/abc_pmc_md_par_it_266.dat';
+file_name = '../test/output/abc_pmc_md_par_it_28.dat';
 file_info = dir(file_name);
 file_size = file_info.bytes;
 number_of_columns = 5;
@@ -36,8 +36,8 @@ clear data
 figure, hold on, hist(D), title('D'), hold off
 figure, hold on, hist(c), title('c'), hold off
 figure, hold on, hist(az), title('az'), hold off
-figure, hold on, scatter(az, dist)
-figure, hold on, scatter(az, w)
+figure, hold on, scatter(D, dist)
+figure, hold on, scatter(D, w)
 %mean(D)
 %mean(c)
 %mean(az)

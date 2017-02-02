@@ -28,23 +28,23 @@ function test_abc_pmc_monodisperse_parallel_single_param()
 	# True system parameters.
 	distribution_class::String = "monodisperse"
 	D_real::Float64 = 2.5 # µm^2/s.
-	c_real::Float64 = 1e9 # part/ml.
+	c_real::Float64 = 5e9 # part/ml.
 	az_real::Float64 = 2.0 # µm.
 	
 	# Simulate system.
 	(K_real, DE_real) = simulate_system(distribution_class, [D_real], c_real, ax, ay, az_real, Lx, Ly, Lz, number_of_frames, deltat, kmin)
-	println(length(DE_real))
+	println( (length(K_real), length(DE_real)) )
 	# Inference starts.
 	random_seed::Int64 = convert(Int64, time_ns())
 	srand(random_seed)
 		
 	# Parameter bounds for inference.
-	lb_D::Float64 = 0.01
-	ub_D::Float64 = 10.0
+	lb_D::Float64 = D_real#0.01
+	ub_D::Float64 = D_real#10.0
 	lb_c::Float64 = 0.25 * c_real
 	ub_c::Float64 = 4.0 * c_real
-	lb_az::Float64 = 0.25 * az_real
-	ub_az::Float64 = 4.0 * az_real
+	lb_az::Float64 = 0.25 * az_real#az_real
+	ub_az::Float64 = 4.0 * az_real#az_real
 			
 	# Inference parameters.
 	number_of_abc_samples::Int64 = 128
@@ -74,7 +74,7 @@ function test_abc_pmc_monodisperse_parallel_single_param()
 	tau_az::Float64 = sqrt( 2.0 * var(az, corrected = false) )
 	
 	# The rest of the iterations.
-	gamma = 0.5#5.0
+	gamma = 6.0#5.0
 	delta_gamma = 0.01
 	epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = [0]
@@ -166,8 +166,9 @@ function test_abc_pmc_monodisperse_parallel_single_param()
 		for current_abc_sample = 1:number_of_abc_samples
 			w_star[current_abc_sample] = 0.0
 			for i = 1:number_of_abc_samples
-				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(D_star[current_abc_sample] - D[i], 0.0, tau_D) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
-				#w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
+				#w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(D_star[current_abc_sample] - D[i], 0.0, tau_D) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
+				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
+				#w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c)
 			end
 			w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
 		end
