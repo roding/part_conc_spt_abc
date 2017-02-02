@@ -5,7 +5,7 @@ workspace()
 #include("../src/simulate_system.jl")
 #include("../src/distance.jl")
 
-function test_abc_pmc_monodisperse_parallel_single_param()
+function test_abc_pmc_monodisperse_parallel()
 	#Inititalization.
 	srand(1)
 	t_start::Int64 = convert(Int64, time_ns())
@@ -33,7 +33,7 @@ function test_abc_pmc_monodisperse_parallel_single_param()
 	
 	# Simulate system.
 	(K_real, DE_real) = simulate_system(distribution_class, [D_real], c_real, ax, ay, az_real, Lx, Ly, Lz, number_of_frames, deltat, kmin)
-	println( (length(K_real), length(DE_real)) )
+	#println( (length(K_real), length(DE_real)) )
 	# Inference starts.
 	random_seed::Int64 = convert(Int64, time_ns())
 	srand(random_seed)
@@ -47,8 +47,8 @@ function test_abc_pmc_monodisperse_parallel_single_param()
 	ub_az::Float64 = 4.0 * az_real#az_real
 			
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 128
-	number_of_iterations::Int64 = 500
+	number_of_abc_samples::Int64 = 128#1024
+	number_of_iterations::Int64 = 5000
 
 	# Variables for population parameter values.
 	D::Array{Float64, 1} = zeros(number_of_abc_samples)
@@ -101,7 +101,6 @@ function test_abc_pmc_monodisperse_parallel_single_param()
 			az_bis = 0.0
 
 			dist_bis = Inf
-			
 			
 			while dist_bis > epsilon 
 				delta_D = tau_D * randn()
@@ -202,4 +201,4 @@ function normpdf(x, mu, sigma)
 	return 1.0 / ( sqrt(2.0 * pi) * sigma ) * exp( - 0.5 * (x - mu)^2 / sigma^2 )
 end	
 
-test_abc_pmc_monodisperse_parallel_single_param()
+test_abc_pmc_monodisperse_parallel()
