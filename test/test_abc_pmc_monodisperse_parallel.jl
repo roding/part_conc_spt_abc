@@ -20,7 +20,7 @@ function test_abc_pmc_monodisperse_parallel()
 	ay::Float64 = 40.0#5.0 # µm.
 	Lx::Float64 = 100.0#10.0 # µm.
 	Ly::Float64 = 100.0#10.0 # µm.
-	Lz::Float64 = 100.0#10.0 # µm.
+	Lz::Float64 = 50.0#10.0 # µm.
 	#ax::Float64 = 5.0 # µm.
 	#ay::Float64 = 5.0 # µm.
 	#Lx::Float64 = 10.0 # µm.
@@ -79,7 +79,7 @@ function test_abc_pmc_monodisperse_parallel()
 	tau_az::Float64 = sqrt( 2.0 * var(az, corrected = false) )
 	
 	# The rest of the iterations.
-	gamma = 6.0#5.0
+	gamma = 7.0#5.0
 	delta_gamma = 0.005
 	epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = [0]
