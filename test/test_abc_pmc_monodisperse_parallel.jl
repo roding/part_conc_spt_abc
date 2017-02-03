@@ -21,6 +21,11 @@ function test_abc_pmc_monodisperse_parallel()
 	Lx::Float64 = 100.0#10.0 # µm.
 	Ly::Float64 = 100.0#10.0 # µm.
 	Lz::Float64 = 100.0#10.0 # µm.
+	#ax::Float64 = 5.0 # µm.
+	#ay::Float64 = 5.0 # µm.
+	#Lx::Float64 = 10.0 # µm.
+	#Ly::Float64 = 10.0 # µm.
+	#Lz::Float64 = 10.0 # µm.
 	number_of_frames::Array{Int64, 1} = 250 * ones(40)
 	deltat::Float64 = 0.05 # seconds
 	kmin::Int64 = 2
@@ -47,7 +52,7 @@ function test_abc_pmc_monodisperse_parallel()
 	ub_az::Float64 = 4.0 * az_real#az_real
 			
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 128#1024
+	number_of_abc_samples::Int64 = 1024
 	number_of_iterations::Int64 = 5000
 
 	# Variables for population parameter values.
@@ -75,7 +80,7 @@ function test_abc_pmc_monodisperse_parallel()
 	
 	# The rest of the iterations.
 	gamma = 6.0#5.0
-	delta_gamma = 0.01
+	delta_gamma = 0.005
 	epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = [0]
 	trial_count_target::Int64 = 10 * number_of_abc_samples
