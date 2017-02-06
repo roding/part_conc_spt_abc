@@ -1,12 +1,12 @@
 workspace()
 
-include("rand_poisson.jl")
+include("../src/rand_poisson.jl")
 
 function test_rand_poisson()
-	lambda::Float64 = 2.5
+	lambda::Float64 = 10000.0
 	
 	x::Int64 = 0
-	n::Int64 = 100000000
+	n::Int64 = 1000000
 	for i = 1:n
 		x = x + rand_poisson(lambda)
 	end
