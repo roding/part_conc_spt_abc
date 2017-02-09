@@ -3,7 +3,7 @@ workspace()
 @everywhere include("../src/simulate_system.jl")
 @everywhere include("../src/distance.jl")
 
-function test_abc_pmc_monodisperse_parallel()
+function test_abc_pmc_lognormal_parallel()
 	#Inititalization.
 	srand(1)
 	t_start::Int64 = convert(Int64, time_ns())
@@ -24,21 +24,24 @@ function test_abc_pmc_monodisperse_parallel()
 	kmin::Int64 = 2
 	
 	# True system parameters.
-	distribution_class::String = "monodisperse"
-	D_real::Float64 = 2.5 # µm^2/s.
+	distribution_class::String = "lognormal"
+	m_real::Float64 = 2.5 # µm^2/s.
+	s_real::Float64 = 0.5 # µm^2/s.
 	c_real::Float64 = 5e9 # part/ml.
 	az_real::Float64 = 2.0 # µm.
 	
 	# Simulate system.
-	(K_real, DE_real) = simulate_system(distribution_class, [D_real], c_real, ax, ay, az_real, Lx, Ly, Lz, number_of_frames, deltat, kmin)
+	(K_real, DE_real) = simulate_system(distribution_class, [m_real, s_real], c_real, ax, ay, az_real, Lx, Ly, Lz, number_of_frames, deltat, kmin)
 	println( (length(K_real), length(DE_real)) )
 	# Inference starts.
 	random_seed::Int64 = convert(Int64, time_ns())
 	srand(random_seed)
 		
 	# Parameter bounds for inference.
-	lb_D::Float64 = 0.25 * D_real
-	ub_D::Float64 = 4.0 * D_real
+	lb_m::Float64 = 0.25 * m_real
+	ub_m::Float64 = 4.0 * m_real
+	lb_s::Float64 = 0.25 * s_real
+	ub_s::Float64 = 4.0 * s_real
 	lb_c::Float64 = 0.25 * c_real
 	ub_c::Float64 = 4.0 * c_real
 	lb_az::Float64 = 0.25 * az_real#az_real
@@ -49,25 +52,29 @@ function test_abc_pmc_monodisperse_parallel()
 	number_of_iterations::Int64 = 5000
 
 	# Variables for population parameter values.
-	D::Array{Float64, 1} = zeros(number_of_abc_samples)
+	m::Array{Float64, 1} = zeros(number_of_abc_samples)
+	s::Array{Float64, 1} = zeros(number_of_abc_samples)
 	c::Array{Float64, 1} = zeros(number_of_abc_samples)
 	az::Array{Float64, 1} = zeros(number_of_abc_samples)
 	dist::Array{Float64, 1} = zeros(number_of_abc_samples)
 	
-	D_star::SharedArray{Float64, 1} = zeros(number_of_abc_samples)
+	m_star::SharedArray{Float64, 1} = zeros(number_of_abc_samples)
+	s_star::SharedArray{Float64, 1} = zeros(number_of_abc_samples)
 	c_star::SharedArray{Float64, 1} = zeros(number_of_abc_samples)
 	az_star::SharedArray{Float64, 1} = zeros(number_of_abc_samples)
 	dist_star::SharedArray{Float64, 1} = zeros(number_of_abc_samples)
 
 	# First iteration, assuming epsilon = inf so everything is accepted.
-	D = lb_D + (ub_D - lb_D) * rand(number_of_abc_samples)
+	m = lb_m + (ub_m - lb_m) * rand(number_of_abc_samples)
+	s = lb_s + (ub_s - lb_s) * rand(number_of_abc_samples)
 	c = lb_c + (ub_c - lb_c) * rand(number_of_abc_samples)
 	az = lb_az + (ub_az - lb_az) * rand(number_of_abc_samples)
 	
 	w::Array{Float64, 1} = ones(number_of_abc_samples) / convert(Float64, number_of_abc_samples)
 	w_star::Array{Float64, 1} = zeros(number_of_abc_samples)
 	
-	tau_D::Float64 = sqrt( 2.0 * var(D, corrected = false) )
+	tau_m::Float64 = sqrt( 2.0 * var(m, corrected = false) )
+	tau_s::Float64 = sqrt( 2.0 * var(s, corrected = false) )
 	tau_c::Float64 = sqrt( 2.0 * var(c, corrected = false) )
 	tau_az::Float64 = sqrt( 2.0 * var(az, corrected = false) )
 	
@@ -86,25 +93,37 @@ function test_abc_pmc_monodisperse_parallel()
 		@sync @parallel for current_abc_sample = 1:number_of_abc_samples
 			idx = findfirst(cumsum(w) .>= rand())
 			
-			D_prim = D[idx]
+			m_prim = m[idx]
+			s_prim = s[idx]
 			c_prim = c[idx]
 			az_prim = az[idx]
 			
-			D_bis = 0.0
+			m_bis = 0.0
+			s_bis = 0.0
 			c_bis = 0.0
 			az_bis = 0.0
 
 			dist_bis = Inf
 			
 			while dist_bis > epsilon 
-				delta_D = tau_D * randn()
-				D_bis = D_prim + delta_D
-				if D_bis < lb_D
-					D_bis = lb_D
-					delta_D = D_bis - D_prim
-				elseif D_bis > ub_D
-					D_bis = ub_D
-					delta_D = D_bis - D_prim
+				delta_m = tau_m * randn()
+				m_bis = m_prim + delta_m
+				if m_bis < lb_m
+					m_bis = lb_m
+					delta_m = m_bis - m_prim
+				elseif m_bis > ub_m
+					m_bis = ub_m
+					delta_m = m_bis - m_prim
+				end
+
+				delta_s = tau_s * randn()
+				s_bis = s_prim + delta_s
+				if s_bis < lb_s
+					s_bis = lb_s
+					delta_s = s_bis - s_prim
+				elseif s_bis > ub_s
+					s_bis = ub_s
+					delta_s = s_bis - s_prim
 				end
 							
 				delta_c = tau_c * randn()
@@ -126,7 +145,7 @@ function test_abc_pmc_monodisperse_parallel()
 					az_bis = ub_az
 					delta_az = az_bis - az_prim
 				end
-				(K_sim, DE_sim) = simulate_system(distribution_class, [D_bis], c_bis, ax, ay, az_bis, Lx, Ly, Lz, number_of_frames, deltat, kmin)
+				(K_sim, DE_sim) = simulate_system(distribution_class, [m_bis, s_bis], c_bis, ax, ay, az_bis, Lx, Ly, Lz, number_of_frames, deltat, kmin)
 				dist_bis = distance(K_real, DE_real, K_sim, DE_sim)
 				#println(dist_bis)
 				
@@ -134,38 +153,41 @@ function test_abc_pmc_monodisperse_parallel()
 			end
 			
 			
-			D_star[current_abc_sample] = D_bis
+			m_star[current_abc_sample] = m_bis
+			s_star[current_abc_sample] = s_bis
 			c_star[current_abc_sample] = c_bis
 			az_star[current_abc_sample] = az_bis
 			dist_star[current_abc_sample] = dist_bis
 		end
 		
-		println((current_iteration, trial_count[1], gamma, delta_gamma, tau_D, tau_c, tau_az))
+		println((current_iteration, trial_count[1], gamma, delta_gamma, tau_m, tau_s, tau_c, tau_az))
 		
 		for current_abc_sample = 1:number_of_abc_samples
 			w_star[current_abc_sample] = 0.0
 			for i = 1:number_of_abc_samples
-				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(D_star[current_abc_sample] - D[i], 0.0, tau_D) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
+				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(m_star[current_abc_sample] - m[i], 0.0, tau_m) * normpdf(s_star[current_abc_sample] - s[i], 0.0, tau_s) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
 			end
 			w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
 		end
 		
 		w = w_star / sum(w_star)
 		
-		D = D_star
+		m = m_star
+		s = s_star
 		c = c_star
 		az = az_star
 		dist = dist_star 
 		
-		tau_D = sqrt( 2.0 * var(D, corrected = false) )
+		tau_m = sqrt( 2.0 * var(m, corrected = false) )
+		tau_s = sqrt( 2.0 * var(s, corrected = false) )
 		tau_c = sqrt( 2.0 * var(c, corrected = false) )
 		tau_az = sqrt( 2.0 * var(az, corrected = false) )
 		
 		# Write intermediate result to file.
-		file_name_output = join((output_dir, "/", "abc_pmc_md_par_it_", string(current_iteration), ".dat"))
+		file_name_output = join((output_dir, "/", "abc_pmc_ln_par_it_", string(current_iteration), ".dat"))
 		file_stream_output = open(file_name_output, "w")
 		for current_abc_sample = 1:number_of_abc_samples
-			write(file_stream_output, D[current_abc_sample], c[current_abc_sample], az[current_abc_sample], dist[current_abc_sample], w[current_abc_sample])
+			write(file_stream_output, m[current_abc_sample], s[current_abc_sample], c[current_abc_sample], az[current_abc_sample], dist[current_abc_sample], w[current_abc_sample])
 		end
 		close(file_stream_output)
 	end
@@ -179,4 +201,4 @@ function normpdf(x, mu, sigma)
 	return 1.0 / ( sqrt(2.0 * pi) * sigma ) * exp( - 0.5 * (x - mu)^2 / sigma^2 )
 end	
 
-test_abc_pmc_monodisperse_parallel()
+test_abc_pmc_lognormal_parallel()
