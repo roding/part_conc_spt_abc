@@ -79,7 +79,7 @@ function test_abc_pmc_monodisperse_parallel()
 	tau_az::Float64 = sqrt( 2.0 * var(az, corrected = false) )
 	
 	# The rest of the iterations.
-	gamma = 7.0#5.0
+	gamma = 7.5#5.0
 	delta_gamma = 0.005
 	epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = [0]
