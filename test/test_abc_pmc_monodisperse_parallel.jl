@@ -2,8 +2,6 @@ workspace()
 
 @everywhere include("../src/simulate_system.jl")
 @everywhere include("../src/distance.jl")
-#include("../src/simulate_system.jl")
-#include("../src/distance.jl")
 
 function test_abc_pmc_monodisperse_parallel()
 	#Inititalization.
@@ -16,16 +14,11 @@ function test_abc_pmc_monodisperse_parallel()
 	end
 	
 	# Acquisition parameters.
-	ax::Float64 = 40.0#5.0 # µm.
-	ay::Float64 = 40.0#5.0 # µm.
-	Lx::Float64 = 100.0#10.0 # µm.
-	Ly::Float64 = 100.0#10.0 # µm.
-	Lz::Float64 = 50.0#10.0 # µm.
-	#ax::Float64 = 5.0 # µm.
-	#ay::Float64 = 5.0 # µm.
-	#Lx::Float64 = 10.0 # µm.
-	#Ly::Float64 = 10.0 # µm.
-	#Lz::Float64 = 10.0 # µm.
+	ax::Float64 = 40.0 # µm.
+	ay::Float64 = 40.0 # µm.
+	Lx::Float64 = 100.0 # µm.
+	Ly::Float64 = 100.0 # µm.
+	Lz::Float64 = 50.0 # µm.
 	number_of_frames::Array{Int64, 1} = 250 * ones(40)
 	deltat::Float64 = 0.05 # seconds
 	kmin::Int64 = 2
@@ -90,12 +83,8 @@ function test_abc_pmc_monodisperse_parallel()
 		trial_count[1] = 0	
 		gamma = gamma - delta_gamma
 		epsilon = 10^gamma
-		#epsilon = 0.99 * epsilon
 		@sync @parallel for current_abc_sample = 1:number_of_abc_samples
-		#for current_abc_sample = 1:number_of_abc_samples
 			idx = findfirst(cumsum(w) .>= rand())
-			#println(w[1])
-			#println(idx)
 			
 			D_prim = D[idx]
 			c_prim = c[idx]
@@ -137,17 +126,11 @@ function test_abc_pmc_monodisperse_parallel()
 					az_bis = ub_az
 					delta_az = az_bis - az_prim
 				end
-				#println(D_bis)
-				#println(c_bis)
-				#println(az_bis)
 				(K_sim, DE_sim) = simulate_system(distribution_class, [D_bis], c_bis, ax, ay, az_bis, Lx, Ly, Lz, number_of_frames, deltat, kmin)
-				#println(length(DE_sim))
 				dist_bis = distance(K_real, DE_real, K_sim, DE_sim)
 				#println(dist_bis)
 				
 				trial_count[1] = trial_count[1] + 1
-
-				#convert(Int64, time_ns()) - t_start_iteration < 
 			end
 			
 			
@@ -159,20 +142,10 @@ function test_abc_pmc_monodisperse_parallel()
 		
 		println((current_iteration, trial_count[1], gamma, delta_gamma, tau_D, tau_c, tau_az))
 		
-		#if trial_count[1] > trial_count_target
-		#	delta_gamma = 0.99 * delta_gamma
-		#else
-		#	delta_gamma = 1.01 * delta_gamma
-		#end
-		#println(trial_count[1])
-		
-		
 		for current_abc_sample = 1:number_of_abc_samples
 			w_star[current_abc_sample] = 0.0
 			for i = 1:number_of_abc_samples
 				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(D_star[current_abc_sample] - D[i], 0.0, tau_D) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
-				#w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
-				#w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c)
 			end
 			w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
 		end
