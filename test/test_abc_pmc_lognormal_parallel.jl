@@ -24,9 +24,7 @@ function test_abc_pmc_lognormal_parallel()
 	kmin::Int64 = 2
 	kmax::Int64 = maximum(number_of_frames)
 	
-	# Distance function parameters.
-	k_bin_edges::Array{Float64, 1} = 0.5:1:kmax+0.5
-	de_bin_edges::Array{Float64, 1} = 0.0:0.1:12.5
+	
 	
 	# True system parameters.
 	distribution_class::String = "lognormal"
@@ -38,6 +36,15 @@ function test_abc_pmc_lognormal_parallel()
 	# Simulate system.
 	(K_real, DE_real) = simulate_system(distribution_class, [m_real, s_real], c_real, ax, ay, az_real, Lx, Ly, Lz, number_of_frames, deltat, kmin)
 	println( (length(K_real), length(DE_real)) )
+	
+	# Distance function parameters.
+	k_bin_edges::Array{Float64, 1} = 0.5:1:kmax+0.5
+	de_bin_edges::Array{Float64, 1} = 0.0:0.1:12.5
+	
+	n_K_real::Array{Int64, 1} = zeros(length(k_bin_edges)-1)
+	n_DE_real::Array{Int64, 1} = zeros(length(de_bin_edges)-1)
+	n_K_sim::Array{Int64, 1} = zeros(length(k_bin_edges)-1)
+	n_DE_sim::Array{Int64, 1} = zeros(length(de_bin_edges)-1)
 	
 	(~, n_K_real) = hist(K_real, k_bin_edges)
 	(~, n_DE_real) = hist(DE_real, de_bin_edges)
@@ -157,8 +164,11 @@ function test_abc_pmc_lognormal_parallel()
 					delta_az = az_bis - az_prim
 				end
 				(K_sim, DE_sim) = simulate_system(distribution_class, [m_bis, s_bis], c_bis, ax, ay, az_bis, Lx, Ly, Lz, number_of_frames, deltat, kmin)
-				dist_bis = distance(K_real, DE_real, K_sim, DE_sim)
-				#println(dist_bis)
+				
+				(~, n_K_sim) = hist(K_sim, k_bin_edges)
+				(~, n_DE_sim) = hist(DE_sim, de_bin_edges)
+				dist_bis = distance(n_K_real, n_DE_real, n_K_sim, n_DE_sim)
+				println(dist_bis)
 				
 				trial_count[1] = trial_count[1] + 1
 			end
