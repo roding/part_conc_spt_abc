@@ -22,6 +22,11 @@ function test_abc_pmc_lognormal_parallel()
 	number_of_frames::Array{Int64, 1} = 250 * ones(40)
 	deltat::Float64 = 0.05 # seconds
 	kmin::Int64 = 2
+	kmax::Int64 = maximum(number_of_frames)
+	
+	# Distance function parameters.
+	k_bin_edges::Array{Float64, 1} = 0.5:1:kmax+0.5
+	de_bin_edges::Array{Float64, 1} = 0.0:0.1:12.5
 	
 	# True system parameters.
 	distribution_class::String = "lognormal"
@@ -33,6 +38,10 @@ function test_abc_pmc_lognormal_parallel()
 	# Simulate system.
 	(K_real, DE_real) = simulate_system(distribution_class, [m_real, s_real], c_real, ax, ay, az_real, Lx, Ly, Lz, number_of_frames, deltat, kmin)
 	println( (length(K_real), length(DE_real)) )
+	
+	(~, n_K_real) = hist(K_real, k_bin_edges)
+	(~, n_DE_real) = hist(DE_real, de_bin_edges)
+	
 	# Inference starts.
 	random_seed::Int64 = convert(Int64, time_ns())
 	srand(random_seed)
@@ -46,10 +55,12 @@ function test_abc_pmc_lognormal_parallel()
 	ub_c::Float64 = 4.0 * c_real
 	lb_az::Float64 = 0.25 * az_real#az_real
 	ub_az::Float64 = 4.0 * az_real#az_real
+	
+	
 			
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 128
-	number_of_iterations::Int64 = 5000
+	number_of_abc_samples::Int64 = 1#28
+	number_of_iterations::Int64 = 1#5000
 
 	# Variables for population parameter values.
 	m::Array{Float64, 1} = zeros(number_of_abc_samples)
