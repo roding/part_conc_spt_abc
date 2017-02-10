@@ -23,9 +23,7 @@ function test_abc_pmc_lognormal_parallel()
 	deltat::Float64 = 0.05 # seconds
 	kmin::Int64 = 2
 	kmax::Int64 = maximum(number_of_frames)
-	
-	
-	
+
 	# True system parameters.
 	distribution_class::String = "lognormal"
 	m_real::Float64 = 2.5 # µm^2/s.
@@ -41,10 +39,10 @@ function test_abc_pmc_lognormal_parallel()
 	k_bin_edges::Array{Float64, 1} = 0.5:1:kmax+0.5
 	de_bin_edges::Array{Float64, 1} = 0.0:0.1:12.5
 	
-	n_K_real::Array{Int64, 1} = zeros(length(k_bin_edges)-1)
-	n_DE_real::Array{Int64, 1} = zeros(length(de_bin_edges)-1)
-	n_K_sim::Array{Int64, 1} = zeros(length(k_bin_edges)-1)
-	n_DE_sim::Array{Int64, 1} = zeros(length(de_bin_edges)-1)
+	n_K_real::Array{Int64, 1} = zeros(length(k_bin_edges) - 1)
+	n_DE_real::Array{Int64, 1} = zeros(length(de_bin_edges) - 1)
+	n_K_sim::Array{Int64, 1} = zeros(length(k_bin_edges) - 1)
+	n_DE_sim::Array{Int64, 1} = zeros(length(de_bin_edges) - 1)
 	
 	(~, n_K_real) = hist(K_real, k_bin_edges)
 	(~, n_DE_real) = hist(DE_real, de_bin_edges)
@@ -62,9 +60,7 @@ function test_abc_pmc_lognormal_parallel()
 	ub_c::Float64 = 4.0 * c_real
 	lb_az::Float64 = 0.25 * az_real#az_real
 	ub_az::Float64 = 4.0 * az_real#az_real
-	
-	
-			
+		
 	# Inference parameters.
 	number_of_abc_samples::Int64 = 1#28
 	number_of_iterations::Int64 = 1#5000
