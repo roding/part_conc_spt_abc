@@ -28,7 +28,7 @@ function test_abc_pmc_lognormal_parallel()
 	distribution_class::String = "lognormal"
 	m_real::Float64 = 2.5 # µm^2/s.
 	s_real::Float64 = 0.5 # µm^2/s.
-	c_real::Float64 = 5e9 # part/ml.
+	c_real::Float64 = 1e9 # part/ml.
 	az_real::Float64 = 2.0 # µm.
 	
 	# Simulate system.
@@ -62,8 +62,8 @@ function test_abc_pmc_lognormal_parallel()
 	ub_az::Float64 = 4.0 * az_real#az_real
 		
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 1#28
-	number_of_iterations::Int64 = 1#5000
+	number_of_abc_samples::Int64 = 128
+	number_of_iterations::Int64 = 5000
 
 	# Variables for population parameter values.
 	m::Array{Float64, 1} = zeros(number_of_abc_samples)
@@ -164,11 +164,10 @@ function test_abc_pmc_lognormal_parallel()
 				(~, n_K_sim) = hist(K_sim, k_bin_edges)
 				(~, n_DE_sim) = hist(DE_sim, de_bin_edges)
 				dist_bis = distance(n_K_real, n_DE_real, n_K_sim, n_DE_sim)
-				println(dist_bis)
+				#println(dist_bis)
 				
 				trial_count[1] = trial_count[1] + 1
 			end
-			
 			
 			m_star[current_abc_sample] = m_bis
 			s_star[current_abc_sample] = s_bis
