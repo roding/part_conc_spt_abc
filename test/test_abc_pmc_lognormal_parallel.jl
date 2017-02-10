@@ -16,9 +16,9 @@ function test_abc_pmc_lognormal_parallel()
 	# Acquisition parameters.
 	ax::Float64 = 40.0 # µm.
 	ay::Float64 = 40.0 # µm.
-	Lx::Float64 = 75.0#100.0 # µm.
-	Ly::Float64 = 75.0#100.0 # µm.
-	Lz::Float64 = 25.0#50.0 # µm.
+	Lx::Float64 = 60.0#100.0 # µm.
+	Ly::Float64 = 60.0#100.0 # µm.
+	Lz::Float64 = 10.0#50.0 # µm.
 	number_of_frames::Array{Int64, 1} = 1000 * ones(40) #250 * ones(40)
 	deltat::Float64 = 0.05 # seconds
 	kmin::Int64 = 2
