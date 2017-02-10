@@ -16,10 +16,10 @@ function test_abc_pmc_lognormal_parallel()
 	# Acquisition parameters.
 	ax::Float64 = 40.0 # µm.
 	ay::Float64 = 40.0 # µm.
-	Lx::Float64 = 100.0 # µm.
-	Ly::Float64 = 100.0 # µm.
-	Lz::Float64 = 50.0 # µm.
-	number_of_frames::Array{Int64, 1} = 250 * ones(40)
+	Lx::Float64 = 75.0#100.0 # µm.
+	Ly::Float64 = 75.0#100.0 # µm.
+	Lz::Float64 = 25.0#50.0 # µm.
+	number_of_frames::Array{Int64, 1} = 1000 * ones(40) #250 * ones(40)
 	deltat::Float64 = 0.05 # seconds
 	kmin::Int64 = 2
 	kmax::Int64 = maximum(number_of_frames)
@@ -28,7 +28,7 @@ function test_abc_pmc_lognormal_parallel()
 	distribution_class::String = "lognormal"
 	m_real::Float64 = 2.5 # µm^2/s.
 	s_real::Float64 = 0.5 # µm^2/s.
-	c_real::Float64 = 1e9 # part/ml.
+	c_real::Float64 = 1e10 # part/ml.
 	az_real::Float64 = 2.0 # µm.
 	
 	# Simulate system.
@@ -37,7 +37,7 @@ function test_abc_pmc_lognormal_parallel()
 	
 	# Distance function parameters.
 	k_bin_edges::Array{Float64, 1} = 0.5:1:kmax+0.5
-	de_bin_edges::Array{Float64, 1} = 0.0:0.1:12.5
+	de_bin_edges::Array{Float64, 1} = 0.0:0.05:12.5 #0.0:0.1:12.5
 	
 	n_K_real::Array{Int64, 1} = zeros(length(k_bin_edges) - 1)
 	n_DE_real::Array{Int64, 1} = zeros(length(de_bin_edges) - 1)
@@ -93,7 +93,7 @@ function test_abc_pmc_lognormal_parallel()
 	tau_az::Float64 = sqrt( 2.0 * var(az, corrected = false) )
 	
 	# The rest of the iterations.
-	gamma = 8.0
+	gamma = 5.0
 	delta_gamma = 0.005
 	epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = [0]
