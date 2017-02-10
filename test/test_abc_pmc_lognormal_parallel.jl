@@ -48,7 +48,7 @@ function test_abc_pmc_lognormal_parallel()
 	ub_az::Float64 = 4.0 * az_real#az_real
 			
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 1024
+	number_of_abc_samples::Int64 = 128
 	number_of_iterations::Int64 = 5000
 
 	# Variables for population parameter values.
@@ -79,7 +79,7 @@ function test_abc_pmc_lognormal_parallel()
 	tau_az::Float64 = sqrt( 2.0 * var(az, corrected = false) )
 	
 	# The rest of the iterations.
-	gamma = 7.5#5.0
+	gamma = 8.0
 	delta_gamma = 0.005
 	epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = [0]

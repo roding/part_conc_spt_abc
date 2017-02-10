@@ -2,7 +2,6 @@ clear
 clc
 close all hidden
 
-%% Read data.
 file_name = '../test/output/abc_pmc_md_par_it_199.dat';
 file_info = dir(file_name);
 file_size = file_info.bytes;
@@ -24,21 +23,11 @@ w  = data(:, 5);
 
 clear data
 
-%% Try inference.
-% p = 0.005;
-% epsilon = prctile(dist, p * 100);
-% index = dist <= epsilon;
-% 
-% D = D(index);
-% c = c(index);
-% az = az(index);
 
 figure, hold on, hist(D), title('D'), hold off
 figure, hold on, hist(c), title('c'), hold off
 figure, hold on, hist(az), title('az'), hold off
-figure, hold on, scatter(D, dist)
-figure, hold on, scatter(D, w)
-%mean(D)
-%mean(c)
-%mean(az)
+mean(D)
+mean(c)
+mean(az)
 max(log10(dist))
