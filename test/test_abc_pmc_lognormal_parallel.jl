@@ -19,7 +19,7 @@ function test_abc_pmc_lognormal_parallel()
 	Lx::Float64 = 60.0#100.0 # µm.
 	Ly::Float64 = 60.0#100.0 # µm.
 	Lz::Float64 = 10.0#50.0 # µm.
-	number_of_frames::Array{Int64, 1} = 1000 * ones(100) #250 * ones(40)
+	number_of_frames::Array{Int64, 1} = 250 * ones(40)
 	deltat::Float64 = 0.05 # seconds
 	kmin::Int64 = 2
 	kmax::Int64 = maximum(number_of_frames)
@@ -37,7 +37,7 @@ function test_abc_pmc_lognormal_parallel()
 	
 	# Distance function parameters.
 	k_bin_edges::Array{Float64, 1} = 0.5:1:kmax+0.5
-	de_bin_edges::Array{Float64, 1} = 0.0:0.05:12.5 #0.0:0.1:12.5
+	de_bin_edges::Array{Float64, 1} = 0.0:0.01:12.5 #0.0:0.1:12.5
 	
 	n_K_real::Array{Int64, 1} = zeros(length(k_bin_edges) - 1)
 	n_DE_real::Array{Int64, 1} = zeros(length(de_bin_edges) - 1)
@@ -54,7 +54,7 @@ function test_abc_pmc_lognormal_parallel()
 	# Parameter bounds for inference.
 	lb_m::Float64 = 0.25 * m_real
 	ub_m::Float64 = 4.0 * m_real
-	lb_s::Float64 = 0.25 * s_real
+	lb_s::Float64 = 0.0#0.25 * s_real
 	ub_s::Float64 = 4.0 * s_real
 	lb_c::Float64 = 0.25 * c_real
 	ub_c::Float64 = 4.0 * c_real
@@ -62,7 +62,7 @@ function test_abc_pmc_lognormal_parallel()
 	ub_az::Float64 = 4.0 * az_real#az_real
 		
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 128
+	number_of_abc_samples::Int64 = 512
 	number_of_iterations::Int64 = 5000
 
 	# Variables for population parameter values.
@@ -164,7 +164,7 @@ function test_abc_pmc_lognormal_parallel()
 				(~, n_K_sim) = hist(K_sim, k_bin_edges)
 				(~, n_DE_sim) = hist(DE_sim, de_bin_edges)
 				dist_bis = distance(n_K_real, n_DE_real, n_K_sim, n_DE_sim)
-				#println(dist_bis)
+				println(dist_bis)
 				
 				trial_count[1] = trial_count[1] + 1
 			end
