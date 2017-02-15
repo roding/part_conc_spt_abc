@@ -93,7 +93,7 @@ function test_abc_pmc_lognormal_parallel()
 	tau_az::Float64 = sqrt( 2.0 * var(az, corrected = false) )
 	
 	# The rest of the iterations.
-	gamma = 9.0
+	gamma = 8.5
 	delta_gamma = 0.005
 	epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = [0]
@@ -164,7 +164,7 @@ function test_abc_pmc_lognormal_parallel()
 				(~, n_K_sim) = hist(K_sim, k_bin_edges)
 				(~, n_DE_sim) = hist(DE_sim, de_bin_edges)
 				dist_bis = distance(n_K_real, n_DE_real, n_K_sim, n_DE_sim)
-				println(dist_bis)
+				#println(dist_bis)
 				
 				trial_count[1] = trial_count[1] + 1
 			end
