@@ -28,7 +28,7 @@ function test_abc_pmc_lognormal_parallel()
 	distribution_class::String = "lognormal"
 	m_real::Float64 = 2.5 # µm^2/s.
 	s_real::Float64 = 0.5 # µm^2/s.
-	c_real::Float64 = 1e10 # part/ml.
+	c_real::Float64 = 5e8 # part/ml.
 	az_real::Float64 = 2.0 # µm.
 	
 	# Simulate system.
@@ -52,17 +52,17 @@ function test_abc_pmc_lognormal_parallel()
 	srand(random_seed)
 		
 	# Parameter bounds for inference.
-	lb_m::Float64 = 0.25 * m_real
-	ub_m::Float64 = 4.0 * m_real
+	lb_m::Float64 = m_real#0.25 * m_real
+	ub_m::Float64 = m_real#4.0 * m_real
 	lb_s::Float64 = 0.0#0.25 * s_real
 	ub_s::Float64 = 4.0 * s_real
-	lb_c::Float64 = 0.25 * c_real
-	ub_c::Float64 = 4.0 * c_real
-	lb_az::Float64 = 0.25 * az_real#az_real
-	ub_az::Float64 = 4.0 * az_real#az_real
+	lb_c::Float64 = c_real#0.25 * c_real
+	ub_c::Float64 = c_real#4.0 * c_real
+	lb_az::Float64 = az_real#0.25 * az_real
+	ub_az::Float64 = az_real#4.0 * az_real
 		
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 512
+	number_of_abc_samples::Int64 = 128#512
 	number_of_iterations::Int64 = 5000
 
 	# Variables for population parameter values.
@@ -93,8 +93,8 @@ function test_abc_pmc_lognormal_parallel()
 	tau_az::Float64 = sqrt( 2.0 * var(az, corrected = false) )
 	
 	# The rest of the iterations.
-	gamma = 8.5
-	delta_gamma = 0.005
+	gamma = 7.0
+	delta_gamma = 0.01#0.005
 	epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = [0]
 	trial_count_target::Int64 = 10 * number_of_abc_samples
@@ -181,7 +181,8 @@ function test_abc_pmc_lognormal_parallel()
 		for current_abc_sample = 1:number_of_abc_samples
 			w_star[current_abc_sample] = 0.0
 			for i = 1:number_of_abc_samples
-				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(m_star[current_abc_sample] - m[i], 0.0, tau_m) * normpdf(s_star[current_abc_sample] - s[i], 0.0, tau_s) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
+				#w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(m_star[current_abc_sample] - m[i], 0.0, tau_m) * normpdf(s_star[current_abc_sample] - s[i], 0.0, tau_s) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
+				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(s_star[current_abc_sample] - s[i], 0.0, tau_s)
 			end
 			w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
 		end
