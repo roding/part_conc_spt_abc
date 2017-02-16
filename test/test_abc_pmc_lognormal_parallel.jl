@@ -52,17 +52,17 @@ function test_abc_pmc_lognormal_parallel()
 	srand(random_seed)
 		
 	# Parameter bounds for inference.
-	lb_m::Float64 = m_real#0.25 * m_real
-	ub_m::Float64 = m_real#4.0 * m_real
+	lb_m::Float64 = 0.25 * m_real
+	ub_m::Float64 = 4.0 * m_real
 	lb_s::Float64 = 0.0#0.25 * s_real
 	ub_s::Float64 = 4.0 * s_real
-	lb_c::Float64 = c_real#0.25 * c_real
-	ub_c::Float64 = c_real#4.0 * c_real
-	lb_az::Float64 = az_real#0.25 * az_real
-	ub_az::Float64 = az_real#4.0 * az_real
+	lb_c::Float64 = 0.25 * c_real
+	ub_c::Float64 = 4.0 * c_real
+	lb_az::Float64 = 0.25 * az_real
+	ub_az::Float64 = 4.0 * az_real
 		
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 128#512
+	number_of_abc_samples::Int64 = 64#128#512
 	number_of_iterations::Int64 = 5000
 
 	# Variables for population parameter values.
@@ -93,7 +93,7 @@ function test_abc_pmc_lognormal_parallel()
 	tau_az::Float64 = sqrt( 2.0 * var(az, corrected = false) )
 	
 	# The rest of the iterations.
-	gamma = 7.0
+	gamma = 9.0
 	delta_gamma = 0.01#0.005
 	epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = [0]
@@ -179,12 +179,13 @@ function test_abc_pmc_lognormal_parallel()
 		println((current_iteration, trial_count[1], gamma, delta_gamma, tau_m, tau_s, tau_c, tau_az))
 		
 		for current_abc_sample = 1:number_of_abc_samples
-			w_star[current_abc_sample] = 0.0
-			for i = 1:number_of_abc_samples
+			#w_star[current_abc_sample] = 0.0
+			#for i = 1:number_of_abc_samples
 				#w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(m_star[current_abc_sample] - m[i], 0.0, tau_m) * normpdf(s_star[current_abc_sample] - s[i], 0.0, tau_s) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
-				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(s_star[current_abc_sample] - s[i], 0.0, tau_s)
-			end
-			w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
+				#w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(s_star[current_abc_sample] - s[i], 0.0, tau_s)
+			#end
+			#w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
+			w_star[current_abc_sample] = 1.0 / dist_star[current_abc_sample]
 		end
 		
 		w = w_star / sum(w_star)
