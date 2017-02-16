@@ -179,13 +179,13 @@ function test_abc_pmc_lognormal_parallel()
 		println((current_iteration, trial_count[1], gamma, delta_gamma, tau_m, tau_s, tau_c, tau_az))
 		
 		for current_abc_sample = 1:number_of_abc_samples
-			#w_star[current_abc_sample] = 0.0
-			#for i = 1:number_of_abc_samples
-				#w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(m_star[current_abc_sample] - m[i], 0.0, tau_m) * normpdf(s_star[current_abc_sample] - s[i], 0.0, tau_s) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
+			w_star[current_abc_sample] = 0.0
+			for i = 1:number_of_abc_samples
+				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(m_star[current_abc_sample] - m[i], 0.0, tau_m) * normpdf(s_star[current_abc_sample] - s[i], 0.0, tau_s) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
 				#w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(s_star[current_abc_sample] - s[i], 0.0, tau_s)
-			#end
-			#w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
-			w_star[current_abc_sample] = 1.0 / dist_star[current_abc_sample]
+			end
+			w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
+			#w_star[current_abc_sample] = 1.0 / dist_star[current_abc_sample]
 		end
 		
 		w = w_star / sum(w_star)
