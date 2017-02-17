@@ -2,7 +2,7 @@ clear
 clc
 close all hidden
 
-file_name = '../test/output/abc_pmc_ln_par_it_399.dat';
+file_name = '../test/output/abc_pmc_ln_par_mirror_it_66.dat';
 file_info = dir(file_name);
 file_size = file_info.bytes;
 number_of_columns = 6;

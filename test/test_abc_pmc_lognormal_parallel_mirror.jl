@@ -93,7 +93,7 @@ function test_abc_pmc_lognormal_parallel()
 	tau_az::Float64 = sqrt( 2.0 * var(az, corrected = false) )
 	
 	# The rest of the iterations.
-	gamma = 9.0
+	gamma = 9.5
 	delta_gamma = 0.01#0.005
 	epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = [0]
@@ -122,43 +122,48 @@ function test_abc_pmc_lognormal_parallel()
 			while dist_bis > epsilon 
 				delta_m = tau_m * randn()
 				m_bis = m_prim + delta_m
-				if m_bis < lb_m
-					m_bis = lb_m
-					delta_m = m_bis - m_prim
-				elseif m_bis > ub_m
-					m_bis = ub_m
-					delta_m = m_bis - m_prim
+				while !( lb_m < m_bis < ub_m )
+					if m_bis < lb_m
+						m_bis = m_bis + 2 * ( lb_m - m_bis )
+					end
+					if m_bis > ub_m
+						m_bis = m_bis - 2 * ( m_bis - ub_m )
+					end
 				end
 
 				delta_s = tau_s * randn()
 				s_bis = s_prim + delta_s
-				if s_bis < lb_s
-					s_bis = lb_s
-					delta_s = s_bis - s_prim
-				elseif s_bis > ub_s
-					s_bis = ub_s
-					delta_s = s_bis - s_prim
+				while !( lb_s < s_bis < ub_s )
+					if s_bis < lb_s
+						s_bis = s_bis + 2 * ( lb_s - s_bis )
+					end
+					if s_bis > ub_s
+						s_bis = s_bis - 2 * ( s_bis - ub_s )
+					end
 				end
 							
 				delta_c = tau_c * randn()
 				c_bis = c_prim + delta_c
-				if c_bis < lb_c
-					c_bis = lb_c
-					delta_c = c_bis - c_prim
-				elseif c_bis > ub_c
-					c_bis = ub_c
-					delta_c = c_bis - c_prim
+				while !( lb_c < c_bis < ub_c )
+					if c_bis < lb_c
+						c_bis = c_bis + 2 * ( lb_c - c_bis )
+					end
+					if c_bis > ub_c
+						c_bis = c_bis - 2 * ( c_bis - ub_c )
+					end
 				end
 				
 				delta_az = tau_az * randn()
 				az_bis = az_prim + delta_az
-				if az_bis < lb_az
-					az_bis = lb_az
-					delta_az = az_bis - az_prim
-				elseif az_bis > ub_az
-					az_bis = ub_az
-					delta_az = az_bis - az_prim
+				while !( lb_az < az_bis < ub_az )
+					if az_bis < lb_az
+						az_bis = az_bis + 2 * ( lb_az - az_bis )
+					end
+					if az_bis > ub_az
+						az_bis = az_bis - 2 * ( az_bis - ub_az )
+					end
 				end
+				
 				(K_sim, DE_sim) = simulate_system(distribution_class, [m_bis, s_bis], c_bis, ax, ay, az_bis, Lx, Ly, Lz, number_of_frames, deltat, kmin)
 				
 				(~, n_K_sim) = hist(K_sim, k_bin_edges)
@@ -188,7 +193,14 @@ function test_abc_pmc_lognormal_parallel()
 			#w_star[current_abc_sample] = 1.0 / dist_star[current_abc_sample]
 		end
 		
+		
 		w = w_star / sum(w_star)
+		
+		#println(m)
+		#println(s)
+		#println(c)
+		#println(az)
+		#println(w)
 		
 		m = m_star
 		s = s_star
@@ -202,7 +214,7 @@ function test_abc_pmc_lognormal_parallel()
 		tau_az = sqrt( 2.0 * var(az, corrected = false) )
 		
 		# Write intermediate result to file.
-		file_name_output = join((output_dir, "/", "abc_pmc_ln_par_it_", string(current_iteration), ".dat"))
+		file_name_output = join((output_dir, "/", "abc_pmc_ln_par_mirror_it_", string(current_iteration), ".dat"))
 		file_stream_output = open(file_name_output, "w")
 		for current_abc_sample = 1:number_of_abc_samples
 			write(file_stream_output, m[current_abc_sample], s[current_abc_sample], c[current_abc_sample], az[current_abc_sample], dist[current_abc_sample], w[current_abc_sample])
