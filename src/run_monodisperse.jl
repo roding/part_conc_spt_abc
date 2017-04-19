@@ -98,35 +98,39 @@ function run_monodisperse()
 			dist_bis = Inf
 			
 			while dist_bis > epsilon 
-				delta_D = tau_D * randn()
-				D_bis = D_prim + delta_D
-				if D_bis < lb_D
-					D_bis = lb_D
-					delta_D = D_bis - D_prim
-				elseif D_bis > ub_D
-					D_bis = ub_D
-					delta_D = D_bis - D_prim
+				delta_s = tau_s * randn()
+				s_bis = s_prim + delta_s
+				while !( lb_s < s_bis < ub_s )
+					if s_bis < lb_s
+						s_bis = s_bis + 2 * ( lb_s - s_bis )
+					end
+					if s_bis > ub_s
+						s_bis = s_bis - 2 * ( s_bis - ub_s )
+					end
 				end
 							
 				delta_c = tau_c * randn()
 				c_bis = c_prim + delta_c
-				if c_bis < lb_c
-					c_bis = lb_c
-					delta_c = c_bis - c_prim
-				elseif c_bis > ub_c
-					c_bis = ub_c
-					delta_c = c_bis - c_prim
+				while !( lb_c < c_bis < ub_c )
+					if c_bis < lb_c
+						c_bis = c_bis + 2 * ( lb_c - c_bis )
+					end
+					if c_bis > ub_c
+						c_bis = c_bis - 2 * ( c_bis - ub_c )
+					end
 				end
 				
 				delta_az = tau_az * randn()
 				az_bis = az_prim + delta_az
-				if az_bis < lb_az
-					az_bis = lb_az
-					delta_az = az_bis - az_prim
-				elseif az_bis > ub_az
-					az_bis = ub_az
-					delta_az = az_bis - az_prim
+				while !( lb_az < az_bis < ub_az )
+					if az_bis < lb_az
+						az_bis = az_bis + 2 * ( lb_az - az_bis )
+					end
+					if az_bis > ub_az
+						az_bis = az_bis - 2 * ( az_bis - ub_az )
+					end
 				end
+				
 				(K_sim, DE_sim) = simulate_system(distribution_class, [D_bis], c_bis, ax, ay, az_bis, Lx, Ly, Lz, number_of_frames, deltat, kmin)
 				dist_bis = distance(K_real, DE_real, K_sim, DE_sim)
 				#println(dist_bis)
