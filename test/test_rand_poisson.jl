@@ -5,7 +5,7 @@ include("../src/rand_poisson.jl")
 function test_rand_poisson()
 	lambda::Float64 = 10000.0
 	
-	n::Int64 = 1000
+	n::Int64 = 100000
 	x::Array{Int64, 1} = zeros(n)
 	
 	for i = 1:n
