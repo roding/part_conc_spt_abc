@@ -9,7 +9,7 @@ function run_monodisperse()
 	srand(1)
 	t_start::Int64 = convert(Int64, time_ns())
 
-	output_dir::String = "output"
+	output_dir::String = "output_monodisperse"
 	if !isdir(output_dir)
 		mkdir(output_dir)
 	end
