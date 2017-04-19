@@ -1,7 +1,7 @@
 workspace()
 
-@everywhere include("../src/simulate_system.jl")
-@everywhere include("../src/distance.jl")
+@everywhere include("simulate_system.jl")
+@everywhere include("distance.jl")
 include("normpdf.jl")
 
 function run_lognormal()
@@ -9,7 +9,7 @@ function run_lognormal()
 	srand(1)
 	t_start::Int64 = convert(Int64, time_ns())
 
-	output_dir::String = "output"
+	output_dir::String = "output_lognormal"
 	if !isdir(output_dir)
 		mkdir(output_dir)
 	end
@@ -215,7 +215,7 @@ function run_lognormal()
 		tau_az = sqrt( 2.0 * var(az, corrected = false) )
 		
 		# Write intermediate result to file.
-		file_name_output = join((output_dir, "/", "abc_pmc_ln_par_mirror_it_", string(current_iteration), ".dat"))
+		file_name_output = join((output_dir, "/", "res_lognormal_", string(current_iteration), ".dat"))
 		file_stream_output = open(file_name_output, "w")
 		for current_abc_sample = 1:number_of_abc_samples
 			write(file_stream_output, m[current_abc_sample], s[current_abc_sample], c[current_abc_sample], az[current_abc_sample], dist[current_abc_sample], w[current_abc_sample])

@@ -1,7 +1,7 @@
 workspace()
 
-@everywhere include("../src/simulate_system.jl")
-@everywhere include("../src/distance.jl")
+@everywhere include("simulate_system.jl")
+@everywhere include("distance.jl")
 include("normpdf.jl")
 
 function run_monodisperse()
@@ -167,7 +167,7 @@ function run_monodisperse()
 		tau_az = sqrt( 2.0 * var(az, corrected = false) )
 		
 		# Write intermediate result to file.
-		file_name_output = join((output_dir, "/", "abc_pmc_md_par_it_", string(current_iteration), ".dat"))
+		file_name_output = join((output_dir, "/", "res_monodisperse_", string(current_iteration), ".dat"))
 		file_stream_output = open(file_name_output, "w")
 		for current_abc_sample = 1:number_of_abc_samples
 			write(file_stream_output, D[current_abc_sample], c[current_abc_sample], az[current_abc_sample], dist[current_abc_sample], w[current_abc_sample])
