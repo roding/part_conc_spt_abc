@@ -27,14 +27,14 @@ function run_lognormal()
 
 	# True system parameters.
 	distribution_class::String = "lognormal"
-	m_real::Float64 = 2.5 # µm^2/s.
-	s_real::Float64 = 0.5 # µm^2/s.
+	m_real::Float64 = 0.5 # µm^2/s.
+	s_real::Float64 = 0.1 # µm^2/s.
 	c_real::Float64 = 5e8 # part/ml.
 	az_real::Float64 = 2.0 # µm.
 	
 	# Distance function parameters.
-	de_number_of_bins::Int64 = 1250
-	de_max::Float64 = 12.5	
+	de_number_of_bins::Int64 = 1000
+	de_max::Float64 = 10.0
 	
 	# Simulate system.
 	n_K_real::Array{Int64, 1} = zeros(kmax)
@@ -42,22 +42,9 @@ function run_lognormal()
 	(n_K_real, n_DE_real) = simulate_system(distribution_class, [m_real, s_real], c_real, ax, ay, az_real, Lx, Ly, Lz, number_of_frames, deltat, kmin, de_number_of_bins, de_max)
 	
 	# Histogram vectors.
-	 = 
-	 = 
 	n_K_sim::Array{Int64, 1} = zeros(kmax)
-	n_DE_sim::Array{Int64, 1} = zeros(length(de_bin_edges) - 1)
-	
-	# Compute histogram of 'real' data set.
-	
-	
-	
-	
-	
-	
-	
-	(~, n_K_real) = hist(K_real, k_bin_edges)
-	(~, n_DE_real) = hist(DE_real, de_bin_edges)
-	
+	n_DE_sim::Array{Int64, 1} = zeros(de_number_of_bins)
+		
 	# Inference starts.
 	random_seed::Int64 = convert(Int64, time_ns())
 	srand(random_seed)
@@ -108,7 +95,6 @@ function run_lognormal()
 	delta_gamma = 0.01#0.005
 	epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = [0]
-	trial_count_target::Int64 = 10 * number_of_abc_samples
 	t_start_iteration::Int64 = 0 
 	for current_iteration = 1:number_of_iterations
 		t_start_iteration = convert(Int64, time_ns())
@@ -175,12 +161,9 @@ function run_lognormal()
 					end
 				end
 				
-				(K_sim, DE_sim) = simulate_system(distribution_class, [m_bis, s_bis], c_bis, ax, ay, az_bis, Lx, Ly, Lz, number_of_frames, deltat, kmin)
+				(n_K_sim, n_DE_sim) = simulate_system(distribution_class, [m_bis, s_bis], c_bis, ax, ay, az_bis, Lx, Ly, Lz, number_of_frames, deltat, kmin, de_number_of_bins, de_max)
 				
-				(~, n_K_sim) = hist(K_sim, k_bin_edges)
-				(~, n_DE_sim) = hist(DE_sim, de_bin_edges)
 				dist_bis = distance(n_K_real, n_DE_real, n_K_sim, n_DE_sim)
-				#println(dist_bis)
 				
 				trial_count[1] = trial_count[1] + 1
 			end
@@ -198,20 +181,11 @@ function run_lognormal()
 			w_star[current_abc_sample] = 0.0
 			for i = 1:number_of_abc_samples
 				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(m_star[current_abc_sample] - m[i], 0.0, tau_m) * normpdf(s_star[current_abc_sample] - s[i], 0.0, tau_s) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
-				#w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(s_star[current_abc_sample] - s[i], 0.0, tau_s)
 			end
 			w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
-			#w_star[current_abc_sample] = 1.0 / dist_star[current_abc_sample]
 		end
 		
-		
 		w = w_star / sum(w_star)
-		
-		#println(m)
-		#println(s)
-		#println(c)
-		#println(az)
-		#println(w)
 		
 		m = m_star
 		s = s_star
