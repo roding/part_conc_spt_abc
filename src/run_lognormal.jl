@@ -38,7 +38,7 @@ function run_lognormal()
 	
 	# Distance function parameters.
 	k_bin_edges::Array{Float64, 1} = 0.5:1:kmax+0.5
-	de_bin_edges::Array{Float64, 1} = 0.0:0.01:12.5 #0.0:0.1:12.5
+	de_bin_edges::Array{Float64, 1} = 0.0:0.01:12.5
 	
 	n_K_real::Array{Int64, 1} = zeros(length(k_bin_edges) - 1)
 	n_DE_real::Array{Int64, 1} = zeros(length(de_bin_edges) - 1)
