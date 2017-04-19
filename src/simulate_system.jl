@@ -1,7 +1,8 @@
 include("rand_poisson.jl")
 include("periodic.jl")
 
-function simulate_system(distribution_class::String, distribution_parameters::Array{Float64, 1}, c::Float64, ax::Float64, ay::Float64, az::Float64, Lx::Float64, Ly::Float64, Lz::Float64, number_of_frames::Array{Int64, 1}, deltat::Float64, kmin::Int64)
+function simulate_system(distribution_class::String, distribution_parameters::Array{Float64, 1}, c::Float64, ax::Float64, ay::Float64, az::Float64, Lx::Float64, Ly::Float64, Lz::Float64, number_of_frames::Array{Int64, 1}, deltat::Float64, kmin::Int64, de_number_of_bins::Int64, de_max::Float64)
+	
 	
 	# Intensity of Poisson distribution of the number of particles. The factor 
 	# 1e12 takes into account that concentration is specified in particles/ml.
@@ -12,6 +13,7 @@ function simulate_system(distribution_class::String, distribution_parameters::Ar
 	
 	# Number of videos to be simulated.
 	number_of_videos::Int64 = length(number_of_frames)
+	kmax::Int64 = maximum(number_of_frames)
 	
 	# Lower and upper bounds for the detection region.
 	lbx::Float64 = 0.5 * (Lx - ax)
@@ -34,10 +36,13 @@ function simulate_system(distribution_class::String, distribution_parameters::Ar
 	k::Int64 = 0
 	de::Float64 = 0.0
 	
-	# Number of positions and estimated diffusion coefficient of all 
+	# Histogram vectors for number of positions and estimated diffusion coefficient of all
 	# recorded trajectories.
-	K::Array{Int64, 1} = zeros(0)
-	DE::Array{Float64, 1} = zeros(0)
+	
+	n_K_real::Array{Int64, 1} = zeros(kmax)
+	n_DE_real::Array{Int64, 1} = zeros(de_number_of_bins)
+	
+	d_de::Float64 = de_max / convert(Float64, de_number_of_bins)
 	
 	# Standard deviation of random displacements.
 	std_dev_random_walk::Float64 = 0.0
@@ -92,13 +97,18 @@ function simulate_system(distribution_class::String, distribution_parameters::Ar
 					end
 				elseif k > 0
 					if k >= kmin
-						push!(K, k)
+						
+						n_K[k] = n_K[k] + 1
+						
 						if k >= 2
 							de = de / (convert(Float64, k - 1) * 4.0 * deltat) # The '4' comes from the 2-D obs.
 						else
 							de = 0.0
 						end
-						push!(DE, de)
+						de = convert(Int64, ceil(de / d_de))
+						if 1 <= de <= kmax
+							n_DE[de] = n_DE[de] + 1
+						end
 					end
 					k = 0
 					de = 0.0
@@ -107,6 +117,6 @@ function simulate_system(distribution_class::String, distribution_parameters::Ar
 		end
 	end
 	
-	return (K, DE)
+	return (n_K, n_DE)
 end
 

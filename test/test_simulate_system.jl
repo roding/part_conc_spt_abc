@@ -23,16 +23,33 @@ function test_simulate_system()
 	ay::Float64 = 40.0 # µm.
 	az::Float64 = 2.0 # µm.
 	L::Float64 = 100.0 # µm.
-	number_of_frames::Array{Int64, 1} = 100 * ones(20000)
+	number_of_frames::Array{Int64, 1} = 100 * ones(2000)
 	deltat::Float64 = 0.05 # seconds
 	kmin::Int64 = 2
 	
+	de_number_of_bins::Int64 = 1250
+	de_max::Float64 = 12.5
+	
 	# Simulate system.
-	(K, DE) = simulate_system(distribution_class, distribution_parameters, c, ax, ay, az, L, number_of_frames, deltat, kmin)
+	(n_K::Array{Int64, 1}, n_DE::Array{Int64, 1}) = simulate_system(
+		distribution_class, 
+		distribution_parameters, 
+		c, 
+		ax, 
+		ay, 
+		az, 
+		Lx, 
+		Ly, 
+		Lz, 
+		number_of_frames, 
+		deltat,
+		kmin, 
+		de_number_of_bins, 
+		de_max)
 	
 	# Save results.
 	file_name_output = "simulated_system.dat"
-	writedlm(file_name_output, [K DE], ',')
+	writedlm(file_name_output, [n_K n_DE], ',')
 	
 	nothing
 end

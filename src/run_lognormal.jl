@@ -29,21 +29,31 @@ function run_lognormal()
 	distribution_class::String = "lognormal"
 	m_real::Float64 = 2.5 # µm^2/s.
 	s_real::Float64 = 0.5 # µm^2/s.
-	c_real::Float64 = 5e9 # part/ml.
+	c_real::Float64 = 5e8 # part/ml.
 	az_real::Float64 = 2.0 # µm.
 	
-	# Simulate system.
-	(K_real, DE_real) = simulate_system(distribution_class, [m_real, s_real], c_real, ax, ay, az_real, Lx, Ly, Lz, number_of_frames, deltat, kmin)
-	println( (length(K_real), length(DE_real)) )
-	
 	# Distance function parameters.
-	k_bin_edges::Array{Float64, 1} = 0.5:1:kmax+0.5
-	de_bin_edges::Array{Float64, 1} = 0.0:0.01:12.5
+	de_number_of_bins::Int64 = 1250
+	de_max::Float64 = 12.5	
 	
-	n_K_real::Array{Int64, 1} = zeros(length(k_bin_edges) - 1)
-	n_DE_real::Array{Int64, 1} = zeros(length(de_bin_edges) - 1)
-	n_K_sim::Array{Int64, 1} = zeros(length(k_bin_edges) - 1)
+	# Simulate system.
+	n_K_real::Array{Int64, 1} = zeros(kmax)
+	n_DE_real::Array{Int64, 1} = zeros(de_number_of_bins)
+	(n_K_real, n_DE_real) = simulate_system(distribution_class, [m_real, s_real], c_real, ax, ay, az_real, Lx, Ly, Lz, number_of_frames, deltat, kmin, de_number_of_bins, de_max)
+	
+	# Histogram vectors.
+	 = 
+	 = 
+	n_K_sim::Array{Int64, 1} = zeros(kmax)
 	n_DE_sim::Array{Int64, 1} = zeros(length(de_bin_edges) - 1)
+	
+	# Compute histogram of 'real' data set.
+	
+	
+	
+	
+	
+	
 	
 	(~, n_K_real) = hist(K_real, k_bin_edges)
 	(~, n_DE_real) = hist(DE_real, de_bin_edges)

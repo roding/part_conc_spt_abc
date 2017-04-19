@@ -1,10 +1,10 @@
-function histogram_float64(x::Array{Float64, 1}, x_bin_edges::FloatRange{Float64})
-	n::Array{Int64, 1} = zeros(length(x_bin_edges) - 1)
+function histogram_de(DE::Array{Float64, 1}, de_bin_edges::FloatRange{Float64})
+	n_DE::Array{Int64, 1} = zeros(length(de_bin_edges) - 1)
 	
-	dx::Float64 = x_bin_edges[2] - x_bin_edges[1]
 	
-	x = x - x_bin_edges[1]
-	x_bin_edges = x_bin_edges - x_bin_edges[1]
+	
+	#x = x - x_bin_edges[1]
+	#x_bin_edges = x_bin_edges - x_bin_edges[1]
 	#println(x)
 	x = x / dx
 	
