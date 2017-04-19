@@ -14,7 +14,7 @@ function test_simulate_system()
 	distribution_parameters::Array{Float64, 1} = [m, s]
 	
 	# Concentration.
-	c::Float64 = 1e8 # part/ml.
+	c::Float64 = 5e8 # part/ml.
 	
 	# Acquisition parameters.
 	ax::Float64 = 40.0 # µm.
@@ -23,12 +23,13 @@ function test_simulate_system()
 	Lx::Float64 = 60.0 # µm.
 	Ly::Float64 = 60.0 # µm.
 	Lz::Float64 = 10.0 # µm.
-	number_of_frames::Array{Int64, 1} = 1000 * ones(200)
+	number_of_frames::Array{Int64, 1} = 250 * ones(40)
 	deltat::Float64 = 0.05 # seconds
-	kmin::Int64 = 2
+	kmin::Int64 = 1#2
+	kmax::Int64 = maximum(number_of_frames)
 	
-	de_number_of_bins::Int64 = 30#1250
-	de_max::Float64 = 3.0#12.5
+	de_number_of_bins::Int64 = 1000#1250
+	de_max::Float64 = 10.0#12.5
 	
 	# Simulate system.
 	(n_K::Array{Int64, 1}, n_DE::Array{Int64, 1}) = simulate_system(
@@ -47,8 +48,19 @@ function test_simulate_system()
 		de_number_of_bins, 
 		de_max)
 	
-	println(n_K')
-	println(n_DE')
+	#println(n_K')
+	#println(n_DE')
+	
+	println(sum(n_K))
+	mean_K = sum(n_K .* (1:kmax)) / sum(n_K)
+	println(mean_K)
+	println(size(n_DE))
+	println(size( de_max/de_number_of_bins:de_max/de_number_of_bins:de_max ))
+	mean_DE = sum(n_DE .* ( de_max/de_number_of_bins:de_max/de_number_of_bins:de_max )) / sum(n_DE)	
+	println(mean_DE)
+	
+	npart = sum(n_K) / sum(number_of_frames) * (Lx*Ly*Lz) / (ax*ay*az) 
+	println(npart)
 	# Save results.
 	#file_name_output::String = "simulated_system.dat"
 	#file_stream_output::IOStream = open(file_name_output, "w")

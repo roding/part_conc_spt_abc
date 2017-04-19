@@ -5,7 +5,7 @@ close all hidden
 number_of_columns = 5;
 precision_in_bytes = 8;
     
-folder = '../test/res_large_system_m_s_20170116';
+folder = '../src/res_lognormal/';
 files = dir([folder '/' '*.dat']);
 number_of_files = numel(files);
 

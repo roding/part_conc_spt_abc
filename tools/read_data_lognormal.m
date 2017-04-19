@@ -2,7 +2,7 @@ clear
 clc
 close all hidden
 
-file_name = '../test/output/abc_pmc_ln_par_mirror_it_467.dat';
+file_name = '../src/output_lognormal/res_lognormal_323.dat';
 file_info = dir(file_name);
 file_size = file_info.bytes;
 number_of_columns = 6;
@@ -30,7 +30,7 @@ figure, hold on, hist(s), title('s'), hold off
 figure, hold on, hist(c), title('c'), hold off
 figure, hold on, hist(az), title('az'), hold off
 %figure, hold on, scatter(m, w)
-figure, hold on, scatter(s, dist)
+figure, hold on, scatter(s, log10(dist))
 mean(m)
 mean(s)
 mean(c)
