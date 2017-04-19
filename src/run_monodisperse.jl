@@ -98,14 +98,14 @@ function run_monodisperse()
 			dist_bis = Inf
 			
 			while dist_bis > epsilon 
-				delta_s = tau_s * randn()
-				s_bis = s_prim + delta_s
-				while !( lb_s < s_bis < ub_s )
-					if s_bis < lb_s
-						s_bis = s_bis + 2 * ( lb_s - s_bis )
+				delta_D = tau_D * randn()
+				D_bis = D_prim + delta_D
+				while !( lb_D < D_bis < ub_D )
+					if D_bis < lb_D
+						D_bis = D_bis + 2 * ( lb_D - D_bis )
 					end
-					if s_bis > ub_s
-						s_bis = s_bis - 2 * ( s_bis - ub_s )
+					if D_bis > ub_D
+						D_bis = D_bis - 2 * ( D_bis - ub_D )
 					end
 				end
 							
