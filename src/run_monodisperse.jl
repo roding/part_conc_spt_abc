@@ -2,6 +2,7 @@ workspace()
 
 @everywhere include("../src/simulate_system.jl")
 @everywhere include("../src/distance.jl")
+include("normpdf.jl")
 
 function run_monodisperse()
 	#Inititalization.
@@ -174,9 +175,5 @@ function run_monodisperse()
 	println(t_exec/1e9)
 	nothing
 end
-
-function normpdf(x, mu, sigma)
-	return 1.0 / ( sqrt(2.0 * pi) * sigma ) * exp( - 0.5 * (x - mu)^2 / sigma^2 )
-end	
 
 run_monodisperse()
