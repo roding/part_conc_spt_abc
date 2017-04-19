@@ -3,7 +3,7 @@ workspace()
 @everywhere include("../src/simulate_system.jl")
 @everywhere include("../src/distance.jl")
 
-function test_abc_pmc_monodisperse_parallel()
+function run_monodisperse()
 	#Inititalization.
 	srand(1)
 	t_start::Int64 = convert(Int64, time_ns())
@@ -179,4 +179,4 @@ function normpdf(x, mu, sigma)
 	return 1.0 / ( sqrt(2.0 * pi) * sigma ) * exp( - 0.5 * (x - mu)^2 / sigma^2 )
 end	
 
-test_abc_pmc_monodisperse_parallel()
+run_monodisperse()
