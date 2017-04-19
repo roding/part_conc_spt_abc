@@ -38,11 +38,12 @@ function simulate_system(distribution_class::String, distribution_parameters::Ar
 	
 	# Histogram vectors for number of positions and estimated diffusion coefficient of all
 	# recorded trajectories.
-	
-	n_K_real::Array{Int64, 1} = zeros(kmax)
-	n_DE_real::Array{Int64, 1} = zeros(de_number_of_bins)
+	n_K::Array{Int64, 1} = zeros(kmax)
+	n_DE::Array{Int64, 1} = zeros(de_number_of_bins)
 	
 	d_de::Float64 = de_max / convert(Float64, de_number_of_bins)
+	
+	ind::Int64 = 0
 	
 	# Standard deviation of random displacements.
 	std_dev_random_walk::Float64 = 0.0
@@ -102,12 +103,12 @@ function simulate_system(distribution_class::String, distribution_parameters::Ar
 						
 						if k >= 2
 							de = de / (convert(Float64, k - 1) * 4.0 * deltat) # The '4' comes from the 2-D obs.
-						else
-							de = 0.0
-						end
-						de = convert(Int64, ceil(de / d_de))
-						if 1 <= de <= kmax
-							n_DE[de] = n_DE[de] + 1
+							#println(de)
+							ind = convert(Int64, ceil(de / d_de))
+							#println(ind)
+							if 1 <= ind <= de_number_of_bins
+								n_DE[ind] = n_DE[ind] + 1
+							end
 						end
 					end
 					k = 0
