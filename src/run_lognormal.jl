@@ -20,8 +20,8 @@ function run_lognormal()
 	Lx::Float64 = 60.0#100.0 # µm.
 	Ly::Float64 = 60.0#100.0 # µm.
 	Lz::Float64 = 10.0#50.0 # µm.
-	number_of_frames::Array{Int64, 1} = 250 * ones(100)
-	deltat::Float64 = 0.05 # seconds
+	number_of_frames::Array{Int64, 1} = 2500 * ones(100)
+	deltat::Float64 = 0.01 # seconds
 	#warn("Frame rate set to 100 Hz for testing.")
 	kmin::Int64 = 2
 	kmax::Int64 = maximum(number_of_frames)
@@ -30,7 +30,7 @@ function run_lognormal()
 	distribution_class::String = "lognormal"
 	m_real::Float64 = 0.5 # µm^2/s.
 	s_real::Float64 = 0.1 # µm^2/s.
-	c_real::Float64 = 1e9 # part/ml.
+	c_real::Float64 = 1e8 # part/ml.
 	az_real::Float64 = 2.0 # µm.
 	
 	# Distance function parameters.
@@ -95,8 +95,8 @@ function run_lognormal()
 	tau_az::Float64 = sqrt( 2.0 * var(az, corrected = false) )
 	
 	# The rest of the iterations.
-	gamma = 7.0
-	delta_gamma = 0.01#0.005
+	gamma = 11.0
+	delta_gamma = 0.05#0.005
 	epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = [0]
 	t_start_iteration::Int64 = 0 
