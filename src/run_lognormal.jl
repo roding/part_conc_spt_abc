@@ -20,9 +20,9 @@ function run_lognormal()
 	Lx::Float64 = 60.0#100.0 # µm.
 	Ly::Float64 = 60.0#100.0 # µm.
 	Lz::Float64 = 10.0#50.0 # µm.
-	number_of_frames::Array{Int64, 1} = 250 * ones(40)
-	deltat::Float64 = 0.01 # seconds
-	warn("Frame rate set to 100 Hz for testing.")
+	number_of_frames::Array{Int64, 1} = 250 * ones(100)
+	deltat::Float64 = 0.05 # seconds
+	#warn("Frame rate set to 100 Hz for testing.")
 	kmin::Int64 = 2
 	kmax::Int64 = maximum(number_of_frames)
 
@@ -64,7 +64,7 @@ function run_lognormal()
 	ub_az::Float64 = 4.0 * az_real
 		
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 32#128#512
+	number_of_abc_samples::Int64 = 128#128#512
 	number_of_iterations::Int64 = 5000
 
 	# Variables for population parameter values.
@@ -95,7 +95,7 @@ function run_lognormal()
 	tau_az::Float64 = sqrt( 2.0 * var(az, corrected = false) )
 	
 	# The rest of the iterations.
-	gamma = 8.0
+	gamma = 7.0
 	delta_gamma = 0.01#0.005
 	epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = [0]
