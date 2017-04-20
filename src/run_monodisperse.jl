@@ -88,7 +88,7 @@ function run_monodisperse()
 	tau_az::Float64 = sqrt( 2.0 * var(az, corrected = false) )
 	
 	# The rest of the iterations.
-	gamma = 7.0
+	gamma = 9.0
 	delta_gamma = 0.01#0.005
 	epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = [0]
@@ -148,7 +148,7 @@ function run_monodisperse()
 				(n_K_sim, n_DE_sim) = simulate_system(distribution_class, [D_bis], c_bis, ax, ay, az_bis, Lx, Ly, Lz, number_of_frames, deltat, kmin, de_number_of_bins, de_max)
 				
 				dist_bis = distance(n_K_real, n_DE_real, n_K_sim, n_DE_sim, d_de)
-				println(dist_bis)
+				#println(dist_bis)
 
 				trial_count[1] = trial_count[1] + 1
 			end
