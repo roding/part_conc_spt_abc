@@ -2,7 +2,7 @@ clear
 clc
 close all hidden
 
-file_name = '../src/output_lognormal/res_lognormal_323.dat';
+file_name = '../src/output_lognormal/res_lognormal_227.dat';
 file_info = dir(file_name);
 file_size = file_info.bytes;
 number_of_columns = 6;

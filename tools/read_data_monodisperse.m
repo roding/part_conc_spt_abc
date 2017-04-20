@@ -2,7 +2,7 @@ clear
 clc
 close all hidden
 
-file_name = '../test/output/abc_pmc_md_par_it_199.dat';
+file_name = '../src/output_monodisperse/res_monodisperse_424.dat';
 file_info = dir(file_name);
 file_size = file_info.bytes;
 number_of_columns = 5;
@@ -18,8 +18,8 @@ data = data';
 D = data(:, 1);
 c = data(:, 2);
 az = data(:, 3);
-dist  = data(:, 4);
-w  = data(:, 5);
+dist = data(:, 4);
+w = data(:, 5);
 
 clear data
 
