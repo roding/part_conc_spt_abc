@@ -17,22 +17,37 @@ function run_monodisperse()
 	# Acquisition parameters.
 	ax::Float64 = 40.0 # µm.
 	ay::Float64 = 40.0 # µm.
-	Lx::Float64 = 100.0 # µm.
-	Ly::Float64 = 100.0 # µm.
-	Lz::Float64 = 50.0 # µm.
-	number_of_frames::Array{Int64, 1} = 250 * ones(40)
+	Lx::Float64 = 60.0#100.0 # µm.
+	Ly::Float64 = 60.0#100.0 # µm.
+	Lz::Float64 = 10.0#50.0 # µm.
+	number_of_frames::Array{Int64, 1} = 250 * ones(100)
 	deltat::Float64 = 0.05 # seconds
+	#warn("Frame rate set to 100 Hz for testing.")
 	kmin::Int64 = 2
-	
+	kmax::Int64 = maximum(number_of_frames)
+
 	# True system parameters.
 	distribution_class::String = "monodisperse"
-	D_real::Float64 = 2.5 # µm^2/s.
-	c_real::Float64 = 5e9 # part/ml.
+	D_real::Float64 = 0.5 # µm^2/s.
+	c_real::Float64 = 1e9 # part/ml.
 	az_real::Float64 = 2.0 # µm.
 	
+	# Distance function parameters.
+	de_number_of_bins::Int64 = 1000
+	de_max::Float64 = 10.0
+	d_de::Float64 = de_max / de_number_of_bins
+	
 	# Simulate system.
-	(K_real, DE_real) = simulate_system(distribution_class, [D_real], c_real, ax, ay, az_real, Lx, Ly, Lz, number_of_frames, deltat, kmin)
-	println( (length(K_real), length(DE_real)) )
+	n_K_real::Array{Int64, 1} = zeros(kmax)
+	n_DE_real::Array{Int64, 1} = zeros(de_number_of_bins)
+	(n_K_real, n_DE_real) = simulate_system(distribution_class, [D_real], c_real, ax, ay, az_real, Lx, Ly, Lz, number_of_frames, deltat, kmin, de_number_of_bins, de_max)
+	println(sum(n_K_real))
+	println(sum(n_K_real .* (1:kmax)) / sum(n_K_real))
+	
+	# Histogram vectors.
+	n_K_sim::Array{Int64, 1} = zeros(kmax)
+	n_DE_sim::Array{Int64, 1} = zeros(de_number_of_bins)
+		
 	# Inference starts.
 	random_seed::Int64 = convert(Int64, time_ns())
 	srand(random_seed)
@@ -42,11 +57,11 @@ function run_monodisperse()
 	ub_D::Float64 = 4.0 * D_real
 	lb_c::Float64 = 0.25 * c_real
 	ub_c::Float64 = 4.0 * c_real
-	lb_az::Float64 = 0.25 * az_real#az_real
-	ub_az::Float64 = 4.0 * az_real#az_real
-			
+	lb_az::Float64 = 0.25 * az_real
+	ub_az::Float64 = 4.0 * az_real
+		
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 1024
+	number_of_abc_samples::Int64 = 128#128#512
 	number_of_iterations::Int64 = 5000
 
 	# Variables for population parameter values.
@@ -73,11 +88,10 @@ function run_monodisperse()
 	tau_az::Float64 = sqrt( 2.0 * var(az, corrected = false) )
 	
 	# The rest of the iterations.
-	gamma = 7.5#5.0
-	delta_gamma = 0.005
+	gamma = 7.0
+	delta_gamma = 0.01#0.005
 	epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = [0]
-	trial_count_target::Int64 = 10 * number_of_abc_samples
 	t_start_iteration::Int64 = 0 
 	for current_iteration = 1:number_of_iterations
 		t_start_iteration = convert(Int64, time_ns())
@@ -131,13 +145,13 @@ function run_monodisperse()
 					end
 				end
 				
-				(K_sim, DE_sim) = simulate_system(distribution_class, [D_bis], c_bis, ax, ay, az_bis, Lx, Ly, Lz, number_of_frames, deltat, kmin)
-				dist_bis = distance(K_real, DE_real, K_sim, DE_sim)
-				#println(dist_bis)
+				(n_K_sim, n_DE_sim) = simulate_system(distribution_class, [D_bis], c_bis, ax, ay, az_bis, Lx, Ly, Lz, number_of_frames, deltat, kmin, de_number_of_bins, de_max)
 				
+				dist_bis = distance(n_K_real, n_DE_real, n_K_sim, n_DE_sim, d_de)
+				println(dist_bis)
+
 				trial_count[1] = trial_count[1] + 1
 			end
-			
 			
 			D_star[current_abc_sample] = D_bis
 			c_star[current_abc_sample] = c_bis
