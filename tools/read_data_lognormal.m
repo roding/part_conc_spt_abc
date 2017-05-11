@@ -2,7 +2,7 @@ clear
 clc
 close all hidden
 
-file_name = '../src/output_lognormal/res_lognormal_121.dat';
+file_name = '../src/output_lognormal/res_lognormal_369.dat';
 file_info = dir(file_name);
 file_size = file_info.bytes;
 number_of_columns = 6;
@@ -25,12 +25,12 @@ w  = data(:, 6);
 clear data
 
 
-figure, hold on, hist(m), title('m'), hold off
-figure, hold on, hist(s), title('s'), hold off
-figure, hold on, hist(c), title('c'), hold off
-figure, hold on, hist(az), title('az'), hold off
-figure, hold on, scatter(s, w)
-%figure, hold on, scatter(s, log10(dist))
+figure, hold on, hist(m, 32), title('m'), hold off
+figure, hold on, hist(s, 32), title('s'), hold off
+figure, hold on, hist(c, 32), title('c'), hold off
+figure, hold on, hist(az, 32), title('az'), hold off
+figure, hold on, scatter(s, log10(w))
+figure, hold on, scatter(s, log10(dist))
 mean(m)
 mean(s)
 mean(c)

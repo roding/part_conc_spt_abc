@@ -6,7 +6,7 @@ include("normpdf.jl")
 
 function run_lognormal()
 	#Inititalization.
-	srand(1)
+	srand(2)
 	t_start::Int64 = convert(Int64, time_ns())
 
 	output_dir::String = "output_lognormal"
@@ -20,9 +20,9 @@ function run_lognormal()
 	Lx::Float64 = 60.0#100.0 # µm.
 	Ly::Float64 = 60.0#100.0 # µm.
 	Lz::Float64 = 10.0#50.0 # µm.
-	number_of_frames::Array{Int64, 1} = 2500 * ones(100)
+	number_of_frames::Array{Int64, 1} = 5000 * ones(400) #5000 * ones(100)
 	deltat::Float64 = 0.01 # seconds
-	#warn("Frame rate set to 100 Hz for testing.")
+	warn("Frame rate set to 100 Hz for testing.")
 	kmin::Int64 = 2
 	kmax::Int64 = maximum(number_of_frames)
 
@@ -34,8 +34,8 @@ function run_lognormal()
 	az_real::Float64 = 2.0 # µm.
 	
 	# Distance function parameters.
-	de_number_of_bins::Int64 = 1000
-	de_max::Float64 = 10.0
+	de_number_of_bins::Int64 = 2000
+	de_max::Float64 = 2.0
 	d_de::Float64 = de_max / de_number_of_bins
 	
 	# Simulate system.
@@ -64,7 +64,7 @@ function run_lognormal()
 	ub_az::Float64 = 4.0 * az_real
 		
 	# Inference parameters.
-	number_of_abc_samples::Int64 = 128#128#512
+	number_of_abc_samples::Int64 = 512#128#512
 	number_of_iterations::Int64 = 5000
 
 	# Variables for population parameter values.
@@ -95,8 +95,8 @@ function run_lognormal()
 	tau_az::Float64 = sqrt( 2.0 * var(az, corrected = false) )
 	
 	# The rest of the iterations.
-	gamma = 11.0
-	delta_gamma = 0.05#0.005
+	gamma = 9.0#8.0
+	delta_gamma = 0.01#0.005
 	epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = [0]
 	t_start_iteration::Int64 = 0 
@@ -183,15 +183,16 @@ function run_lognormal()
 		
 		println((current_iteration, trial_count[1], gamma, delta_gamma, tau_m, tau_s, tau_c, tau_az))
 		
-		for current_abc_sample = 1:number_of_abc_samples
-			w_star[current_abc_sample] = 0.0
-			for i = 1:number_of_abc_samples
-				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(m_star[current_abc_sample] - m[i], 0.0, tau_m) * normpdf(s_star[current_abc_sample] - s[i], 0.0, tau_s) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
-			end
-			w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
-		end
-		
-		w = w_star / sum(w_star)
+#		for current_abc_sample = 1:number_of_abc_samples
+#			w_star[current_abc_sample] = 0.0
+#			for i = 1:number_of_abc_samples
+#				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(m_star[current_abc_sample] - m[i], 0.0, tau_m) * normpdf(s_star[current_abc_sample] - s[i], 0.0, tau_s) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
+#			end
+#			w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
+#		end
+#		w = w_star / sum(w_star)
+		w = 1 ./ dist_star.^2
+		w = w / sum(w)
 		
 		m = m_star
 		s = s_star
