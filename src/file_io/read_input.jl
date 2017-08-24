@@ -3,70 +3,50 @@ function read_input(file_path::String)
 	file_string::String = readstring(file_stream)
 	close(file_stream)
 
-	# Read particle data.
-	particle_type::String = read_key(file_string, "particle_type", String)
-	R_temp::Array{Float64, 1} = read_key(file_string, "R", Array{Float64, 1})
-	number_of_properties::Int64 = 0
-	if particle_type == "sphere"
-		number_of_properties = 1
-	elseif particle_type == "ellipse"
-		number_of_properties = 2
-	elseif particle_type == "ellipsoid"
-		number_of_properties = 3
-	elseif particle_type == "cuboid"
-		number_of_properties = 3
-	end
-	number_of_particles::Int64 = length(R_temp) / number_of_properties
-	R::Array{Float64, 2} = reshape(R_temp, number_of_particles, number_of_properties)
-
-	# Read input on initial system size.
-	Lx::Float64 = read_key(file_string, "domain_size_x", Float64)
-	Ly::Float64 = read_key(file_string, "domain_size_y", Float64)
-	Lz::Float64 = read_key(file_string, "domain_size_z", Float64)
-	phi::Float64 = read_key(file_string, "phi", Float64)
-
-	# Read input on target system size.
-	phi_target::Float64 = read_key(file_string, "phi_target", Float64)
-
-	# Position constraint.
-	position_constraint_axis::String = read_key(file_string, "position_constraint_axis", String)
-	position_constraint_lower::Float64 = read_key(file_string, "position_constraint_lower", Float64)
-	position_constraint_upper::Float64 = read_key(file_string, "position_constraint_upper", Float64)
-
-	# Orientation constraint.
-	orientation_axis::Array{Float64, 1} = read_key(file_string, "orientation_axis", Array{Float64, 1})
-	orientation_constraint_axis::Array{Float64, 1} = read_key(file_string, "orientation_constraint_axis", Array{Float64, 1})
-	orientation_constraint_lower::Float64 = read_key(file_string, "orientation_constraint_lower", Float64)
-	orientation_constraint_upper::Float64 = read_key(file_string, "orientation_constraint_upper", Float64)
-
-	# Other input.
-	sigma_translation_max::Float64 = read_key(file_string, "sigma_translation_max", Float64)
-	sigma_rotation_max::Float64 = read_key(file_string, "sigma_rotation_max", Float64)
-	sigma_ratio::Float64 = read_key(file_string, "sigma_ratio", Float64)
-	number_of_equilibration_sweeps::Int64 = read_key(file_string, "number_of_equilibration_sweeps", Int64)
-	delta_phi::Float64 = read_key(file_string, "delta_phi", Float64)
-
+	distribution_class::String = read_key(file_string, "distribution_class", String)
+	number_of_components::Int64 = read_key(file_string, "number_of_components", Int64)
+	ax::Float64 = read_key(file_string, "ax", Float64)
+	ay::Float64 = read_key(file_string, "ay", Float64)
+	Lx::Float64 = read_key(file_string, "Lx", Float64)
+	Ly::Float64 = read_key(file_string, "Ly", Float64)
+	Lz::Float64 = read_key(file_string, "Lz", Float64)
+	kmin::Int64 = read_key(file_string, "kmin", Int64)
+	number_of_de_bins::Int64 = read_key(file_string, "number_of_de_bins", Int64)
+	ub_de::Float64 = read_key(file_string, "ub_de", Float64)
+	lb_m::Float64 = read_key(file_string, "lb_m", Float64)
+	ub_m::Float64 = read_key(file_string, "ub_m", Float64)
+	lb_s::Float64 = read_key(file_string, "lb_s", Float64)
+	ub_s::Float64 = read_key(file_string, "ub_s", Float64)
+	lb_c::Float64 = read_key(file_string, "lb_c", Float64)
+	ub_c::Float64 = read_key(file_string, "ub_c", Float64)
+	lb_az::Float64 = read_key(file_string, "lb_az", Float64)
+	ub_az::Float64 = read_key(file_string, "ub_az", Float64)
+	number_of_abc_samples::Int64 = read_key(file_string, "number_of_abc_samples", Int64)
+	gamma_initial::Float64 = read_key(file_string, "gamma_initial", Float64)
+	delta_gamma::Float64 = read_key(file_string, "delta_gamma", Float64)
 	output_file_path::String = read_key(file_string, "output_file_path", String)
-
+	
 	return (
-		particle_type,
-		R,
+		distribution_class,
+		number_of_components,
+		ax,
+		ay,
 		Lx,
 		Ly,
 		Lz,
-		phi,
-		phi_target,
-		position_constraint_axis,
-		position_constraint_lower,
-		position_constraint_upper,
-		orientation_axis,
-		orientation_constraint_axis,
-		orientation_constraint_lower,
-		orientation_constraint_upper,
-		sigma_translation_max,
-		sigma_rotation_max,
-		sigma_ratio,
-		number_of_equilibration_sweeps,
-		delta_phi,
+		kmin,
+		number_of_de_bins,
+		ub_de,
+		lb_m,
+		ub_m,
+		lb_s,
+		ub_s,
+		lb_c,
+		ub_c,
+		lb_az,
+		ub_az,
+		number_of_abc_samples,
+		gamma_initial,
+		delta_gamma,
 		output_file_path)
 end
