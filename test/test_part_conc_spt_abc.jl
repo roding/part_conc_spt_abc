@@ -26,15 +26,17 @@ function test_part_conc_spt_abc()
 	deltat::Float64 = 0.05 # seconds
 	kmin::Int64 = 2
 	distribution_class::String = "discrete"
-	D_real::Array{Float64, 1} = [1.5] # µm^2/s.
+	m_real::Array{Float64, 1} = [1.5] # µm^2/s.
+	s_real::Array{Float64, 1} = [0.0] # µm^2/s. Just put to zero for discrete model.
 	w_real::Array{Float64, 1} = [1.0]
 	c_real::Float64 = 1e8 # part/ml.
 	az_real::Float64 = 2.0 # µm.
 	
 	# Simulate experiment.
-	distribution_parameters::Array{Float64, 1} = vcat(D_real, w_real)
 	(K::Array{Int64, 1}, DE::Array{Float64, 1}) = generate_experiment(	distribution_class, 
-																distribution_parameters, 
+																m_real,
+																s_real,
+																w_real,
 																c_real, 
 																ax, 
 																ay, 
@@ -55,6 +57,52 @@ function test_part_conc_spt_abc()
 				deltat,
 				K,
 				DE)
+				
+	# Write input to file.
+	input_file_path::String =  "M:/part_conc_spt_abc/dev/part_conc_spt_abc/test/input.xml"
+	number_of_components::Int64 = 1
+	number_of_de_bins::Int64 = 2000
+	ub_de::Float64 = 4.0
+	lb_m::Float64 = 0.25 * minimum(m_real)
+	ub_m::Float64 = 4.0 * maximum(m_real)
+	lb_s::Float64 = 0.0 # Just put to zero for discrete model.
+	ub_s::Float64 = 0.0 # Just put to zero for discrete model.
+	lb_c::Float64 = 0.25 * c_real
+	ub_c::Float64 = 4.0 * c_real
+	lb_az::Float64 = 0.25 * az_real
+	ub_az::Float64 = 4.0 * az_real
+	number_of_abc_samples::Int64 = 512
+	gamma_initial::Float64 = 9.0
+	delta_gamma::Float64 = 0.01
+	output_file_path::String = "M:/part_conc_spt_abc/dev/part_conc_spt_abc/test/output.xml"
+	write_input(	input_file_path,
+				data_file_path,
+				distribution_class,
+				number_of_components,
+				Lx,
+				Ly,
+				Lz,
+				kmin,
+				number_of_de_bins,
+				ub_de,
+				lb_m,
+				ub_m,
+				lb_s,
+				ub_s,
+				lb_c,
+				ub_c,
+				lb_az,
+				ub_az,
+				number_of_abc_samples,
+				gamma_initial,
+				delta_gamma,
+				output_file_path)
+	
+	# Run inference.
+	program_path::String = abspath("../src/run_part_conc_spt_abc.jl")
+	cmd::Cmd = `julia` $program_path $input_file_path`
+	#cmd::Cmd = `julia -p 88 $number_of_cores $program_path $input_file_path`
+	run(cmd)
 				
 	nothing
 end

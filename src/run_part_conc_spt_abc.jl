@@ -25,7 +25,7 @@ function run_part_conc_spt_abc()
 		input_file_path = ARGS[1]
 	else
 		println("No input file specified or specified input file does not exist. Aborting.")
-		return nothing
+		return -1
 	end
 
 	# Read input.
@@ -62,7 +62,7 @@ function run_part_conc_spt_abc()
 	
 
 
-	nothing
+	return 0
 end
 
 run_part_conc_spt_abc()

@@ -1,5 +1,7 @@
 function generate_experiment(	distribution_class::String, 
-							distribution_parameters::Array{Float64, 1}, 
+							m::Array{Float64, 1},
+							s::Array{Float64, 1}, 
+							w::Array{Float64, 1}, 
 							c::Float64, 
 							ax::Float64, 
 							ay::Float64, 
@@ -11,15 +13,15 @@ function generate_experiment(	distribution_class::String,
 							deltat::Float64, 
 							kmin::Int64)
 	
+	# Number of components in distribution.
+	number_of_components::Int64 = length(m)
+	cum_w::Array{Float64, 1} = cumsum(w)
+	
 	# Intensity of Poisson distribution of the number of particles. The factor 
 	# 1e12 takes into account that concentration is specified in particles/ml.
 	lambda::Float64 = c * Lx * Ly * Lz / 1e12
 
-	# Number of particles in simulated system, which varies between videos.
-	number_of_particles::Int64 = 0
-	
-	# Number of videos to be simulated.
-	println(number_of_frames)
+	# Number of videos.
 	number_of_videos::Int64 = length(number_of_frames)
 	
 	# Lower and upper bounds for the detection region.
@@ -30,30 +32,23 @@ function generate_experiment(	distribution_class::String,
 	lbz::Float64 = 0.5 * (Lz - az)
 	ubz::Float64 = 0.5 * (Lz + az)
 	
-	# Variables for storing positions and displacements.
+	
+	# Vectors for storing number of positions and estimated diffusion coefficients of all recorded trajectories.
+	K::Array{Int64, 1} = []
+	DE::Array{Float64, 1} = []
+		
+	# Variables for storing positions, displacements, number of particles, etc
 	x::Float64 = 0.0
 	y::Float64 = 0.0
 	z::Float64 = 0.0
 	deltax::Float64 = 0.0
 	deltay::Float64 = 0.0
 	deltaz::Float64 = 0.0
-	
-	# Number of positions and estimated diffusion coefficient of 
-	# current trajectory.
+	number_of_particles::Int64 = 0
 	k::Int64 = 0
 	de::Float64 = 0.0
-	
-	# Vectors for storing number of positions and estimated diffusion coefficients of all recorded trajectories.
-	K::Array{Int64, 1} = []
-	DE::Array{Float64, 1} = []
-		
-	# Standard deviation of random displacements.
 	std_dev_random_walk::Float64 = 0.0
 	
-	# Compute cumulative component weights/fractions for randomization.
-	number_of_components::Int64 = length(distribution_parameters) / 2
-	cumulative_weights::Array{Float64, 1} = cumsum(distribution_parameters[number_of_components+1:2*number_of_components])
-
 	for current_video = 1:number_of_videos
 		number_of_particles = rand_poisson(lambda)
 		
@@ -62,10 +57,10 @@ function generate_experiment(	distribution_class::String,
 			# a random standard deviation for the displacements.
 			#if distribution_class == "discrete"
 			if number_of_components == 1
-				std_dev_random_walk = sqrt(2.0 * distribution_parameters[1] * deltat)
+				std_dev_random_walk = sqrt(2.0 * m[1] * deltat)
 			else
-				index = rand_component(cumulative_weights::Array{Float64, 1})
-				std_dev_random_walk = sqrt(2.0 * distribution_parameters[index] * deltat)
+				index = rand_component(cum_w)
+				std_dev_random_walk = sqrt(2.0 * m[index] * deltat)
 			end
 			#elseif distribution_class == "lognormal"
 			#	std_dev_random_walk = sqrt(2 * exp(log(distribution_parameters[1]) - 0.5 * log(1 + distribution_parameters[2]^2/distribution_parameters[1]^2) + (sqrt(log(1 + distribution_parameters[2]^2/distribution_parameters[1]^2))) * rand()) * deltat)
