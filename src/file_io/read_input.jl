@@ -5,8 +5,6 @@ function read_input(file_path::String)
 
 	distribution_class::String = read_key(file_string, "distribution_class", String)
 	number_of_components::Int64 = read_key(file_string, "number_of_components", Int64)
-	ax::Float64 = read_key(file_string, "ax", Float64)
-	ay::Float64 = read_key(file_string, "ay", Float64)
 	Lx::Float64 = read_key(file_string, "Lx", Float64)
 	Ly::Float64 = read_key(file_string, "Ly", Float64)
 	Lz::Float64 = read_key(file_string, "Lz", Float64)
@@ -29,8 +27,6 @@ function read_input(file_path::String)
 	return (
 		distribution_class,
 		number_of_components,
-		ax,
-		ay,
 		Lx,
 		Ly,
 		Lz,
