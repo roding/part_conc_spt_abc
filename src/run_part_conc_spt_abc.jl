@@ -3,6 +3,8 @@ workspace()
 include("file_io/read_key.jl")
 include("file_io/read_input.jl")
 include("file_io/read_data.jl")
+include("rand_poisson.jl")
+include("position_periodic.jl")
 
 function run_part_conc_spt_abc()
 	# Start time.
