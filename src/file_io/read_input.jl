@@ -3,6 +3,7 @@ function read_input(file_path::String)
 	file_string::String = readstring(file_stream)
 	close(file_stream)
 
+	data_file_path::String = read_key(file_string, "data_file_path", String)
 	distribution_class::String = read_key(file_string, "distribution_class", String)
 	number_of_components::Int64 = read_key(file_string, "number_of_components", Int64)
 	Lx::Float64 = read_key(file_string, "Lx", Float64)
@@ -25,6 +26,7 @@ function read_input(file_path::String)
 	output_file_path::String = read_key(file_string, "output_file_path", String)
 	
 	return (
+		data_file_path,
 		distribution_class,
 		number_of_components,
 		Lx,

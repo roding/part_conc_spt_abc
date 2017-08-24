@@ -1,5 +1,9 @@
 workspace()
 
+include("file_io/read_key.jl")
+include("file_io/read_input.jl")
+include("file_io/read_data.jl")
+
 function run_part_conc_spt_abc()
 	# Start time.
 	t_start_ns::Int64 = convert(Int64, time_ns())
@@ -23,6 +27,36 @@ function run_part_conc_spt_abc()
 	end
 
 	# Read input.
+	(	data_file_path::String,
+		distribution_class::String,
+		number_of_components::Int64,
+		Lx::Float64,
+		Ly::Float64,
+		Lz::Float64,
+		kmin::Int64,
+		number_of_de_bins::Int64,
+		ub_de::Float64,
+		lb_m::Float64,
+		ub_m::Float64,
+		lb_s::Float64,
+		ub_s::Float64,
+		lb_c::Float64,
+		ub_c::Float64,
+		lb_az::Float64,
+		ub_az::Float64,
+		number_of_abc_samples::Int64,
+		gamma_initial::Float64,
+		delta_gamma::Float64,
+		output_file_path::String) = read_input(input_file_path)
+		
+	# Read data.
+	(	ax::Float64,
+		ay::Float64,
+		number_of_frames::Array{Int64, 1},
+		deltat::Float64,
+		K::Array{Int64, 1},
+		DE::Array{Float64, 1}) = read_data(data_file_path)
+		
 	
 
 
