@@ -57,12 +57,12 @@ function generate_experiment(	distribution_class::String,
 		for current_particle = 1:number_of_particles
 			# Generate random diffusion coefficent from distribution, or more precisely,
 			# a random standard deviation for the displacements.
-			if distribution_class == "discrete"
-				
+			#if distribution_class == "discrete"
+				index = 
 				std_dev_random_walk = sqrt(2 * distribution_parameters[1] * deltat)
-			elseif distribution_class == "lognormal"
-				std_dev_random_walk = sqrt(2 * exp(log(distribution_parameters[1]) - 0.5 * log(1 + distribution_parameters[2]^2/distribution_parameters[1]^2) + (sqrt(log(1 + distribution_parameters[2]^2/distribution_parameters[1]^2))) * rand()) * deltat)
-			end
+			#elseif distribution_class == "lognormal"
+			#	std_dev_random_walk = sqrt(2 * exp(log(distribution_parameters[1]) - 0.5 * log(1 + distribution_parameters[2]^2/distribution_parameters[1]^2) + (sqrt(log(1 + distribution_parameters[2]^2/distribution_parameters[1]^2))) * rand()) * deltat)
+			#end
 			
 			# Random initial position.
 			x = Lx * rand()

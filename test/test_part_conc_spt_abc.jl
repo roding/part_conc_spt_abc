@@ -6,6 +6,7 @@ include("../src/file_io/read_data.jl")
 include("../src/file_io/write_key.jl")
 include("../src/file_io/write_input.jl")
 include("../src/file_io/write_data.jl")
+include("../src/rand_component.jl")
 include("../src/generate_experiment.jl")
 include("../src/rand_poisson.jl")
 include("../src/position_periodic.jl")
@@ -30,6 +31,8 @@ function test_part_conc_spt_abc()
 	w_real::Float64 = [1.0]
 	c_real::Float64 = 1e8 # part/ml.
 	az_real::Float64 = 2.0 # µm.
+	
+	
 	
 	
 	
