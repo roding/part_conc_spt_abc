@@ -18,6 +18,14 @@ function read_key(file_string::String, key_name::String, fmt::DataType)
 			data[current_value] = parse(Float64, key_string_array[current_value])
 		end
 		return data
+	elseif fmt == Array{Int64, 1}
+		key_string_array = split(key_string, ",")
+		number_of_values = length(key_string_array)
+		data = Array{Int64}(number_of_values)
+		for current_value = 1:number_of_values
+			data[current_value] = parse(Int64, key_string_array[current_value])
+		end
+		return data
 	else
 		error("Incompatible data type.")
 		nothing

@@ -4,8 +4,7 @@ function write_data(	file_path::String,
 					number_of_frames::Array{Int64, 1},
 					deltat::Float64,
 					K::Array{Int64, 1},
-					DE::Array{Float64, 1},
-					)
+					DE::Array{Float64, 1})
 
 	file_stream::IOStream = open(file_path, "w")
 

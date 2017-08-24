@@ -9,9 +9,7 @@ function generate_experiment(	distribution_class::String,
 							Lz::Float64, 
 							number_of_frames::Array{Int64, 1}, 
 							deltat::Float64, 
-							kmin::Int64, 
-							number_of_de_bins::Int64, 
-							ub_de::Float64)
+							kmin::Int64)
 	
 	# Intensity of Poisson distribution of the number of particles. The factor 
 	# 1e12 takes into account that concentration is specified in particles/ml.
@@ -21,6 +19,7 @@ function generate_experiment(	distribution_class::String,
 	number_of_particles::Int64 = 0
 	
 	# Number of videos to be simulated.
+	println(number_of_frames)
 	number_of_videos::Int64 = length(number_of_frames)
 	
 	# Lower and upper bounds for the detection region.
@@ -46,10 +45,14 @@ function generate_experiment(	distribution_class::String,
 	
 	# Vectors for storing number of positions and estimated diffusion coefficients of all recorded trajectories.
 	K::Array{Int64, 1} = []
-	DE::Array{Int64, 1} = []
+	DE::Array{Float64, 1} = []
 		
 	# Standard deviation of random displacements.
 	std_dev_random_walk::Float64 = 0.0
+	
+	# Compute cumulative component weights/fractions for randomization.
+	number_of_components::Int64 = length(distribution_parameters) / 2
+	cumulative_weights::Array{Float64, 1} = cumsum(distribution_parameters[number_of_components+1:2*number_of_components])
 
 	for current_video = 1:number_of_videos
 		number_of_particles = rand_poisson(lambda)
@@ -58,8 +61,12 @@ function generate_experiment(	distribution_class::String,
 			# Generate random diffusion coefficent from distribution, or more precisely,
 			# a random standard deviation for the displacements.
 			#if distribution_class == "discrete"
-				index = 
-				std_dev_random_walk = sqrt(2 * distribution_parameters[1] * deltat)
+			if number_of_components == 1
+				std_dev_random_walk = sqrt(2.0 * distribution_parameters[1] * deltat)
+			else
+				index = rand_component(cumulative_weights::Array{Float64, 1})
+				std_dev_random_walk = sqrt(2.0 * distribution_parameters[index] * deltat)
+			end
 			#elseif distribution_class == "lognormal"
 			#	std_dev_random_walk = sqrt(2 * exp(log(distribution_parameters[1]) - 0.5 * log(1 + distribution_parameters[2]^2/distribution_parameters[1]^2) + (sqrt(log(1 + distribution_parameters[2]^2/distribution_parameters[1]^2))) * rand()) * deltat)
 			#end
@@ -89,9 +96,9 @@ function generate_experiment(	distribution_class::String,
 				y = y + deltay
 				z = z + deltaz
 				
-				x = periodic(x, Lx)
-				y = periodic(y, Ly)
-				z = periodic(z, Lz)
+				x = position_periodic(x, Lx)
+				y = position_periodic(y, Ly)
+				z = position_periodic(z, Lz)
 				
 				if (lbz <= z <= ubz) & (lbx <= x <= ubx) & (lby <= y <= uby)
 					k = k + 1
@@ -99,27 +106,24 @@ function generate_experiment(	distribution_class::String,
 						de = de + deltax^2 + deltay^2 # Only in x-y plane.
 					end
 				elseif k > 0
-					if k >= kmin
-						
-						n_K[k] = n_K[k] + 1
-						
-						if k >= 2
-							de = de / (convert(Float64, k - 1) * 4.0 * deltat) # The '4' comes from the 2-D obs.
-							#println(de)
-							ind = convert(Int64, ceil(de / d_de))
-							#println(ind)
-							if 1 <= ind <= number_of_de_bins
-								n_DE[ind] = n_DE[ind] + 1
-							end
-						end
+					if k >= kmin # Assuming kmin >= 2 otherwise the division fails.
+						push!(K, k)
+						de = de / (convert(Float64, k - 1) * 4.0 * deltat) # The '4' comes from the 2D observations.
+						push!(DE, de)	
 					end
 					k = 0
 					de = 0.0
 				end
 			end
+			
+			# If particle is inside detection region in last frame, we have now missed that trajectory and need to add it now.
+			if (lbz <= z <= ubz) & (lbx <= x <= ubx) & (lby <= y <= uby) & k >= kmin # Assuming kmin >= 2 otherwise the division fails.
+				push!(K, k)
+				de = de / (convert(Float64, k - 1) * 4.0 * deltat) # The '4' comes from the 2D observations.
+				push!(DE, de)	
+			end
 		end
 	end
 	
-	return (n_K, n_DE)
+	return (K, DE)
 end
-
