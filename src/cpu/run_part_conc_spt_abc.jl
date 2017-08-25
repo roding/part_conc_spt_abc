@@ -59,6 +59,7 @@ function run_part_conc_spt_abc()
 		number_of_abc_samples::Int64,
 		gamma_initial::Float64,
 		delta_gamma::Float64,
+		ub_average_number_of_trials::Int64,
 		output_file_path::String) = read_input(input_file_path)
 		
 	# Read data.
@@ -95,6 +96,7 @@ function run_part_conc_spt_abc()
 									number_of_abc_samples,
 									gamma_initial,
 									delta_gamma,
+									ub_average_number_of_trials,
 									ax,
 									ay,
 									number_of_frames,

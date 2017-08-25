@@ -72,6 +72,7 @@ function test_part_conc_spt_abc()
 	number_of_abc_samples::Int64 = 32
 	gamma_initial::Float64 = 9.0
 	delta_gamma::Float64 = 0.01
+	ub_average_number_of_trials::Int64 = 500
 	output_file_path::String = abspath("output.xml")
 	write_input(	input_file_path,
 				data_file_path,
@@ -94,6 +95,7 @@ function test_part_conc_spt_abc()
 				number_of_abc_samples,
 				gamma_initial,
 				delta_gamma,
+				ub_average_number_of_trials,
 				output_file_path)
 
 	# Run inference.

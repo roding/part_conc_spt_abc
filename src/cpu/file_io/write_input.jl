@@ -19,6 +19,7 @@ function write_input(	file_path::String,
 					number_of_abc_samples::Int64,
 					gamma_initial::Float64,
 					delta_gamma::Float64,
+					ub_average_number_of_trials::Int64,
 					output_file_path::String)
 
 	file_stream::IOStream = open(file_path, "w")
@@ -45,6 +46,7 @@ function write_input(	file_path::String,
 	write_key(file_stream, "number_of_abc_samples", number_of_abc_samples)
 	write_key(file_stream, "gamma_initial", gamma_initial)
 	write_key(file_stream, "delta_gamma", delta_gamma)
+	write_key(file_stream, "ub_average_number_of_trials", ub_average_number_of_trials)
 	write_key(file_stream, "output_file_path", output_file_path)
 
 	@printf(file_stream, "%s", "</input>")

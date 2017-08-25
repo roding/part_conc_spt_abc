@@ -23,6 +23,7 @@ function read_input(file_path::String)
 	number_of_abc_samples::Int64 = read_key(file_string, "number_of_abc_samples", Int64)
 	gamma_initial::Float64 = read_key(file_string, "gamma_initial", Float64)
 	delta_gamma::Float64 = read_key(file_string, "delta_gamma", Float64)
+	ub_average_number_of_trials::Int64 = read_key(file_string, "ub_average_number_of_trials", Int64)
 	output_file_path::String = read_key(file_string, "output_file_path", String)
 	
 	return (
@@ -46,5 +47,6 @@ function read_input(file_path::String)
 		number_of_abc_samples,
 		gamma_initial,
 		delta_gamma,
+		ub_average_number_of_trials,
 		output_file_path)
 end

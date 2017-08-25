@@ -17,6 +17,7 @@ function estimate(distribution_class::String,
 				number_of_abc_samples::Int64,
 				gamma_initial::Float64,
 				delta_gamma::Float64,
+				ub_average_number_of_trials::Int64,
 				ax::Float64,
 				ay::Float64,
 				number_of_frames::Array{Int64, 1},
@@ -78,7 +79,6 @@ function estimate(distribution_class::String,
 	gamma::Float64 = gamma_initial
 	epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = zeros(number_of_abc_samples)
-	ub_average_number_of_trials::Int64 = 500
 	is_converged::Bool = false
 	while !is_converged
 		trial_count = zeros(number_of_abc_samples)
@@ -93,7 +93,7 @@ function estimate(distribution_class::String,
 			c_bis = c[:, current_abc_sample]
 			az_bis = az[current_abc_sample]
 
-			while dist_bis > epsilon && mean(trial_count) < ub_average_number_of_trials
+			while dist_bis > epsilon && mean(trial_count) < convert(Float64, ub_average_number_of_trials)
 				idx = rand_weighted_index(cum_w)
 
 				m_prim = m[:, idx]
