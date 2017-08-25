@@ -85,7 +85,7 @@ function estimate(distribution_class::String,
 	gamma::Float64 = gamma_initial
 	epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = zeros(number_of_abc_samples)
-	ub_number_of_trials::Int64 = 100
+	ub_average_number_of_trials::Int64 = 100
 	is_converged::Bool = false
 	while !is_converged
 		trial_count = zeros(number_of_abc_samples)
@@ -100,7 +100,7 @@ function estimate(distribution_class::String,
 			c_bis = c[:, current_abc_sample]
 			az_bis = az[current_abc_sample]
 				
-			while dist_bis > epsilon && trial_count[current_abc_sample] < ub_number_of_trials
+			while dist_bis > epsilon && mean(trial_count) < ub_average_number_of_trials
 				idx = rand_weighted_index(cum_w)
 			
 				m_prim = m[:, idx]
@@ -160,10 +160,10 @@ function estimate(distribution_class::String,
 		end
 		
 		#println(size(m))
-		println((gamma, maximum(trial_count), mean(m[1, :]), mean(m[2, :]), mean(c[1, :]), mean(c[2, :]), mean(az)))
+		println((gamma, mean(trial_count), mean(m[1, :]), mean(m[2, :]), mean(c[1, :]), mean(c[2, :]), mean(az)))
 		
 		
-		if maximum(trial_count) < ub_number_of_trials
+		if mean(trial_count) < ub_average_number_of_trials
 		#	for current_abc_sample = 1:number_of_abc_samples
 		#		w_star[current_abc_sample] = 0.0
 		#		for i = 1:number_of_abc_samples
