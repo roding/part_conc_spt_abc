@@ -69,7 +69,7 @@ function test_part_conc_spt_abc()
 	ub_c::Float64 = 4.0 * maximum(c_real)
 	lb_az::Float64 = 0.25 * az_real
 	ub_az::Float64 = 4.0 * az_real
-	number_of_abc_samples::Int64 = 512
+	number_of_abc_samples::Int64 = 16
 	gamma_initial::Float64 = 9.0
 	delta_gamma::Float64 = 0.01
 	output_file_path::String = abspath("output.xml")
@@ -99,7 +99,7 @@ function test_part_conc_spt_abc()
 	# Run inference.
 	program_path::String = abspath("../src/run_part_conc_spt_abc.jl")
 	#cmd::Cmd = `julia $program_path $input_file_path`
-	cmd::Cmd = `julia -p 32 $program_path $input_file_path`
+	cmd::Cmd = `julia -p 8 $program_path $input_file_path`
 	run(cmd)
 				
 	nothing

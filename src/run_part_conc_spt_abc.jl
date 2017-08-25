@@ -14,6 +14,7 @@ foo = @__FILE__
 @everywhere include(joinpath(program_file_dir, "position_periodic.jl"))
 @everywhere include(joinpath(program_file_dir, "displace.jl"))
 @everywhere include(joinpath(program_file_dir, "rand_poisson.jl"))
+@everywhere include(joinpath(program_file_dir, "normpdf.jl"))
 
 function run_part_conc_spt_abc()
 	# Start time.

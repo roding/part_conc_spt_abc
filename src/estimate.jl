@@ -82,31 +82,35 @@ function estimate(distribution_class::String,
 	# The rest of the iterations.
 	gamma::Float64 = gamma_initial
 	epsilon::Float64 = 10^gamma
-	trial_count::SharedArray{Int64, 1} = [0]
-	t_start_iteration::Int64 = 0
-	number_of_iterations::Int64 = 1000
-	for current_iteration = 1:number_of_iterations
-		t_start_iteration = convert(Int64, time_ns())
-		trial_count[1] = 0	
+	trial_count::SharedArray{Int64, 1} = zeros(number_of_abc_samples)
+	ub_number_of_trials::Int64 = 5
+	is_converged::Bool = false
+	while !is_converged
+		trial_count = zeros(number_of_abc_samples)
 		gamma = gamma - delta_gamma
 		epsilon = 10^gamma
 		cum_w = cumsum(w)
 		@sync @parallel for current_abc_sample = 1:number_of_abc_samples
-			idx = rand_weighted_index(cum_w)
-			
-			m_prim = m[:, idx]
-			s_prim = s[:, idx]
-			c_prim = c[:, idx]
-			az_prim = az[idx]
-			
-			m_bis = zeros(number_of_components)
-			s_bis = zeros(number_of_components)
-			c_bis = zeros(number_of_components)
-			az_bis = 0.0
-
 			dist_bis = Inf
 			
-			while dist_bis > epsilon 
+			m_bis = m[:, current_abc_sample]
+			s_bis = s[:, current_abc_sample]
+			c_bis = c[:, current_abc_sample]
+			az_bis = az[current_abc_sample]
+				
+			while dist_bis > epsilon && trial_count[current_abc_sample] < ub_number_of_trials
+				idx = rand_weighted_index(cum_w)
+			
+				m_prim = m[:, idx]
+				s_prim = s[:, idx]
+				c_prim = c[:, idx]
+				az_prim = az[idx]
+				
+				m_bis = zeros(number_of_components)
+				s_bis = zeros(number_of_components)
+				c_bis = zeros(number_of_components)
+				az_bis = 0.0
+			
 				for current_component = 1:number_of_components
 					m_bis[current_component] = displace(m_prim[current_component], tau_m[current_component], lb_m, ub_m)
 					if distribution_class != "discrete"
@@ -139,8 +143,9 @@ function estimate(distribution_class::String,
 				
 				dist_bis = distance(n_K, n_DE, n_K_sim, n_DE_sim, d_de)
 				
-				trial_count[1] = trial_count[1] + 1
+				trial_count[current_abc_sample] = trial_count[current_abc_sample] + 1
 			end
+			
 			for current_component = 1:number_of_components
 				m_star[:, current_abc_sample] = m_bis
 				if distribution_class != "discrete"
@@ -153,35 +158,40 @@ function estimate(distribution_class::String,
 		end
 		
 		#println(size(m))
-		println((current_iteration, trial_count[1], gamma, delta_gamma, mean(m[1, :]), mean(m[2, :]), mean(c[1, :]), mean(c[2, :]), mean(az)))
+		println((gamma, mean(trial_count), mean(m[1, :]), mean(m[2, :]), mean(c[1, :]), mean(c[2, :]), mean(az)))
 		
-#		for current_abc_sample = 1:number_of_abc_samples
-#			w_star[current_abc_sample] = 0.0
-#			for i = 1:number_of_abc_samples
-#				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(m_star[current_abc_sample] - m[i], 0.0, tau_m) * normpdf(s_star[current_abc_sample] - s[i], 0.0, tau_s) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
-#			end
-#			w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
-#		end
-#		w = w_star / sum(w_star)
-		w = 1 ./ dist_star.^2
-		w = w / sum(w)
-		
-		m = convert(Array{Float64, 2}, m_star)
-		if distribution_class != "discrete"
-			s = convert(Array{Float64, 2}, s_star)
-		end
-		c = convert(Array{Float64, 2}, c_star)
-		az = convert(Array{Float64, 1}, az_star)
-		dist = convert(Array{Float64, 1}, dist_star)
-		
-		for current_component = 1:number_of_components
-			tau_m[current_component] = sqrt( 2.0 * var(m[current_component, :], corrected = false) )
-			if distribution_class != "discrete"
-				tau_s[current_component] = sqrt( 2.0 * var(s[current_component, :], corrected = false) )
+		if maximum(trial_count) < ub_number_of_trials
+			for current_abc_sample = 1:number_of_abc_samples
+				w_star[current_abc_sample] = 0.0
+				for i = 1:number_of_abc_samples
+					w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(m_star[current_abc_sample] - m[i], 0.0, tau_m) * normpdf(s_star[current_abc_sample] - s[i], 0.0, tau_s) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
+				end
+				w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
 			end
-			tau_c[current_component] = sqrt( 2.0 * var(c[current_component, :], corrected = false) )
+			w = w_star / sum(w_star)
+			#w = 1 ./ dist_star.^2
+			#w = w / sum(w)
+			
+			m = convert(Array{Float64, 2}, m_star)
+			if distribution_class != "discrete"
+				s = convert(Array{Float64, 2}, s_star)
+			end
+			c = convert(Array{Float64, 2}, c_star)
+			az = convert(Array{Float64, 1}, az_star)
+			dist = convert(Array{Float64, 1}, dist_star)
+			
+			for current_component = 1:number_of_components
+				tau_m[current_component] = sqrt( 2.0 * var(m[current_component, :], corrected = false) )
+				if distribution_class != "discrete"
+					tau_s[current_component] = sqrt( 2.0 * var(s[current_component, :], corrected = false) )
+				end
+				tau_c[current_component] = sqrt( 2.0 * var(c[current_component, :], corrected = false) )
+			end
+			tau_az = sqrt( 2.0 * var(az, corrected = false) )
+		else 
+			is_converged = true
+			println("Converged.")
 		end
-		tau_az = sqrt( 2.0 * var(az, corrected = false) )
 	end
 	
 	#t_exec::Int64 = convert(Int64, time_ns()) - t_start
