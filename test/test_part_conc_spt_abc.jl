@@ -59,7 +59,7 @@ function test_part_conc_spt_abc()
 	# Write input to file.
 	input_file_path::String = abspath("input.xml")
 	number_of_components::Int64 = 2
-	number_of_de_bins::Int64 = 2000
+	number_of_de_bins::Int64 = 200
 	ub_de::Float64 = 4.0 * maximum(m_real)
 	lb_m::Float64 = 0.25 * minimum(m_real)
 	ub_m::Float64 = 4.0 * maximum(m_real)
@@ -69,7 +69,7 @@ function test_part_conc_spt_abc()
 	ub_c::Float64 = 4.0 * maximum(c_real)
 	lb_az::Float64 = 0.25 * az_real
 	ub_az::Float64 = 4.0 * az_real
-	number_of_abc_samples::Int64 = 512
+	number_of_abc_samples::Int64 = 32
 	gamma_initial::Float64 = 9.0
 	delta_gamma::Float64 = 0.01
 	output_file_path::String = abspath("output.xml")
