@@ -16,12 +16,12 @@ function simulate(	distribution_class::String,
 	
 	# Number of components in distribution.
 	number_of_components::Int64 = length(m)
-	fractions::Array{Float64, 1} = c / sum(c)
+	fractions::Array{Float64, 1} = 10.^c / sum(10.^c)
 	cum_fractions::Array{Float64, 1} = cumsum(fractions)
 	
 	# Intensity of Poisson distribution of the number of particles. The factor 
 	# 1e12 takes into account that concentration is specified in particles/ml.
-	lambda::Float64 = sum(c) * Lx * Ly * Lz / 1e12
+	lambda::Float64 = sum(10.^c) * Lx * Ly * Lz / 1e12
 	kmax::Int64 = maximum(number_of_frames)
 	
 	# Number of videos.
