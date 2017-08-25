@@ -52,7 +52,7 @@ function simulate(	distribution_class::String,
 	H::Array{Int64, 2} = zeros(kmax, number_of_de_bins)
 	d_de::Float64 = ub_de / convert(Float64, number_of_de_bins)
 	idx::Int64 = 0
-	
+
 	for current_video = 1:number_of_videos
 		number_of_particles = rand_poisson(lambda)
 
@@ -60,14 +60,14 @@ function simulate(	distribution_class::String,
 			# Generate random diffusion coefficent from distribution, or more precisely,
 			# a random standard deviation for the displacements.
 			#if distribution_class == "discrete"
-			if number_of_components == 1
-				std_dev_random_walk = sqrt(2.0 * m[1] * deltat)
-			else
-				index = rand_weighted_index(cum_fractions)
-				std_dev_random_walk = sqrt(2.0 * m[index] * deltat)
-			end
+				if number_of_components == 1
+					std_dev_random_walk = sqrt(2.0 * m[1] * deltat)
+				else
+					index = rand_weighted_index(cum_fractions)
+					std_dev_random_walk = sqrt(2.0 * m[index] * deltat)
+				end
 			#elseif distribution_class == "lognormal"
-			#	std_dev_random_walk = sqrt(2 * exp(log(distribution_parameters[1]) - 0.5 * log(1 + distribution_parameters[2]^2/distribution_parameters[1]^2) + (sqrt(log(1 + distribution_parameters[2]^2/distribution_parameters[1]^2))) * rand()) * deltat)
+			#	std_dev_random_walk = sqrt(2.0 * exp(log(distribution_parameters[1]) - 0.5 * log(1 + distribution_parameters[2]^2/distribution_parameters[1]^2) + (sqrt(log(1.0 + distribution_parameters[2]^2/distribution_parameters[1]^2))) * rand()) * deltat)
 			#end
 
 			# Random initial position.

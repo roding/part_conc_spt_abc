@@ -26,9 +26,9 @@ function test_part_conc_spt_abc()
 	deltat::Float64 = 0.05 # seconds
 	kmin::Int64 = 2
 	distribution_class::String = "discrete"
-	m_real::Array{Float64, 1} = [0.66666, 2.0] # µm^2/s.
+	m_real::Array{Float64, 1} = [1.0, 2.5] # µm^2/s.
 	s_real::Array{Float64, 1} = [0.0, 0.0] # µm^2/s. Just put to zero for discrete model.
-	c_real::Array{Float64, 1} = [1e8, 1e8] # part/ml.
+	c_real::Array{Float64, 1} = [5e8, 5e8] # part/ml.
 	az_real::Float64 = 2.0 # µm.
 
 	# Simulate experiment.
@@ -69,7 +69,7 @@ function test_part_conc_spt_abc()
 	ub_c::Float64 = 4.0 * maximum(c_real)
 	lb_az::Float64 = 0.25 * az_real
 	ub_az::Float64 = 4.0 * az_real
-	number_of_abc_samples::Int64 = 32
+	number_of_abc_samples::Int64 = 512
 	gamma_initial::Float64 = 9.0
 	delta_gamma::Float64 = 0.01
 	output_file_path::String = abspath("output.xml")
