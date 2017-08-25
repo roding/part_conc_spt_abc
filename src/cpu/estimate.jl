@@ -24,11 +24,6 @@ function estimate(distribution_class::String,
 				K::Array{Int64, 1},
 				DE::Array{Float64, 1})
 
-	#Inititalization.
-	#t_start::Int64 = convert(Int64, time_ns())
-
-	temp::Float64 = 0.0
-
 	# Distance function histogram bin width.
 	d_de::Float64 = ub_de / convert(Float64, number_of_de_bins)
 
@@ -159,7 +154,6 @@ function estimate(distribution_class::String,
 
 		#println(size(m))
 		println((round(gamma, 2), round(mean(trial_count), 2), round(mean(m[1, :]), 2), round(mean(m[2, :]), 2), round(mean(c[1, :]), 2), round(mean(c[2, :]), 2), round(mean(az), 2)))
-
 
 		if mean(trial_count) < ub_average_number_of_trials
 			w = 1 ./ dist_star.^2
