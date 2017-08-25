@@ -69,7 +69,7 @@ function test_part_conc_spt_abc()
 	ub_c::Float64 = 4.0 * maximum(c_real)
 	lb_az::Float64 = 0.25 * az_real
 	ub_az::Float64 = 4.0 * az_real
-	number_of_abc_samples::Int64 = 16
+	number_of_abc_samples::Int64 = 256
 	gamma_initial::Float64 = 9.0
 	delta_gamma::Float64 = 0.01
 	output_file_path::String = abspath("output.xml")
