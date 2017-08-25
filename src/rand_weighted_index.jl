@@ -1,4 +1,4 @@
-function rand_component(cumulative_weights::Array{Float64, 1})
+function rand_weighted_index(cumulative_weights::Array{Float64, 1})
 	val::Float64 = rand()
 	idx::Int64 = 1
 	while cumulative_weights[idx] < val

@@ -1,8 +1,7 @@
 function generate_experiment(	distribution_class::String, 
 							m::Array{Float64, 1},
 							s::Array{Float64, 1}, 
-							w::Array{Float64, 1}, 
-							c::Float64, 
+							c::Array{Float64, 1}, 
 							ax::Float64, 
 							ay::Float64, 
 							az::Float64, 
@@ -15,11 +14,12 @@ function generate_experiment(	distribution_class::String,
 	
 	# Number of components in distribution.
 	number_of_components::Int64 = length(m)
-	cum_w::Array{Float64, 1} = cumsum(w)
+	fractions::Array{Float64, 1} = c / sum(c)
+	cum_fractions::Array{Float64, 1} = cumsum(fractions)
 	
 	# Intensity of Poisson distribution of the number of particles. The factor 
 	# 1e12 takes into account that concentration is specified in particles/ml.
-	lambda::Float64 = c * Lx * Ly * Lz / 1e12
+	lambda::Float64 = sum(c) * Lx * Ly * Lz / 1e12
 
 	# Number of videos.
 	number_of_videos::Int64 = length(number_of_frames)
@@ -31,7 +31,6 @@ function generate_experiment(	distribution_class::String,
 	uby::Float64 = 0.5 * (Ly + ay)
 	lbz::Float64 = 0.5 * (Lz - az)
 	ubz::Float64 = 0.5 * (Lz + az)
-	
 	
 	# Vectors for storing number of positions and estimated diffusion coefficients of all recorded trajectories.
 	K::Array{Int64, 1} = []
@@ -59,7 +58,7 @@ function generate_experiment(	distribution_class::String,
 			if number_of_components == 1
 				std_dev_random_walk = sqrt(2.0 * m[1] * deltat)
 			else
-				index = rand_component(cum_w)
+				index = rand_weighted_index(cum_fractions)
 				std_dev_random_walk = sqrt(2.0 * m[index] * deltat)
 			end
 			#elseif distribution_class == "lognormal"
@@ -112,7 +111,7 @@ function generate_experiment(	distribution_class::String,
 			end
 			
 			# If particle is inside detection region in last frame, we have now missed that trajectory and need to add it now.
-			if (lbz <= z <= ubz) & (lbx <= x <= ubx) & (lby <= y <= uby) & k >= kmin # Assuming kmin >= 2 otherwise the division fails.
+			if k >= kmin # Assuming kmin >= 2 otherwise the division fails.
 				push!(K, k)
 				de = de / (convert(Float64, k - 1) * 4.0 * deltat) # The '4' comes from the 2D observations.
 				push!(DE, de)	

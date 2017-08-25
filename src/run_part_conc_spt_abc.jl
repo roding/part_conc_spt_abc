@@ -75,6 +75,34 @@ function run_part_conc_spt_abc()
 	println(length(K))
 	println(length(DE))
 	
+	# Run ABC.
+	estimate(distribution_class,
+			number_of_components,
+			Lx,
+			Ly,
+			Lz,
+			kmin,
+			number_of_de_bins,
+			ub_de,
+			lb_m,
+			ub_m,
+			lb_s,
+			ub_s,
+			lb_c,
+			ub_c,
+			lb_az,
+			ub_az,
+			number_of_abc_samples,
+			gamma_initial,
+			delta_gamma,
+			ax,
+			ay,
+			number_of_frames,
+			deltat,
+			K,
+			DE)
+	
+	
 		
 	
 

@@ -6,7 +6,7 @@ include("../src/file_io/read_data.jl")
 include("../src/file_io/write_key.jl")
 include("../src/file_io/write_input.jl")
 include("../src/file_io/write_data.jl")
-include("../src/rand_component.jl")
+include("../src/rand_weighted_index.jl")
 include("../src/generate_experiment.jl")
 include("../src/rand_poisson.jl")
 include("../src/position_periodic.jl")
@@ -28,15 +28,13 @@ function test_part_conc_spt_abc()
 	distribution_class::String = "discrete"
 	m_real::Array{Float64, 1} = [1.5] # µm^2/s.
 	s_real::Array{Float64, 1} = [0.0] # µm^2/s. Just put to zero for discrete model.
-	w_real::Array{Float64, 1} = [1.0]
-	c_real::Float64 = 1e8 # part/ml.
+	c_real::Array{Float64, 1} = [1e8] # part/ml.
 	az_real::Float64 = 2.0 # µm.
 	
 	# Simulate experiment.
 	(K::Array{Int64, 1}, DE::Array{Float64, 1}) = generate_experiment(	distribution_class, 
 																m_real,
 																s_real,
-																w_real,
 																c_real, 
 																ax, 
 																ay, 
@@ -67,8 +65,8 @@ function test_part_conc_spt_abc()
 	ub_m::Float64 = 4.0 * maximum(m_real)
 	lb_s::Float64 = 0.0 # Just put to zero for discrete model.
 	ub_s::Float64 = 0.0 # Just put to zero for discrete model.
-	lb_c::Float64 = 0.25 * c_real
-	ub_c::Float64 = 4.0 * c_real
+	lb_c::Float64 = 0.25 * minimum(c_real)
+	ub_c::Float64 = 4.0 * maximum(c_real)
 	lb_az::Float64 = 0.25 * az_real
 	ub_az::Float64 = 4.0 * az_real
 	number_of_abc_samples::Int64 = 512
