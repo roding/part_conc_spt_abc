@@ -51,7 +51,7 @@ function simulate(	distribution_class::String,
 	# recorded trajectories.
 	n_K::Array{Int64, 1} = zeros(kmax)
 	n_DE::Array{Int64, 1} = zeros(number_of_de_bins)
-	d_de::Float64 = ub_de / convert(Float64, number_of_bins)
+	d_de::Float64 = ub_de / convert(Float64, number_of_de_bins)
 	idx::Int64 = 0
 
 	for current_video = 1:number_of_videos

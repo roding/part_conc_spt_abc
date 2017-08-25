@@ -3,8 +3,6 @@ workspace()
 include("file_io/read_key.jl")
 include("file_io/read_input.jl")
 include("file_io/read_data.jl")
-include("rand_poisson.jl")
-include("position_periodic.jl")
 include("estimate.jl")
 
 foo = @__FILE__
@@ -15,6 +13,7 @@ foo = @__FILE__
 @everywhere include(joinpath(program_file_dir, "rand_weighted_index.jl"))
 @everywhere include(joinpath(program_file_dir, "position_periodic.jl"))
 @everywhere include(joinpath(program_file_dir, "displace.jl"))
+@everywhere include(joinpath(program_file_dir, "rand_poisson.jl"))
 
 function run_part_conc_spt_abc()
 	# Start time.
