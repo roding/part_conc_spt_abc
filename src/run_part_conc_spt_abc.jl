@@ -5,6 +5,16 @@ include("file_io/read_input.jl")
 include("file_io/read_data.jl")
 include("rand_poisson.jl")
 include("position_periodic.jl")
+include("estimate.jl")
+
+foo = @__FILE__
+@eval @everywhere f = $foo
+@everywhere (program_file_dir, program_file_name) = splitdir(f)
+@everywhere include(joinpath(program_file_dir, "simulate.jl"))
+@everywhere include(joinpath(program_file_dir, "distance.jl"))
+@everywhere include(joinpath(program_file_dir, "rand_weighted_index.jl"))
+@everywhere include(joinpath(program_file_dir, "position_periodic.jl"))
+@everywhere include(joinpath(program_file_dir, "displace.jl"))
 
 function run_part_conc_spt_abc()
 	# Start time.
@@ -76,36 +86,37 @@ function run_part_conc_spt_abc()
 	println(length(DE))
 	
 	# Run ABC.
-	estimate(distribution_class,
-			number_of_components,
-			Lx,
-			Ly,
-			Lz,
-			kmin,
-			number_of_de_bins,
-			ub_de,
-			lb_m,
-			ub_m,
-			lb_s,
-			ub_s,
-			lb_c,
-			ub_c,
-			lb_az,
-			ub_az,
-			number_of_abc_samples,
-			gamma_initial,
-			delta_gamma,
-			ax,
-			ay,
-			number_of_frames,
-			deltat,
-			K,
-			DE)
-	
-	
-		
-	
-
+	(	m::Array{Float64, 2}, 
+		s::Array{Float64, 2}, 
+		c::Array{Float64, 2}, 
+		az::Array{Float64, 1}, 
+		dist::Array{Float64, 1}, 
+		w::Array{Float64, 1}, 
+		epsilon::Float64) = estimate(	distribution_class,
+									number_of_components,
+									Lx,
+									Ly,
+									Lz,
+									kmin,
+									number_of_de_bins,
+									ub_de,
+									lb_m,
+									ub_m,
+									lb_s,
+									ub_s,
+									lb_c,
+									ub_c,
+									lb_az,
+									ub_az,
+									number_of_abc_samples,
+									gamma_initial,
+									delta_gamma,
+									ax,
+									ay,
+									number_of_frames,
+									deltat,
+									K,
+									DE)
 
 	return 0
 end

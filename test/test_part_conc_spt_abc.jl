@@ -98,8 +98,8 @@ function test_part_conc_spt_abc()
 	
 	# Run inference.
 	program_path::String = abspath("../src/run_part_conc_spt_abc.jl")
-	cmd::Cmd = `julia $program_path $input_file_path`
-	#cmd::Cmd = `julia -p 88 $number_of_cores $program_path $input_file_path`
+	#cmd::Cmd = `julia $program_path $input_file_path`
+	cmd::Cmd = `julia -p 4 $program_path $input_file_path`
 	run(cmd)
 				
 	nothing

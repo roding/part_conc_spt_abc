@@ -1,9 +1,3 @@
-#workspace()
-#
-#@everywhere include("simulate_system.jl")
-#@everywhere include("distance.jl")
-#include("normpdf.jl")
-
 function estimate(distribution_class::String,
 				number_of_components::Int64,
 				Lx::Float64,
@@ -37,48 +31,58 @@ function estimate(distribution_class::String,
 	d_de::Float64 = ub_de / convert(Float64, number_of_de_bins)
 	
 	# Convert data to histogram form.
+	kmax::Int64 = maximum(number_of_frames)
 	n_K::Array{Int64, 1} = zeros(kmax)
 	n_DE::Array{Int64, 1} = zeros(number_of_de_bins)
 	idx::Int64 = 0
 	for i = 1:length(K)
-		n_K[K[i]] += 1
 		idx = convert(Int64, ceil(DE[i] / d_de))
-		n_DE[idx] += 1
+		if 1 <= idx <= number_of_de_bins
+			n_K[K[i]] += 1
+			n_DE[idx] += 1
+		end
 	end
 	
 	# Variables for population parameter values.
-	m::Array{Float64, 1} = zeros(number_of_abc_samples)
-	s::Array{Float64, 1} = zeros(number_of_abc_samples)
-	c::Array{Float64, 1} = zeros(number_of_abc_samples)
+	m::Array{Float64, 2} = zeros(number_of_abc_samples, number_of_components)
+	s::Array{Float64, 2} = zeros(number_of_abc_samples, number_of_components)
+	c::Array{Float64, 2} = zeros(number_of_abc_samples, number_of_components)
 	az::Array{Float64, 1} = zeros(number_of_abc_samples)
 	dist::Array{Float64, 1} = zeros(number_of_abc_samples)
 	
-	m_star::SharedArray{Float64, 1} = zeros(number_of_abc_samples)
-	s_star::SharedArray{Float64, 1} = zeros(number_of_abc_samples)
-	c_star::SharedArray{Float64, 1} = zeros(number_of_abc_samples)
+	m_star::SharedArray{Float64, 2} = zeros(number_of_abc_samples, number_of_components)
+	s_star::SharedArray{Float64, 2} = zeros(number_of_abc_samples, number_of_components)
+	c_star::SharedArray{Float64, 2} = zeros(number_of_abc_samples, number_of_components)
 	az_star::SharedArray{Float64, 1} = zeros(number_of_abc_samples)
 	dist_star::SharedArray{Float64, 1} = zeros(number_of_abc_samples)
 
 	# Initialize assuming that epsilon = inf so that everything is accepted.
-	m = lb_m + (ub_m - lb_m) * rand(number_of_abc_samples)
-	s = lb_s + (ub_s - lb_s) * rand(number_of_abc_samples)
-	c = lb_c + (ub_c - lb_c) * rand(number_of_abc_samples)
+	m = lb_m + (ub_m - lb_m) * rand(number_of_abc_samples, number_of_components)
+	s = lb_s + (ub_s - lb_s) * rand(number_of_abc_samples, number_of_components)
+	c = lb_c + (ub_c - lb_c) * rand(number_of_abc_samples, number_of_components)
 	az = lb_az + (ub_az - lb_az) * rand(number_of_abc_samples)
 	
 	w::Array{Float64, 1} = ones(number_of_abc_samples) / convert(Float64, number_of_abc_samples)
 	cum_w::Array{Float64, 1} = cumsum(w)
 	w_star::Array{Float64, 1} = zeros(number_of_abc_samples)
 	
-	tau_m::Float64 = sqrt( 2.0 * var(m, corrected = false) )
-	tau_s::Float64 = sqrt( 2.0 * var(s, corrected = false) )
-	tau_c::Float64 = sqrt( 2.0 * var(c, corrected = false) )
+	# Displacement standard deviations.
+	tau_m::Array{Float64, 1} = zeros(number_of_components)
+	tau_s::Array{Float64, 1} = zeros(number_of_components)
+	tau_c::Array{Float64, 1} = zeros(number_of_components)
+	for current_component = 1:number_of_components
+		tau_m[current_component] = sqrt( 2.0 * var(m[:, current_component], corrected = false) )
+		tau_s[current_component] = sqrt( 2.0 * var(s[:, current_component], corrected = false) )
+		tau_c[current_component] = sqrt( 2.0 * var(c[:, current_component], corrected = false) )
+	end
 	tau_az::Float64 = sqrt( 2.0 * var(az, corrected = false) )
 	
 	# The rest of the iterations.
 	gamma::Float64 = gamma_initial
 	epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = [0]
-	t_start_iteration::Int64 = 0 
+	t_start_iteration::Int64 = 0
+	number_of_iterations::Int64 = 10
 	for current_iteration = 1:number_of_iterations
 		t_start_iteration = convert(Int64, time_ns())
 		trial_count[1] = 0	
@@ -88,80 +92,59 @@ function estimate(distribution_class::String,
 		@sync @parallel for current_abc_sample = 1:number_of_abc_samples
 			idx = rand_weighted_index(cum_w)
 			
-			m_prim = m[idx]
-			s_prim = s[idx]
-			c_prim = c[idx]
+			m_prim = m[idx, :]
+			s_prim = s[idx, :]
+			c_prim = c[idx, :]
 			az_prim = az[idx]
 			
-			m_bis = 0.0
-			s_bis = 0.0
-			c_bis = 0.0
+			m_bis = zeros(number_of_components)
+			s_bis = zeros(number_of_components)
+			c_bis = zeros(number_of_components)
 			az_bis = 0.0
 
 			dist_bis = Inf
 			
 			while dist_bis > epsilon 
-				delta_m = tau_m * randn()
-				m_bis = m_prim + delta_m
-				while !( lb_m < m_bis < ub_m )
-					if m_bis < lb_m
-						m_bis = m_bis + 2 * ( lb_m - m_bis )
+				for current_component = 1:number_of_components
+					m_bis[current_component] = displace(m_prim[current_component], tau_m[current_component], lb_m, ub_m)
+					if distribution_class != "discrete"
+						s_bis[current_component] = displace(s_prim[current_component], tau_s[current_component], lb_s, ub_s)
 					end
-					if m_bis > ub_m
-						m_bis = m_bis - 2 * ( m_bis - ub_m )
-					end
-				end
-
-				delta_s = tau_s * randn()
-				s_bis = s_prim + delta_s
-				while !( lb_s < s_bis < ub_s )
-					if s_bis < lb_s
-						s_bis = s_bis + 2 * ( lb_s - s_bis )
-					end
-					if s_bis > ub_s
-						s_bis = s_bis - 2 * ( s_bis - ub_s )
-					end
-				end
-							
-				delta_c = tau_c * randn()
-				c_bis = c_prim + delta_c
-				while !( lb_c < c_bis < ub_c )
-					if c_bis < lb_c
-						c_bis = c_bis + 2 * ( lb_c - c_bis )
-					end
-					if c_bis > ub_c
-						c_bis = c_bis - 2 * ( c_bis - ub_c )
-					end
+					c_bis[current_component] = displace(c_prim[current_component], tau_c[current_component], lb_c, ub_c)
 				end
 				
-				delta_az = tau_az * randn()
-				az_bis = az_prim + delta_az
-				while !( lb_az < az_bis < ub_az )
-					if az_bis < lb_az
-						az_bis = az_bis + 2 * ( lb_az - az_bis )
-					end
-					if az_bis > ub_az
-						az_bis = az_bis - 2 * ( az_bis - ub_az )
-					end
-				end
-				
-				(n_K_sim, n_DE_sim) = simulate_system(distribution_class, [m_bis, s_bis], c_bis, ax, ay, az_bis, Lx, Ly, Lz, number_of_frames, deltat, kmin, de_number_of_bins, de_max)
+				(n_K_sim, n_DE_sim) = simulate(distribution_class, 
+											m_bis,
+											s_bis, 
+											c_bis, 
+											ax, 
+											ay, 
+											az_bis, 
+											Lx, 
+											Ly, 
+											Lz, 
+											number_of_frames, 
+											deltat, 
+											kmin,
+											number_of_de_bins, 
+											ub_de)
 				
 				dist_bis = distance(n_K_real, n_DE_real, n_K_sim, n_DE_sim, d_de)
-				#println(dist_bis)
-
 				
 				trial_count[1] = trial_count[1] + 1
 			end
-			
-			m_star[current_abc_sample] = m_bis
-			s_star[current_abc_sample] = s_bis
-			c_star[current_abc_sample] = c_bis
+			for current_component = 1:number_of_components
+				m_star[current_abc_sample, current_component] = m_bis
+				if distribution_class != "discrete"
+					s_star[current_abc_sample, current_component] = s_bis
+				end
+				c_star[current_abc_sample, current_component] = c_bis
+			end
 			az_star[current_abc_sample] = az_bis
 			dist_star[current_abc_sample] = dist_bis
 		end
 		
-		println((current_iteration, trial_count[1], gamma, delta_gamma, tau_m, tau_s, tau_c, tau_az))
+		println((current_iteration, trial_count[1], gamma, delta_gamma))
 		
 #		for current_abc_sample = 1:number_of_abc_samples
 #			w_star[current_abc_sample] = 0.0
@@ -174,29 +157,23 @@ function estimate(distribution_class::String,
 		w = 1 ./ dist_star.^2
 		w = w / sum(w)
 		
-		m = m_star
-		s = s_star
-		c = c_star
-		az = az_star
-		dist = dist_star 
-		
-		tau_m = sqrt( 2.0 * var(m, corrected = false) )
-		tau_s = sqrt( 2.0 * var(s, corrected = false) )
-		tau_c = sqrt( 2.0 * var(c, corrected = false) )
-		tau_az = sqrt( 2.0 * var(az, corrected = false) )
-		
-		# Write intermediate result to file.
-		file_name_output = join((output_dir, "/", "res_lognormal_", string(current_iteration), ".dat"))
-		file_stream_output = open(file_name_output, "w")
-		for current_abc_sample = 1:number_of_abc_samples
-			write(file_stream_output, m[current_abc_sample], s[current_abc_sample], c[current_abc_sample], az[current_abc_sample], dist[current_abc_sample], w[current_abc_sample])
+		m = convert(Array{Float64, 2}, m_star)
+		if distribution_class != "discrete"
+			s = convert(Array{Float64, 2}, s_star)
 		end
-		close(file_stream_output)
+		c = convert(Array{Float64, 2}, c_star)
+		az = convert(Array{Float64, 1}, az_star)
+		dist = convert(Array{Float64, 1}, dist_star)
+		
+		for current_component = 1:number_of_components
+			tau_m[current_component] = sqrt( 2.0 * var(m[:, current_component], corrected = false) )
+			tau_s[current_component] = sqrt( 2.0 * var(s[:, current_component], corrected = false) )
+			tau_c[current_component] = sqrt( 2.0 * var(c[:, current_component], corrected = false) )
+		end
+		tau_az = sqrt( 2.0 * var(az, corrected = false) )
 	end
 	
-	t_exec::Int64 = convert(Int64, time_ns()) - t_start
-	println(t_exec/1e9)
-	nothing
+	#t_exec::Int64 = convert(Int64, time_ns()) - t_start
+	#println(t_exec/1e9)
+	return (m, s, c, az, dist, w, epsilon)
 end
-
-run_lognormal()
