@@ -47,13 +47,12 @@ function simulate(	distribution_class::String,
 	de::Float64 = 0.0
 	std_dev_random_walk::Float64 = 0.0
 
-	# Histogram vectors for number of positions and estimated diffusion coefficients of all
+	# Histogram matrix for number of positions and estimated diffusion coefficients of all
 	# recorded trajectories.
-	n_K::Array{Int64, 1} = zeros(kmax)
-	n_DE::Array{Int64, 1} = zeros(number_of_de_bins)
+	H::Array{Int64, 2} = zeros(kmax, number_of_de_bins)
 	d_de::Float64 = ub_de / convert(Float64, number_of_de_bins)
 	idx::Int64 = 0
-
+	
 	for current_video = 1:number_of_videos
 		number_of_particles = rand_poisson(lambda)
 
@@ -110,8 +109,7 @@ function simulate(	distribution_class::String,
 						de = de / (convert(Float64, k - 1) * 4.0 * deltat) # The '4' comes from the 2D observations.
 						idx = convert(Int64, ceil(de / d_de))
 						if 1 <= idx <= number_of_de_bins
-							n_K[k] = n_K[k] + 1
-							n_DE[idx] = n_DE[idx] + 1
+							H[k, idx] += 1
 						end
 					end
 					k = 0
@@ -124,13 +122,12 @@ function simulate(	distribution_class::String,
 				de = de / (convert(Float64, k - 1) * 4.0 * deltat) # The '4' comes from the 2D observations.
 				idx = convert(Int64, ceil(de / d_de))
 				if 1 <= idx <= number_of_de_bins
-					n_K[k] = n_K[k] + 1
-					n_DE[idx] = n_DE[idx] + 1
+					H[k, idx] += 1
 				end
 			end
 
 		end
 	end
 
-	return (n_K, n_DE)
+	return H
 end

@@ -34,14 +34,12 @@ function estimate(distribution_class::String,
 
 	# Convert data to histogram form.
 	kmax::Int64 = maximum(number_of_frames)
-	n_K::Array{Int64, 1} = zeros(kmax)
-	n_DE::Array{Int64, 1} = zeros(number_of_de_bins)
+	H::Array{Int64, 2} = zeros(kmax, number_of_de_bins)
 	idx::Int64 = 0
 	for i = 1:length(K)
 		idx = convert(Int64, ceil(DE[i] / d_de))
 		if 1 <= idx <= number_of_de_bins
-			n_K[K[i]] += 1
-			n_DE[idx] += 1
+			H[K[i], idx] += 1
 		end
 	end
 
@@ -127,23 +125,23 @@ function estimate(distribution_class::String,
 				s_bis = s_bis[p]
 				c_bis = c_bis[p]
 
-				(n_K_sim, n_DE_sim) = simulate(distribution_class,
-											m_bis,
-											s_bis,
-											c_bis,
-											ax,
-											ay,
-											az_bis,
-											Lx,
-											Ly,
-											Lz,
-											number_of_frames,
-											deltat,
-											kmin,
-											number_of_de_bins,
-											ub_de)
+				H_sim = simulate(	distribution_class,
+								m_bis,
+								s_bis,
+								c_bis,
+								ax,
+								ay,
+								az_bis,
+								Lx,
+								Ly,
+								Lz,
+								number_of_frames,
+								deltat,
+								kmin,
+								number_of_de_bins,
+								ub_de)
 
-				dist_bis = distance(n_K, n_DE, n_K_sim, n_DE_sim, d_de)
+				dist_bis = distance(H, H_sim)
 
 				trial_count[current_abc_sample] = trial_count[current_abc_sample] + 1
 			end
