@@ -84,7 +84,7 @@ function estimate(distribution_class::String,
 	epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = [0]
 	t_start_iteration::Int64 = 0
-	number_of_iterations::Int64 = 100
+	number_of_iterations::Int64 = 1000
 	for current_iteration = 1:number_of_iterations
 		t_start_iteration = convert(Int64, time_ns())
 		trial_count[1] = 0	
