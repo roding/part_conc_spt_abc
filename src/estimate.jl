@@ -164,26 +164,26 @@ function estimate(distribution_class::String,
 		
 		
 		if mean(trial_count) < ub_average_number_of_trials
-		#	for current_abc_sample = 1:number_of_abc_samples
-		#		w_star[current_abc_sample] = 0.0
-		#		for i = 1:number_of_abc_samples
-		#			temp = 1.0
-		#			for current_component = 1:number_of_components
-		#				temp *= normpdf(m_star[current_component, current_abc_sample] - m[current_component, i], 0.0, tau_m[current_component])
-		#				if distribution_class != "discrete"
-		#					temp *= normpdf(s_star[current_component, current_abc_sample] - s[current_component, i], 0.0, tau_s[current_component])
-		#				end
-		#				temp *= normpdf(c_star[current_component, current_abc_sample] - c[current_component, i], 0.0, tau_c[current_component])
-		#			end
-		#			temp *= normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
-		#			
-		#			w_star[current_abc_sample] += w[i] * temp
-		#		end
-		#		w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
-		#	end
-		#	w = w_star / sum(w_star)
-			w = 1 ./ dist_star.^2
-			w = w / sum(w)
+			for current_abc_sample = 1:number_of_abc_samples
+				w_star[current_abc_sample] = 0.0
+				for i = 1:number_of_abc_samples
+					temp = 1.0
+					for current_component = 1:number_of_components
+						temp *= normpdf(m_star[current_component, current_abc_sample] - m[current_component, i], 0.0, tau_m[current_component])
+						if distribution_class != "discrete"
+							temp *= normpdf(s_star[current_component, current_abc_sample] - s[current_component, i], 0.0, tau_s[current_component])
+						end
+						temp *= normpdf(c_star[current_component, current_abc_sample] - c[current_component, i], 0.0, tau_c[current_component])
+					end
+					temp *= normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
+					
+					w_star[current_abc_sample] += w[i] * temp
+				end
+				w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
+			end
+			w = w_star / sum(w_star)
+		#	w = 1 ./ dist_star.^2
+		#	w = w / sum(w)
 			
 			m = convert(Array{Float64, 2}, m_star)
 			if distribution_class != "discrete"
