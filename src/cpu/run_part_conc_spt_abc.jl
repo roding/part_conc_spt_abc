@@ -3,6 +3,9 @@ workspace()
 include("file_io/read_key.jl")
 include("file_io/read_input.jl")
 include("file_io/read_data.jl")
+include("file_io/read_output.jl")
+include("file_io/write_key.jl")
+include("file_io/write_output.jl")
 include("estimate.jl")
 
 foo = @__FILE__
@@ -103,7 +106,42 @@ function run_part_conc_spt_abc()
 									deltat,
 									K,
 									DE)
-
+	
+	write_output(	output_file_path,
+				distribution_class,
+				number_of_components,
+				number_of_abc_samples,
+				m,
+				s,
+				c,
+				az, 
+				dist, 
+				w,
+				epsilon)
+	println(join(("Output written to ", output_file_path, ".")))
+	
+	(
+		distribution_class,
+		number_of_components,
+		number_of_abc_samples,
+		m,
+		s,
+		c,
+		az,
+		dist,
+		w,
+		epsilon) = read_output(output_file_path)
+	println(distribution_class)
+	println(number_of_components)
+	println(number_of_abc_samples)
+	println(m)
+	println(s)
+	println(c)
+	println(az)
+	println(dist)
+	println(w)
+	println(epsilon)
+	
 	return 0
 end
 
