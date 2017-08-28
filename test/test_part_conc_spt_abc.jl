@@ -33,18 +33,18 @@ function test_part_conc_spt_abc()
 
 	# Simulate experiment.
 	(K::Array{Int64, 1}, DE::Array{Float64, 1}) = generate_experiment(	distribution_class,
-																m_real,
-																s_real,
-																c_real,
-																ax,
-																ay,
-																az_real,
-																Lx,
-																Ly,
-																Lz,
-																number_of_frames,
-																deltat,
-																kmin)
+																		m_real,
+																		s_real,
+																		c_real,
+																		ax,
+																		ay,
+																		az_real,
+																		Lx,
+																		Ly,
+																		Lz,
+																		number_of_frames,
+																		deltat,
+																		kmin)
 
 	# Write data to file.
 	data_file_path::String = abspath("data.xml")
@@ -74,7 +74,7 @@ function test_part_conc_spt_abc()
 	delta_gamma::Float64 = 0.01
 	ub_average_number_of_trials::Int64 = 500
 	output_file_path::String = abspath("output.xml")
-	write_input(	input_file_path,
+	write_input(input_file_path,
 				data_file_path,
 				distribution_class,
 				number_of_components,
@@ -101,7 +101,8 @@ function test_part_conc_spt_abc()
 	# Run inference.
 	program_path::String = abspath("../src/cpu/run_part_conc_spt_abc.jl")
 	#cmd::Cmd = `julia $program_path $input_file_path`
-	cmd::Cmd = `julia -p 32 $program_path $input_file_path`
+	str_number_of_cores::String = string(Sys.CPU_CORES)
+	cmd::Cmd = `julia -p $str_number_of_cores $program_path $input_file_path`
 	run(cmd)
 
 	nothing
