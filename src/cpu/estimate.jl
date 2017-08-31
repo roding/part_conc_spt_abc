@@ -141,13 +141,11 @@ function estimate(distribution_class::String,
 				trial_count[current_abc_sample] = trial_count[current_abc_sample] + 1
 			end
 
-			for current_component = 1:number_of_components
-				m_star[:, current_abc_sample] = m_bis
-				if distribution_class != "discrete"
-					s_star[:, current_abc_sample] = s_bis
-				end
-				c_star[:, current_abc_sample] = c_bis
+			m_star[:, current_abc_sample] = m_bis
+			if distribution_class != "discrete"
+				s_star[:, current_abc_sample] = s_bis
 			end
+			c_star[:, current_abc_sample] = c_bis
 			az_star[current_abc_sample] = az_bis
 			dist_star[current_abc_sample] = dist_bis
 		end
