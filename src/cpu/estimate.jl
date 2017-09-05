@@ -16,7 +16,7 @@ function estimate(distribution_class::String,
 				ub_az::Float64,
 				number_of_abc_samples::Int64,
 				gamma_initial::Float64,
-				gamma_adaptive::String,
+				gamma_adaptive::Bool,
 				delta_gamma::Float64,
 				ub_average_number_of_trials::Int64,
 				ax::Float64,
@@ -78,7 +78,7 @@ function estimate(distribution_class::String,
 
 	# The rest of the iterations.
 	gamma::Float64 = 0.0
-	if gamma_adaptive == "true"
+	if gamma_adaptive
 		for current_abc_sample = 1:number_of_abc_samples
 			H_sim = simulate(	distribution_class,
 								m[:, current_abc_sample],

@@ -18,7 +18,7 @@ function write_input(	file_path::String,
 						ub_az::Float64,
 						number_of_abc_samples::Int64,
 						gamma_initial::Float64,
-						gamma_adaptive::String,
+						gamma_adaptive::Bool,
 						delta_gamma::Float64,
 						ub_average_number_of_trials::Int64,
 						output_file_path::String)
