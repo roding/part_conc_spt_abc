@@ -71,7 +71,7 @@ function test_part_conc_spt_abc()
 	ub_az::Float64 = 4.0 * az_real
 	number_of_abc_samples::Int64 = 128
 	gamma_initial::Float64 = 15.0
-	gamma_adaptive::Bool = true
+	gamma_adaptive::Bool = false
 	delta_gamma::Float64 = 0.01
 	ub_average_number_of_trials::Int64 = 500
 	output_file_path::String = abspath("output.xml")
