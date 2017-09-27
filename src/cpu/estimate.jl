@@ -153,27 +153,27 @@ function estimate(distribution_class::String,
 		#println(size(m))
 		println((round(gamma, 2), round(mean(trial_count), 2), round(mean(m[1, :]), 2), round(mean(m[2, :]), 2), round(mean(c[1, :]), 2), round(mean(c[2, :]), 2), round(mean(az), 2)))
 
-		if mean(trial_count) < ub_average_number_of_trials
-			w = 1 ./ dist_star.^2
-			w = w / sum(w)
+		w = 1 ./ dist_star.^2
+		w = w / sum(w)
 
-			m = convert(Array{Float64, 2}, m_star)
+		m = convert(Array{Float64, 2}, m_star)
+		if distribution_class != "discrete"
+			s = convert(Array{Float64, 2}, s_star)
+		end
+		c = convert(Array{Float64, 2}, c_star)
+		az = convert(Array{Float64, 1}, az_star)
+		dist = convert(Array{Float64, 1}, dist_star)
+
+		for current_component = 1:number_of_components
+			tau_m[current_component] = sqrt( 2.0 * var(m[current_component, :], corrected = false) )
 			if distribution_class != "discrete"
-				s = convert(Array{Float64, 2}, s_star)
+				tau_s[current_component] = sqrt( 2.0 * var(s[current_component, :], corrected = false) )
 			end
-			c = convert(Array{Float64, 2}, c_star)
-			az = convert(Array{Float64, 1}, az_star)
-			dist = convert(Array{Float64, 1}, dist_star)
+			tau_c[current_component] = sqrt( 2.0 * var(c[current_component, :], corrected = false) )
+		end
+		tau_az = sqrt( 2.0 * var(az, corrected = false) )
 
-			for current_component = 1:number_of_components
-				tau_m[current_component] = sqrt( 2.0 * var(m[current_component, :], corrected = false) )
-				if distribution_class != "discrete"
-					tau_s[current_component] = sqrt( 2.0 * var(s[current_component, :], corrected = false) )
-				end
-				tau_c[current_component] = sqrt( 2.0 * var(c[current_component, :], corrected = false) )
-			end
-			tau_az = sqrt( 2.0 * var(az, corrected = false) )
-		else
+		if mean(trial_count) >= ub_average_number_of_trials
 			is_converged = true
 			println("Converged.")
 		end
