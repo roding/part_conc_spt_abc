@@ -61,10 +61,11 @@ function run_part_conc_spt_abc()
 		ub_az::Float64,
 		number_of_abc_samples::Int64,
 		gamma_initial::Float64,
+		gamma_adaptive::Bool,
 		delta_gamma::Float64,
 		ub_average_number_of_trials::Int64,
 		output_file_path::String) = read_input(input_file_path)
-		
+
 	# Read data.
 	(	ax::Float64,
 		ay::Float64,
@@ -72,54 +73,55 @@ function run_part_conc_spt_abc()
 		deltat::Float64,
 		K::Array{Int64, 1},
 		DE::Array{Float64, 1}) = read_data(data_file_path)
-		
+
 	# Run ABC.
-	(	m::Array{Float64, 2}, 
-		s::Array{Float64, 2}, 
-		c::Array{Float64, 2}, 
-		az::Array{Float64, 1}, 
-		dist::Array{Float64, 1}, 
-		w::Array{Float64, 1}, 
+	(	m::Array{Float64, 2},
+		s::Array{Float64, 2},
+		c::Array{Float64, 2},
+		az::Array{Float64, 1},
+		dist::Array{Float64, 1},
+		w::Array{Float64, 1},
 		epsilon::Float64) = estimate(	distribution_class,
-									number_of_components,
-									Lx,
-									Ly,
-									Lz,
-									kmin,
-									number_of_de_bins,
-									ub_de,
-									lb_m,
-									ub_m,
-									lb_s,
-									ub_s,
-									lb_c,
-									ub_c,
-									lb_az,
-									ub_az,
-									number_of_abc_samples,
-									gamma_initial,
-									delta_gamma,
-									ub_average_number_of_trials,
-									ax,
-									ay,
-									number_of_frames,
-									deltat,
-									K,
-									DE)
-	
+										number_of_components,
+										Lx,
+										Ly,
+										Lz,
+										kmin,
+										number_of_de_bins,
+										ub_de,
+										lb_m,
+										ub_m,
+										lb_s,
+										ub_s,
+										lb_c,
+										ub_c,
+										lb_az,
+										ub_az,
+										number_of_abc_samples,
+										gamma_initial,
+										gamma_adaptive,
+										delta_gamma,
+										ub_average_number_of_trials,
+										ax,
+										ay,
+										number_of_frames,
+										deltat,
+										K,
+										DE)
+
 	write_output(	output_file_path,
-				distribution_class,
-				number_of_components,
-				number_of_abc_samples,
-				m,
-				s,
-				c,
-				az, 
-				dist, 
-				w,
-				epsilon)
+					distribution_class,
+					number_of_components,
+					number_of_abc_samples,
+					m,
+					s,
+					c,
+					az,
+					dist,
+					w,
+					epsilon)
 	println(join(("Output written to ", output_file_path, ".")))
-	
+
 	(
 		distribution_class,
 		number_of_components,
@@ -141,7 +143,7 @@ function run_part_conc_spt_abc()
 	println(dist)
 	println(w)
 	println(epsilon)
-	
+
 	return 0
 end
 

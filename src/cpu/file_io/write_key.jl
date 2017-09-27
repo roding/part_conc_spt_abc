@@ -21,6 +21,8 @@ function write_key(file_stream::IOStream, key_name::String, key_value)
 		@printf(file_stream, "%d", key_value[end])
 	elseif typeof(key_value) == String
 		@printf(file_stream, "%s", key_value)
+	elseif typeof(key_value) == Bool
+		@printf(file_stream, "%s", string(key_value))
 	else
 		error("Incompatible data type.")
 	end

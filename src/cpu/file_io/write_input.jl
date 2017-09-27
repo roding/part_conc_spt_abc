@@ -1,26 +1,27 @@
 function write_input(	file_path::String,
-					data_file_path::String,
-					distribution_class::String,
-					number_of_components::Int64,
-					Lx::Float64,
-					Ly::Float64,
-					Lz::Float64,
-					kmin::Int64,
-					number_of_de_bins::Int64,
-					ub_de::Float64,
-					lb_m::Float64,
-					ub_m::Float64,
-					lb_s::Float64,
-					ub_s::Float64,
-					lb_c::Float64,
-					ub_c::Float64,
-					lb_az::Float64,
-					ub_az::Float64,
-					number_of_abc_samples::Int64,
-					gamma_initial::Float64,
-					delta_gamma::Float64,
-					ub_average_number_of_trials::Int64,
-					output_file_path::String)
+						data_file_path::String,
+						distribution_class::String,
+						number_of_components::Int64,
+						Lx::Float64,
+						Ly::Float64,
+						Lz::Float64,
+						kmin::Int64,
+						number_of_de_bins::Int64,
+						ub_de::Float64,
+						lb_m::Float64,
+						ub_m::Float64,
+						lb_s::Float64,
+						ub_s::Float64,
+						lb_c::Float64,
+						ub_c::Float64,
+						lb_az::Float64,
+						ub_az::Float64,
+						number_of_abc_samples::Int64,
+						gamma_initial::Float64,
+						gamma_adaptive::Bool,
+						delta_gamma::Float64,
+						ub_average_number_of_trials::Int64,
+						output_file_path::String)
 
 	file_stream::IOStream = open(file_path, "w")
 
@@ -45,6 +46,7 @@ function write_input(	file_path::String,
 	write_key(file_stream, "ub_az", ub_az)
 	write_key(file_stream, "number_of_abc_samples", number_of_abc_samples)
 	write_key(file_stream, "gamma_initial", gamma_initial)
+	write_key(file_stream, "gamma_adaptive", gamma_adaptive)
 	write_key(file_stream, "delta_gamma", delta_gamma)
 	write_key(file_stream, "ub_average_number_of_trials", ub_average_number_of_trials)
 	write_key(file_stream, "output_file_path", output_file_path)

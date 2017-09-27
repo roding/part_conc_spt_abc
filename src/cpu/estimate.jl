@@ -16,6 +16,7 @@ function estimate(distribution_class::String,
 				ub_az::Float64,
 				number_of_abc_samples::Int64,
 				gamma_initial::Float64,
+				gamma_adaptive::Bool,
 				delta_gamma::Float64,
 				ub_average_number_of_trials::Int64,
 				ax::Float64,
@@ -76,7 +77,32 @@ function estimate(distribution_class::String,
 	tau_az::Float64 = sqrt( 2.0 * var(az, corrected = false) )
 
 	# The rest of the iterations.
-	gamma::Float64 = gamma_initial
+	gamma::Float64 = 0.0
+	if gamma_adaptive
+		for current_abc_sample = 1:number_of_abc_samples
+			H_sim = simulate(	distribution_class,
+								m[:, current_abc_sample],
+								s[:, current_abc_sample],
+								c[:, current_abc_sample],
+								ax,
+								ay,
+								az[current_abc_sample],
+								Lx,
+								Ly,
+								Lz,
+								number_of_frames,
+								deltat,
+								kmin,
+								number_of_de_bins,
+								ub_de)
+
+			dist[current_abc_sample] = distance(H, H_sim)
+		end
+		gamma = log10(median(dist))
+	else
+		gamma = gamma_initial
+	end
+
 	epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = zeros(number_of_abc_samples)
 	is_converged::Bool = false
