@@ -4,7 +4,7 @@ function simulate(	distribution_class::String,
 					c::Array{Float64, 1},
 					ax::Float64,
 					ay::Float64,
-					az::Float64,
+					az::Array{Float64, 1},
 					Lx::Float64,
 					Ly::Float64,
 					Lz::Float64,
@@ -32,8 +32,8 @@ function simulate(	distribution_class::String,
 	ubx::Float64 = 0.5 * (Lx + ax)
 	lby::Float64 = 0.5 * (Ly - ay)
 	uby::Float64 = 0.5 * (Ly + ay)
-	lbz::Float64 = 0.5 * (Lz - az)
-	ubz::Float64 = 0.5 * (Lz + az)
+	lbz::Array{Int64, 1} = 0.5 * (Lz - az)
+	ubz::Array{Int64, 1} = 0.5 * (Lz + az)
 
 	# Variables for storing positions, displacements, number of particles, etc
 	x::Float64 = 0.0
@@ -46,6 +46,7 @@ function simulate(	distribution_class::String,
 	k::Int64 = 0
 	de::Float64 = 0.0
 	std_dev_random_walk::Float64 = 0.0
+	index::Int64 = 0
 
 	# Histogram matrix for number of positions and estimated diffusion coefficients of all
 	# recorded trajectories.
@@ -60,12 +61,8 @@ function simulate(	distribution_class::String,
 			# Generate random diffusion coefficent from distribution, or more precisely,
 			# a random standard deviation for the displacements.
 			if distribution_class == "discrete"
-				if number_of_components == 1
-					std_dev_random_walk = sqrt(2.0 * m[1] * deltat)
-				else
-					index = rand_weighted_index(cum_fractions)
-					std_dev_random_walk = sqrt(2.0 * m[index] * deltat)
-				end
+				index = rand_weighted_index(cum_fractions)
+				std_dev_random_walk = sqrt(2.0 * m[index] * deltat)
 			elseif distribution_class == "lognormal"
 				std_dev_random_walk = sqrt(2.0 * exp(log(m[1]) - 0.5 * log(1 + s[1]^2/m[1]^2) + (sqrt(log(1 + s[1]^2/m[1]^2))) * rand()) * deltat)
 			end
@@ -79,7 +76,7 @@ function simulate(	distribution_class::String,
 			de = 0.0
 
 			# In detection region or not? Check z limits first because they are more restrictive.
-			if (lbz <= z <= ubz) & (lbx <= x <= ubx) & (lby <= y <= uby)
+			if (lbz[index] <= z <= ubz[index]) & (lbx <= x <= ubx) & (lby <= y <= uby)
 				k = 1
 			else
 				k = 0
@@ -99,7 +96,7 @@ function simulate(	distribution_class::String,
 				y = position_periodic(y, Ly)
 				z = position_periodic(z, Lz)
 
-				if (lbz <= z <= ubz) & (lbx <= x <= ubx) & (lby <= y <= uby)
+				if (lbz[index] <= z <= ubz[index]) & (lbx <= x <= ubx) & (lby <= y <= uby)
 					k = k + 1
 					if k >= 2 # The first point inside the detection region does not contributed toward the estimated diffusion coefficient.
 						de = de + deltax^2 + deltay^2 # Only in x-y plane.
