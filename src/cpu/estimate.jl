@@ -44,13 +44,13 @@ function estimate(distribution_class::String,
 	m::Array{Float64, 2} = zeros(number_of_components, number_of_abc_samples)
 	s::Array{Float64, 2} = zeros(number_of_components, number_of_abc_samples)
 	c::Array{Float64, 2} = zeros(number_of_components, number_of_abc_samples)
-	az::Array{Float64, 1} = zeros(number_of_components, number_of_abc_samples)
+	az::Array{Float64, 2} = zeros(number_of_components, number_of_abc_samples)
 	dist::Array{Float64, 1} = zeros(number_of_abc_samples)
 
 	m_star::SharedArray{Float64, 2} = zeros(number_of_components, number_of_abc_samples)
 	s_star::SharedArray{Float64, 2} = zeros(number_of_components, number_of_abc_samples)
 	c_star::SharedArray{Float64, 2} = zeros(number_of_components, number_of_abc_samples)
-	az_star::SharedArray{Float64, 1} = zeros(number_of_components, number_of_abc_samples)
+	az_star::SharedArray{Float64, 2} = zeros(number_of_components, number_of_abc_samples)
 	dist_star::SharedArray{Float64, 1} = zeros(number_of_abc_samples)
 
 	# Initialize assuming that epsilon = inf so that everything is accepted.
@@ -67,6 +67,7 @@ function estimate(distribution_class::String,
 	tau_m::Array{Float64, 1} = zeros(number_of_components)
 	tau_s::Array{Float64, 1} = zeros(number_of_components)
 	tau_c::Array{Float64, 1} = zeros(number_of_components)
+	tau_az::Array{Float64, 1} = zeros(number_of_components)
 	for current_component = 1:number_of_components
 		tau_m[current_component] = sqrt( 2.0 * var(m[current_component, :], corrected = false) )
 		if distribution_class != "discrete"
@@ -75,7 +76,7 @@ function estimate(distribution_class::String,
 		tau_c[current_component] = sqrt( 2.0 * var(c[current_component, :], corrected = false) )
 		tau_az[current_component] = sqrt( 2.0 * var(az[current_component, :], corrected = false) )
 	end
-
+	
 	# The rest of the iterations.
 	gamma::Float64 = 0.0
 	if gamma_adaptive
@@ -207,6 +208,6 @@ function estimate(distribution_class::String,
 			println("Converged.")
 		end
 	end
-	
+
 	return (m, s, c, az, dist, w, epsilon)
 end

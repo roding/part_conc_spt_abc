@@ -32,8 +32,8 @@ function simulate(	distribution_class::String,
 	ubx::Float64 = 0.5 * (Lx + ax)
 	lby::Float64 = 0.5 * (Ly - ay)
 	uby::Float64 = 0.5 * (Ly + ay)
-	lbz::Array{Int64, 1} = 0.5 * (Lz - az)
-	ubz::Array{Int64, 1} = 0.5 * (Lz + az)
+	lbz::Array{Float64, 1} = 0.5 * (Lz - az)
+	ubz::Array{Float64, 1} = 0.5 * (Lz + az)
 
 	# Variables for storing positions, displacements, number of particles, etc
 	x::Float64 = 0.0
