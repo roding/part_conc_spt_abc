@@ -178,6 +178,8 @@ function estimate(distribution_class::String,
 
 		#println(size(m))
 		println((round(gamma, 2), round(mean(trial_count), 2), round(mean(m[1, :]), 2), round(mean(m[2, :]), 2), round(mean(c[1, :]), 2), round(mean(c[2, :]), 2), round(mean(az), 2)))
+		#println((round(gamma, 2), round(mean(trial_count), 2), round(mean(m), 2), round(mean(c), 2), round(mean(az), 2)))
+
 
 		w = 1 ./ dist_star.^2
 		w = w / sum(w)
