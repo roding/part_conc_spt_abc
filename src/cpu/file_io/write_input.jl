@@ -1,6 +1,6 @@
 function write_input(	file_path::String,
 						data_file_path::String,
-						distribution_class::String,
+						model::String,
 						number_of_components::Int64,
 						Lx::Float64,
 						Ly::Float64,
@@ -28,7 +28,7 @@ function write_input(	file_path::String,
 	@printf(file_stream, "%s", "<input>\n")
 
 	write_key(file_stream, "data_file_path", data_file_path)
-	write_key(file_stream, "distribution_class", distribution_class)
+	write_key(file_stream, "model", model)
 	write_key(file_stream, "number_of_components", number_of_components)
 	write_key(file_stream, "Lx", Lx)
 	write_key(file_stream, "Ly", Ly)

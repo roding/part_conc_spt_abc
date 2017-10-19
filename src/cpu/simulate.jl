@@ -1,4 +1,4 @@
-function simulate(	distribution_class::String,
+function simulate(	model::String,
 					m::Array{Float64, 1},
 					s::Array{Float64, 1},
 					c::Array{Float64, 1},
@@ -60,12 +60,12 @@ function simulate(	distribution_class::String,
 		for current_particle = 1:number_of_particles
 			# Generate random diffusion coefficent from distribution, or more precisely,
 			# a random standard deviation for the displacements.
-			if distribution_class == "discrete"
+			#if model == "discrete"
 				index = rand_weighted_index(cum_fractions)
 				std_dev_random_walk = sqrt(2.0 * m[index] * deltat)
-			elseif distribution_class == "lognormal"
-				std_dev_random_walk = sqrt(2.0 * exp(log(m[1]) - 0.5 * log(1 + s[1]^2/m[1]^2) + (sqrt(log(1 + s[1]^2/m[1]^2))) * rand()) * deltat)
-			end
+			#elseif model == "lognormal"
+			#	std_dev_random_walk = sqrt(2.0 * exp(log(m[1]) - 0.5 * log(1 + s[1]^2/m[1]^2) + (sqrt(log(1 + s[1]^2/m[1]^2))) * rand()) * deltat)
+			#end
 
 			# Random initial position.
 			x = Lx * rand()

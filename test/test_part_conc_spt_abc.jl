@@ -25,14 +25,14 @@ function test_part_conc_spt_abc()
 	number_of_frames::Array{Int64, 1} = 250 * ones(50)
 	deltat::Float64 = 0.05 # seconds
 	kmin::Int64 = 2
-	distribution_class::String = "discrete"
+	model::String = "discrete-fixed-depth"
 	m_real::Array{Float64, 1} = [1.0, 3.0] # µm^2/s.
 	s_real::Array{Float64, 1} = [0.0, 0.0] # µm^2/s. Just put to zero for discrete model.
 	c_real::Array{Float64, 1} = [1e8, 1e8] # part/ml.
-	az_real::Float64 = 2.0 # µm.
+	az_real::Array{Float64, 1} = [2.0, 2.0] # µm.
 
 	# Simulate experiment.
-	(K::Array{Int64, 1}, DE::Array{Float64, 1}) = generate_experiment(	distribution_class,
+	(K::Array{Int64, 1}, DE::Array{Float64, 1}) = generate_experiment(	model,
 																		m_real,
 																		s_real,
 																		c_real,
@@ -67,8 +67,8 @@ function test_part_conc_spt_abc()
 	ub_s::Float64 = 0.0 # Just put to zero for discrete model.
 	lb_c::Float64 = 0.25 * minimum(c_real)
 	ub_c::Float64 = 4.0 * maximum(c_real)
-	lb_az::Float64 = 0.25 * az_real
-	ub_az::Float64 = 4.0 * az_real
+	lb_az::Float64 = 0.25 * minimum(az_real)
+	ub_az::Float64 = 4.0 * maximum(az_real)
 	number_of_abc_samples::Int64 = 128
 	gamma_initial::Float64 = 15.0
 	gamma_adaptive::Bool = false
@@ -77,7 +77,7 @@ function test_part_conc_spt_abc()
 	output_file_path::String = abspath("output.xml")
 	write_input(input_file_path,
 				data_file_path,
-				distribution_class,
+				model,
 				number_of_components,
 				Lx,
 				Ly,

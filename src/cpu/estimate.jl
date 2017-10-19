@@ -1,4 +1,4 @@
-function estimate(distribution_class::String,
+function estimate(model::String,
 				number_of_components::Int64,
 				Lx::Float64,
 				Ly::Float64,
@@ -57,7 +57,13 @@ function estimate(distribution_class::String,
 	m = lb_m + (ub_m - lb_m) * rand(number_of_components, number_of_abc_samples)
 	s = lb_s + (ub_s - lb_s) * rand(number_of_components, number_of_abc_samples)
 	c = lb_c + (ub_c - lb_c) * rand(number_of_components, number_of_abc_samples)
-	az = lb_az + (ub_az - lb_az) * rand(number_of_components, number_of_abc_samples)
+	if model == "discrete-fixed-depth"
+		az = lb_az + (ub_az - lb_az) * repmat(rand(1, number_of_abc_samples), 2)
+	elseif model == "discrete-variable-depth"
+		az = lb_az + (ub_az - lb_az) * rand(number_of_components, number_of_abc_samples)
+	else
+		az = lb_az + (ub_az - lb_az) * rand(number_of_components, number_of_abc_samples)
+	end
 
 	w::Array{Float64, 1} = ones(number_of_abc_samples) / convert(Float64, number_of_abc_samples)
 	cum_w::Array{Float64, 1} = cumsum(w)
@@ -70,18 +76,19 @@ function estimate(distribution_class::String,
 	tau_az::Array{Float64, 1} = zeros(number_of_components)
 	for current_component = 1:number_of_components
 		tau_m[current_component] = sqrt( 2.0 * var(m[current_component, :], corrected = false) )
-		if distribution_class != "discrete"
-			tau_s[current_component] = sqrt( 2.0 * var(s[current_component, :], corrected = false) )
-		end
+		#if model != "discrete"
+		#	tau_s[current_component] = sqrt( 2.0 * var(s[current_component, :], corrected = false) )
+		#end
+
 		tau_c[current_component] = sqrt( 2.0 * var(c[current_component, :], corrected = false) )
 		tau_az[current_component] = sqrt( 2.0 * var(az[current_component, :], corrected = false) )
 	end
-	
+
 	# The rest of the iterations.
 	gamma::Float64 = 0.0
 	if gamma_adaptive
 		for current_abc_sample = 1:number_of_abc_samples
-			H_sim = simulate(	distribution_class,
+			H_sim = simulate(	model,
 								m[:, current_abc_sample],
 								s[:, current_abc_sample],
 								c[:, current_abc_sample],
@@ -133,22 +140,28 @@ function estimate(distribution_class::String,
 				c_bis = zeros(number_of_components)
 				az_bis = zeros(number_of_components)
 
-				for current_component = 1:number_of_components
-					m_bis[current_component] = displace(m_prim[current_component], tau_m[current_component], lb_m, ub_m)
-					if distribution_class != "discrete"
-						s_bis[current_component] = displace(s_prim[current_component], tau_s[current_component], lb_s, ub_s)
+				if model == "discrete-fixed-depth"
+					for current_component = 1:number_of_components
+						m_bis[current_component] = displace(m_prim[current_component], tau_m[current_component], lb_m, ub_m)
+						c_bis[current_component] = displace(c_prim[current_component], tau_c[current_component], lb_c, ub_c)
 					end
-					c_bis[current_component] = displace(c_prim[current_component], tau_c[current_component], lb_c, ub_c)
-					az_bis[current_component] = displace(az_prim[current_component], tau_az[current_component], lb_az, ub_az)
+					az_bis[1] = displace(az_prim[1], tau_az[1], lb_az, ub_az)
+					az_bis[2:end] = az_bis[1]
+				elseif model == "discrete-variable-depth"
+					for current_component = 1:number_of_components
+						m_bis[current_component] = displace(m_prim[current_component], tau_m[current_component], lb_m, ub_m)
+						c_bis[current_component] = displace(c_prim[current_component], tau_c[current_component], lb_c, ub_c)
+						az_bis[current_component] = displace(az_prim[current_component], tau_az[current_component], lb_az, ub_az)
+					end
 				end
 
-				p = sortperm(m_bis)
+				p = sortperm(m_bis) # To avoid label switching problems.
 				m_bis = m_bis[p]
 				s_bis = s_bis[p]
 				c_bis = c_bis[p]
 				az_bis = az_bis[p]
 
-				H_sim = simulate(	distribution_class,
+				H_sim = simulate(	model,
 								m_bis,
 								s_bis,
 								c_bis,
@@ -170,15 +183,11 @@ function estimate(distribution_class::String,
 			end
 
 			m_star[:, current_abc_sample] = m_bis
-			if distribution_class != "discrete"
-				s_star[:, current_abc_sample] = s_bis
-			end
 			c_star[:, current_abc_sample] = c_bis
 			az_star[:, current_abc_sample] = az_bis
 			dist_star[current_abc_sample] = dist_bis
 		end
 
-		#println(size(m))
 		println((round(gamma, 2), round(mean(trial_count), 2), round(mean(m[1, :]), 2), round(mean(m[2, :]), 2), round(mean(c[1, :]), 2), round(mean(c[2, :]), 2), round(mean(az[1, :]), 2), round(mean(az[2, :]), 2)))
 		#println((round(gamma, 2), round(mean(trial_count), 2), round(mean(m), 2), round(mean(c), 2), round(mean(az), 2)))
 
@@ -187,7 +196,7 @@ function estimate(distribution_class::String,
 		w = w / sum(w)
 
 		m = convert(Array{Float64, 2}, m_star)
-		if distribution_class != "discrete"
+		if model != "discrete"
 			s = convert(Array{Float64, 2}, s_star)
 		end
 		c = convert(Array{Float64, 2}, c_star)
@@ -196,9 +205,6 @@ function estimate(distribution_class::String,
 
 		for current_component = 1:number_of_components
 			tau_m[current_component] = sqrt( 2.0 * var(m[current_component, :], corrected = false) )
-			if distribution_class != "discrete"
-				tau_s[current_component] = sqrt( 2.0 * var(s[current_component, :], corrected = false) )
-			end
 			tau_c[current_component] = sqrt( 2.0 * var(c[current_component, :], corrected = false) )
 			tau_az[current_component] = sqrt( 2.0 * var(az[current_component, :], corrected = false) )
 		end

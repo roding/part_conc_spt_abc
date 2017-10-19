@@ -43,7 +43,7 @@ function run_part_conc_spt_abc()
 
 	# Read input.
 	(	data_file_path::String,
-		distribution_class::String,
+		model::String,
 		number_of_components::Int64,
 		Lx::Float64,
 		Ly::Float64,
@@ -81,7 +81,7 @@ function run_part_conc_spt_abc()
 		az::Array{Float64, 2},
 		dist::Array{Float64, 1},
 		w::Array{Float64, 1},
-		epsilon::Float64) = estimate(	distribution_class,
+		epsilon::Float64) = estimate(	model,
 										number_of_components,
 										Lx,
 										Ly,
@@ -110,7 +110,7 @@ function run_part_conc_spt_abc()
 										DE)
 
 	write_output(	output_file_path,
-					distribution_class,
+					model,
 					number_of_components,
 					number_of_abc_samples,
 					m,
@@ -123,7 +123,7 @@ function run_part_conc_spt_abc()
 	println(join(("Output written to ", output_file_path, ".")))
 
 	(
-		distribution_class,
+		model,
 		number_of_components,
 		number_of_abc_samples,
 		m,
@@ -133,7 +133,7 @@ function run_part_conc_spt_abc()
 		dist,
 		w,
 		epsilon) = read_output(output_file_path)
-	println(distribution_class)
+	println(model)
 	println(number_of_components)
 	println(number_of_abc_samples)
 	println(m)
