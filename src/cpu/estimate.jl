@@ -188,9 +188,13 @@ function estimate(model::String,
 			dist_star[current_abc_sample] = dist_bis
 		end
 
-		println((round(gamma, 2), round(mean(trial_count), 2), round(mean(m[1, :]), 2), round(mean(m[2, :]), 2), round(mean(c[1, :]), 2), round(mean(c[2, :]), 2), round(mean(az[1, :]), 2), round(mean(az[2, :]), 2)))
-		#println((round(gamma, 2), round(mean(trial_count), 2), round(mean(m), 2), round(mean(c), 2), round(mean(az), 2)))
-
+		if model == "discrete-fixed-depth" || model == "discrete-variable-depth"
+			if number_of_components == 1
+				println((round(gamma, 2), round(mean(trial_count), 2), round(mean(m), 2), round(mean(c), 2), round(mean(az), 2)))
+			elseif number_of_components == 2
+				println((round(gamma, 2), round(mean(trial_count), 2), round(mean(m[1, :]), 2), round(mean(m[2, :]), 2), round(mean(c[1, :]), 2), round(mean(c[2, :]), 2), round(mean(az[1, :]), 2), round(mean(az[2, :]), 2)))
+			end
+		end
 
 		w = 1 ./ dist_star.^2
 		w = w / sum(w)
