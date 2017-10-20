@@ -29,8 +29,8 @@ function generate_experiment(	model::String,
 	ubx::Float64 = 0.5 * (Lx + ax)
 	lby::Float64 = 0.5 * (Ly - ay)
 	uby::Float64 = 0.5 * (Ly + ay)
-	lbz::Array{Int64, 1} = 0.5 * (Lz - az)
-	ubz::Array{Int64, 1} = 0.5 * (Lz + az)
+	lbz::Array{Float64, 1} = 0.5 * (Lz - az)
+	ubz::Array{Float64, 1} = 0.5 * (Lz + az)
 
 	# Vectors for storing number of positions and estimated diffusion coefficients of all recorded trajectories.
 	K::Array{Int64, 1} = []
