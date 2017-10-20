@@ -5,7 +5,7 @@ function write_output(	file_path::String,
 					m::Array{Float64, 2},
 					s::Array{Float64, 2},
 					c::Array{Float64, 2},
-					az::Array{Float64, 1},
+					az::Array{Float64, 2},
 					dist::Array{Float64, 1},
 					w::Array{Float64, 1},
 					epsilon::Float64)

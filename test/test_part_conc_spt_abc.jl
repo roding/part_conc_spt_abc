@@ -16,13 +16,16 @@ function test_part_conc_spt_abc()
 	random_seed::Int64 = convert(Int64, time_ns())
 	srand(random_seed)
 
+	# Timing.
+	time_start::Int64 = convert(Int64, time_ns())
+
 	# Experimental parameters.
 	ax::Float64 = 40.0 # µm.
 	ay::Float64 = 40.0 # µm.
 	Lx::Float64 = 60.0 # µm.
 	Ly::Float64 = 60.0 # µm.
 	Lz::Float64 = 10.0 # µm.
-	number_of_frames::Array{Int64, 1} = 250 * ones(50)
+	number_of_frames::Array{Int64, 1} = 250 * ones(5)#250 * ones(50)
 	deltat::Float64 = 0.05 # seconds
 	kmin::Int64 = 2
 	model::String = "discrete-fixed-depth"
@@ -73,7 +76,7 @@ function test_part_conc_spt_abc()
 	gamma_initial::Float64 = 15.0
 	gamma_adaptive::Bool = false
 	delta_gamma::Float64 = 0.01
-	ub_average_number_of_trials::Int64 = 500
+	ub_average_number_of_trials::Int64 = 1.2#500
 	output_file_path::String = abspath("output.xml")
 	write_input(input_file_path,
 				data_file_path,
@@ -104,10 +107,13 @@ function test_part_conc_spt_abc()
 	program_path::String = abspath("../src/cpu/run_part_conc_spt_abc.jl")
 	#cmd::Cmd = `julia $program_path $input_file_path`
 	str_number_of_cores::String = string(Sys.CPU_CORES)
-	#cmd::Cmd = `julia -p $str_number_of_cores $program_path $input_file_path`
-	cmd::Cmd = `julia --math-mode=fast --check-bounds=no --optimize=3 -p $str_number_of_cores $program_path $input_file_path`
+	cmd::Cmd = `julia -p $str_number_of_cores $program_path $input_file_path`
+	#cmd::Cmd = `julia --math-mode=fast --check-bounds=no --optimize=3 -p $str_number_of_cores $program_path $input_file_path`
 	run(cmd)
 
+	time_end::Int64 = convert(Int64, time_ns())
+	time_exec::Float64 = convert(Float64, time_end - time_start) / 1e9
+	println(time_exec)
 	nothing
 end
 
