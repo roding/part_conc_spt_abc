@@ -20,7 +20,7 @@ function write_output(	file_path::String,
 	write_key(file_stream, "m", m[:])
 	write_key(file_stream, "s", s[:])
 	write_key(file_stream, "c", c[:])
-	write_key(file_stream, "az", az)
+	write_key(file_stream, "az", az[:])
 	write_key(file_stream, "dist", dist)
 	write_key(file_stream, "w", w)
 	write_key(file_stream, "epsilon", epsilon)
