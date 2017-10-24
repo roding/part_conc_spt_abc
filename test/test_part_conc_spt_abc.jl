@@ -102,6 +102,7 @@ function test_part_conc_spt_abc()
 	#cmd::Cmd = `julia $program_path $input_file_path`
 	str_number_of_cores::String = string(Sys.CPU_CORES)
 	cmd::Cmd = `julia -p $str_number_of_cores $program_path $input_file_path`
+	#cmd::Cmd = `julia -p 1 $program_path $input_file_path`
 	#cmd::Cmd = `julia --math-mode=fast --check-bounds=no --optimize=3 -p $str_number_of_cores $program_path $input_file_path`
 	run(cmd)
 

@@ -56,8 +56,6 @@ function estimate(model::String,
 		az = lb_az + (ub_az - lb_az) * repmat(rand(1, number_of_abc_samples), 2)
 	elseif model == "discrete-variable-depth"
 		az = lb_az + (ub_az - lb_az) * rand(number_of_components, number_of_abc_samples)
-	else
-		az = lb_az + (ub_az - lb_az) * rand(number_of_components, number_of_abc_samples)
 	end
 
 	w::Array{Float64, 1} = ones(number_of_abc_samples) / convert(Float64, number_of_abc_samples)

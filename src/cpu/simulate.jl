@@ -71,7 +71,8 @@ function simulate(	model::String,
 			de = 0.0
 
 			# In detection region or not? Check z limits first because they are more restrictive.
-			if (lbz[index] <= z <= ubz[index]) & (lbx <= x <= ubx) & (lby <= y <= uby)
+			#if (lbz[index] <= z <= ubz[index]) & (lbx <= x <= ubx) & (lby <= y <= uby)
+			if (abs(z - 0.5 * Lz) <= 0.5 * az[index]) & (abs(x - 0.5 * Lx) <= 0.5 * ax) & (abs(y - 0.5 * Ly) <= 0.5 * ay)
 				k = 1
 			else
 				k = 0
@@ -91,7 +92,8 @@ function simulate(	model::String,
 				y = position_periodic(y, Ly)
 				z = position_periodic(z, Lz)
 
-				if (lbz[index] <= z <= ubz[index]) & (lbx <= x <= ubx) & (lby <= y <= uby)
+				#if (lbz[index] <= z <= ubz[index]) & (lbx <= x <= ubx) & (lby <= y <= uby)
+				if (abs(z - 0.5 * Lz) <= 0.5 * az[index]) & (abs(x - 0.5 * Lx) <= 0.5 * ax) & (abs(y - 0.5 * Ly) <= 0.5 * ay)
 					k = k + 1
 					if k >= 2 # The first point inside the detection region does not contributed toward the estimated diffusion coefficient.
 						de = de + deltax^2 + deltay^2 # Only in x-y plane.
