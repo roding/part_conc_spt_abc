@@ -8,8 +8,6 @@ function estimate(model::String,
 				ub_de::Float64,
 				lb_m::Float64,
 				ub_m::Float64,
-				lb_s::Float64,
-				ub_s::Float64,
 				lb_c::Float64,
 				ub_c::Float64,
 				lb_az::Float64,
@@ -42,20 +40,17 @@ function estimate(model::String,
 
 	# Variables for population parameter values.
 	m::Array{Float64, 2} = zeros(number_of_components, number_of_abc_samples)
-	s::Array{Float64, 2} = zeros(number_of_components, number_of_abc_samples)
 	c::Array{Float64, 2} = zeros(number_of_components, number_of_abc_samples)
 	az::Array{Float64, 2} = zeros(number_of_components, number_of_abc_samples)
 	dist::Array{Float64, 1} = zeros(number_of_abc_samples)
 
 	m_star::SharedArray{Float64, 2} = zeros(number_of_components, number_of_abc_samples)
-	s_star::SharedArray{Float64, 2} = zeros(number_of_components, number_of_abc_samples)
 	c_star::SharedArray{Float64, 2} = zeros(number_of_components, number_of_abc_samples)
 	az_star::SharedArray{Float64, 2} = zeros(number_of_components, number_of_abc_samples)
 	dist_star::SharedArray{Float64, 1} = zeros(number_of_abc_samples)
 
 	# Initialize assuming that epsilon = inf so that everything is accepted.
 	m = lb_m + (ub_m - lb_m) * rand(number_of_components, number_of_abc_samples)
-	s = lb_s + (ub_s - lb_s) * rand(number_of_components, number_of_abc_samples)
 	c = lb_c + (ub_c - lb_c) * rand(number_of_components, number_of_abc_samples)
 	if model == "discrete-fixed-depth"
 		az = lb_az + (ub_az - lb_az) * repmat(rand(1, number_of_abc_samples), 2)
@@ -71,15 +66,10 @@ function estimate(model::String,
 
 	# Displacement standard deviations.
 	tau_m::Array{Float64, 1} = zeros(number_of_components)
-	tau_s::Array{Float64, 1} = zeros(number_of_components)
 	tau_c::Array{Float64, 1} = zeros(number_of_components)
 	tau_az::Array{Float64, 1} = zeros(number_of_components)
 	for current_component = 1:number_of_components
 		tau_m[current_component] = sqrt( 2.0 * var(m[current_component, :], corrected = false) )
-		#if model != "discrete"
-		#	tau_s[current_component] = sqrt( 2.0 * var(s[current_component, :], corrected = false) )
-		#end
-
 		tau_c[current_component] = sqrt( 2.0 * var(c[current_component, :], corrected = false) )
 		tau_az[current_component] = sqrt( 2.0 * var(az[current_component, :], corrected = false) )
 	end
@@ -90,7 +80,6 @@ function estimate(model::String,
 		for current_abc_sample = 1:number_of_abc_samples
 			H_sim = simulate(	model,
 								m[:, current_abc_sample],
-								s[:, current_abc_sample],
 								c[:, current_abc_sample],
 								ax,
 								ay,
@@ -123,7 +112,6 @@ function estimate(model::String,
 			dist_bis = Inf
 
 			m_bis = m[:, current_abc_sample]
-			s_bis = s[:, current_abc_sample]
 			c_bis = c[:, current_abc_sample]
 			az_bis = az[:, current_abc_sample]
 
@@ -131,12 +119,10 @@ function estimate(model::String,
 				idx = rand_weighted_index(cum_w)
 
 				m_prim = m[:, idx]
-				s_prim = s[:, idx]
 				c_prim = c[:, idx]
 				az_prim = az[:, idx]
 
 				m_bis = zeros(number_of_components)
-				s_bis = zeros(number_of_components)
 				c_bis = zeros(number_of_components)
 				az_bis = zeros(number_of_components)
 
@@ -157,13 +143,11 @@ function estimate(model::String,
 
 				p = sortperm(m_bis) # To avoid label switching problems.
 				m_bis = m_bis[p]
-				s_bis = s_bis[p]
 				c_bis = c_bis[p]
 				az_bis = az_bis[p]
 
 				H_sim = simulate(	model,
 								m_bis,
-								s_bis,
 								c_bis,
 								ax,
 								ay,
@@ -200,9 +184,6 @@ function estimate(model::String,
 		w = w / sum(w)
 
 		m = convert(Array{Float64, 2}, m_star)
-		if model != "discrete"
-			s = convert(Array{Float64, 2}, s_star)
-		end
 		c = convert(Array{Float64, 2}, c_star)
 		az = convert(Array{Float64, 2}, az_star)
 		dist = convert(Array{Float64, 1}, dist_star)
@@ -219,5 +200,5 @@ function estimate(model::String,
 		end
 	end
 
-	return (m, s, c, az, dist, w, epsilon)
+	return (m, c, az, dist, w, epsilon)
 end

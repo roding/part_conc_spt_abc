@@ -10,8 +10,6 @@ function write_input(	file_path::String,
 						ub_de::Float64,
 						lb_m::Float64,
 						ub_m::Float64,
-						lb_s::Float64,
-						ub_s::Float64,
 						lb_c::Float64,
 						ub_c::Float64,
 						lb_az::Float64,
@@ -38,8 +36,6 @@ function write_input(	file_path::String,
 	write_key(file_stream, "ub_de", ub_de)
 	write_key(file_stream, "lb_m", lb_m)
 	write_key(file_stream, "ub_m", ub_m)
-	write_key(file_stream, "lb_s", lb_s)
-	write_key(file_stream, "ub_s", ub_s)
 	write_key(file_stream, "lb_c", lb_c)
 	write_key(file_stream, "ub_c", ub_c)
 	write_key(file_stream, "lb_az", lb_az)

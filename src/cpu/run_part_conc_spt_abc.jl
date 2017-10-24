@@ -53,8 +53,6 @@ function run_part_conc_spt_abc()
 		ub_de::Float64,
 		lb_m::Float64,
 		ub_m::Float64,
-		lb_s::Float64,
-		ub_s::Float64,
 		lb_c::Float64,
 		ub_c::Float64,
 		lb_az::Float64,
@@ -76,7 +74,6 @@ function run_part_conc_spt_abc()
 
 	# Run ABC.
 	(	m::Array{Float64, 2},
-		s::Array{Float64, 2},
 		c::Array{Float64, 2},
 		az::Array{Float64, 2},
 		dist::Array{Float64, 1},
@@ -91,8 +88,6 @@ function run_part_conc_spt_abc()
 										ub_de,
 										lb_m,
 										ub_m,
-										lb_s,
-										ub_s,
 										lb_c,
 										ub_c,
 										lb_az,
@@ -114,7 +109,6 @@ function run_part_conc_spt_abc()
 					number_of_components,
 					number_of_abc_samples,
 					m,
-					s,
 					c,
 					az,
 					dist,
@@ -127,7 +121,6 @@ function run_part_conc_spt_abc()
 		number_of_components,
 		number_of_abc_samples,
 		m,
-		s,
 		c,
 		az,
 		dist,
@@ -137,7 +130,6 @@ function run_part_conc_spt_abc()
 	println(number_of_components)
 	println(number_of_abc_samples)
 	println(m)
-	println(s)
 	println(c)
 	println(az)
 	println(dist)
