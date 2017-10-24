@@ -30,14 +30,12 @@ function test_part_conc_spt_abc()
 	kmin::Int64 = 2
 	model::String = "discrete-fixed-depth"
 	m_real::Array{Float64, 1} = [1.0, 3.0] # µm^2/s.
-	s_real::Array{Float64, 1} = [0.0, 0.0] # µm^2/s. Just put to zero for discrete model.
 	c_real::Array{Float64, 1} = [1e8, 1e8] # part/ml.
 	az_real::Array{Float64, 1} = [2.0, 2.0] # µm.
 
 	# Simulate experiment.
 	(K::Array{Int64, 1}, DE::Array{Float64, 1}) = generate_experiment(	model,
 																		m_real,
-																		s_real,
 																		c_real,
 																		ax,
 																		ay,
@@ -66,8 +64,6 @@ function test_part_conc_spt_abc()
 	ub_de::Float64 = 4.0 * maximum(m_real)
 	lb_m::Float64 = 0.25 * minimum(m_real)
 	ub_m::Float64 = 4.0 * maximum(m_real)
-	lb_s::Float64 = 0.0 # Just put to zero for discrete model.
-	ub_s::Float64 = 0.0 # Just put to zero for discrete model.
 	lb_c::Float64 = 0.25 * minimum(c_real)
 	ub_c::Float64 = 4.0 * maximum(c_real)
 	lb_az::Float64 = 0.25 * minimum(az_real)
@@ -90,8 +86,6 @@ function test_part_conc_spt_abc()
 				ub_de,
 				lb_m,
 				ub_m,
-				lb_s,
-				ub_s,
 				lb_c,
 				ub_c,
 				lb_az,
