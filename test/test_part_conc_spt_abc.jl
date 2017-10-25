@@ -13,7 +13,7 @@ include("../src/cpu/position_periodic.jl")
 
 function test_part_conc_spt_abc()
 	# Inititalization of random number generation device.
-	random_seed::Int64 = convert(Int64, time_ns())
+	random_seed::Int64 = 1#convert(Int64, time_ns())
 	srand(random_seed)
 
 	# Timing.
@@ -25,7 +25,7 @@ function test_part_conc_spt_abc()
 	Lx::Float64 = 60.0 # µm.
 	Ly::Float64 = 60.0 # µm.
 	Lz::Float64 = 10.0 # µm.
-	number_of_frames::Array{Int64, 1} = 250 * ones(10)
+	number_of_frames::Array{Int64, 1} = 250 * ones(50)
 	deltat::Float64 = 0.05 # seconds
 	kmin::Int64 = 2
 	model::String = "discrete-fixed-depth"
@@ -72,8 +72,9 @@ function test_part_conc_spt_abc()
 	gamma_initial::Float64 = 15.0
 	gamma_adaptive::Bool = true#false
 	delta_gamma::Float64 = 0.01
-	weighting_scheme::String = "pmc-standard"
-	ub_average_number_of_trials::Int64 = 50#500
+	#weighting_scheme::String = "pmc-standard"
+	weighting_scheme::String = "inverse-distance-squared"
+	ub_average_number_of_trials::Int64 = 500
 	output_file_path::String = abspath("output.xml")
 	write_input(input_file_path,
 				data_file_path,

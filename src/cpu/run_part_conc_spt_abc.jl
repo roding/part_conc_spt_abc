@@ -118,8 +118,7 @@ function run_part_conc_spt_abc()
 					epsilon)
 	println(join(("Output written to ", output_file_path, ".")))
 
-	(
-		model,
+	(	model,
 		number_of_components,
 		number_of_abc_samples,
 		m,
@@ -128,15 +127,6 @@ function run_part_conc_spt_abc()
 		dist,
 		w,
 		epsilon) = read_output(output_file_path)
-	println(model)
-	println(number_of_components)
-	println(number_of_abc_samples)
-	println(m)
-	println(c)
-	println(az)
-	println(dist)
-	println(w)
-	println(epsilon)
 
 	return 0
 end

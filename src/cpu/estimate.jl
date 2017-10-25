@@ -176,7 +176,6 @@ function estimate(model::String,
 			for current_abc_sample = 1:number_of_abc_samples
 				w_star[current_abc_sample] = 0.0
 				for i = 1:number_of_abc_samples
-					if
 					term = 1.0
 					for current_component = 1:number_of_components
 						term = term * normpdf(m_star[current_component, current_abc_sample] - m[current_component, i], 0.0, tau_m[current_component])
