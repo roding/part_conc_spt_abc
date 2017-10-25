@@ -172,23 +172,16 @@ function estimate(model::String,
 			dist_star[current_abc_sample] = dist_bis
 		end
 
-		if model == "discrete-fixed-depth" || model == "discrete-variable-depth"
-			if number_of_components == 1
-				println((round(gamma, 2), round(mean(trial_count), 2), round(mean(m), 2), round(mean(c), 2), round(mean(az), 2)))
-			elseif number_of_components == 2
-				println((round(gamma, 2), round(mean(trial_count), 2), round(mean(m[1, :]), 2), round(mean(m[2, :]), 2), round(mean(c[1, :]), 2), round(mean(c[2, :]), 2), round(mean(az[1, :]), 2), round(mean(az[2, :]), 2)))
-			end
-		end
-
 		if weighting_scheme == "pmc-standard"
 			for current_abc_sample = 1:number_of_abc_samples
 				w_star[current_abc_sample] = 0.0
 				for i = 1:number_of_abc_samples
+					if
 					term = 1.0
 					for current_component = 1:number_of_components
-						term = term * normpdf(m_star[current_abc_sample] - m[i], 0.0, tau_m[current_abc_sample])
-						term = term * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c[current_abc_sample])
-						term = term * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az[current_abc_sample])
+						term = term * normpdf(m_star[current_component, current_abc_sample] - m[current_component, i], 0.0, tau_m[current_component])
+						term = term * normpdf(c_star[current_component, current_abc_sample] - c[current_component, i], 0.0, tau_c[current_component])
+						term = term * normpdf(az_star[current_component, current_abc_sample] - az[current_component, i], 0.0, tau_az[current_component])
 					end
 					w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * term
 				end
@@ -209,6 +202,14 @@ function estimate(model::String,
 			tau_m[current_component] = sqrt( 2.0 * var(m[current_component, :], corrected = false) )
 			tau_c[current_component] = sqrt( 2.0 * var(c[current_component, :], corrected = false) )
 			tau_az[current_component] = sqrt( 2.0 * var(az[current_component, :], corrected = false) )
+		end
+
+		if model == "discrete-fixed-depth" || model == "discrete-variable-depth"
+			if number_of_components == 1
+				println((round(gamma, 2), round(mean(trial_count), 2), round(mean(m), 2), round(mean(c), 2), round(mean(az), 2)))
+			elseif number_of_components == 2
+				println((round(gamma, 2), round(mean(trial_count), 2), round(mean(m[1, :]), 2), round(mean(m[2, :]), 2), round(mean(c[1, :]), 2), round(mean(c[2, :]), 2), round(mean(az[1, :]), 2), round(mean(az[2, :]), 2)))
+			end
 		end
 
 		if mean(trial_count) >= ub_average_number_of_trials
