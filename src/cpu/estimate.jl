@@ -181,6 +181,15 @@ function estimate(model::String,
 		w = 1 ./ dist_star.^2
 		w = w / sum(w)
 
+		for current_abc_sample = 1:number_of_abc_samples
+			w_star[current_abc_sample] = 0.0
+			for i = 1:number_of_abc_samples
+				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(D_star[current_abc_sample] - D[i], 0.0, tau_D) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
+			end
+			w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
+		end
+		w = w_star / sum(w_star)
+
 		m = convert(Array{Float64, 2}, m_star)
 		c = convert(Array{Float64, 2}, c_star)
 		az = convert(Array{Float64, 2}, az_star)
