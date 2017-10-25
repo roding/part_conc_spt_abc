@@ -72,6 +72,7 @@ function test_part_conc_spt_abc()
 	gamma_initial::Float64 = 15.0
 	gamma_adaptive::Bool = true#false
 	delta_gamma::Float64 = 0.01
+	weighting_scheme::String = "pmc-standard"
 	ub_average_number_of_trials::Int64 = 50#500
 	output_file_path::String = abspath("output.xml")
 	write_input(input_file_path,
@@ -94,6 +95,7 @@ function test_part_conc_spt_abc()
 				gamma_initial,
 				gamma_adaptive,
 				delta_gamma,
+				weighting_scheme,
 				ub_average_number_of_trials,
 				output_file_path)
 

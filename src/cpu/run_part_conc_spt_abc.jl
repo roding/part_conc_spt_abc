@@ -61,6 +61,7 @@ function run_part_conc_spt_abc()
 		gamma_initial::Float64,
 		gamma_adaptive::Bool,
 		delta_gamma::Float64,
+		weighting_scheme::String,
 		ub_average_number_of_trials::Int64,
 		output_file_path::String) = read_input(input_file_path)
 
@@ -96,6 +97,7 @@ function run_part_conc_spt_abc()
 										gamma_initial,
 										gamma_adaptive,
 										delta_gamma,
+										weighting_scheme,
 										ub_average_number_of_trials,
 										ax,
 										ay,

@@ -16,6 +16,7 @@ function estimate(model::String,
 				gamma_initial::Float64,
 				gamma_adaptive::Bool,
 				delta_gamma::Float64,
+				weighting_scheme::String,
 				ub_average_number_of_trials::Int64,
 				ax::Float64,
 				ay::Float64,
@@ -61,6 +62,7 @@ function estimate(model::String,
 	w::Array{Float64, 1} = ones(number_of_abc_samples) / convert(Float64, number_of_abc_samples)
 	cum_w::Array{Float64, 1} = cumsum(w)
 	w_star::Array{Float64, 1} = zeros(number_of_abc_samples)
+	term::Float64 = 0.0
 
 	# Displacement standard deviations.
 	tau_m::Array{Float64, 1} = zeros(number_of_components)
@@ -178,17 +180,25 @@ function estimate(model::String,
 			end
 		end
 
-		w = 1 ./ dist_star.^2
-		w = w / sum(w)
-
-		for current_abc_sample = 1:number_of_abc_samples
-			w_star[current_abc_sample] = 0.0
-			for i = 1:number_of_abc_samples
-				w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * normpdf(D_star[current_abc_sample] - D[i], 0.0, tau_D) * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c) * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az)
+		if weighting_scheme == "pmc-standard"
+			for current_abc_sample = 1:number_of_abc_samples
+				w_star[current_abc_sample] = 0.0
+				for i = 1:number_of_abc_samples
+					term = 1.0
+					for current_component = 1:number_of_components
+						term = term * normpdf(m_star[current_abc_sample] - m[i], 0.0, tau_m[current_abc_sample])
+						term = term * normpdf(c_star[current_abc_sample] - c[i], 0.0, tau_c[current_abc_sample])
+						term = term * normpdf(az_star[current_abc_sample] - az[i], 0.0, tau_az[current_abc_sample])
+					end
+					w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * term
+				end
+				w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
 			end
-			w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
+			w = w_star / sum(w_star)
+		elseif weighting_scheme == "inverse-distance-squared"
+			w = 1 ./ dist_star.^2
+			w = w / sum(w)
 		end
-		w = w_star / sum(w_star)
 
 		m = convert(Array{Float64, 2}, m_star)
 		c = convert(Array{Float64, 2}, c_star)

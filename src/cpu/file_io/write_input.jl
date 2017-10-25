@@ -18,6 +18,7 @@ function write_input(	file_path::String,
 						gamma_initial::Float64,
 						gamma_adaptive::Bool,
 						delta_gamma::Float64,
+						weighting_scheme::String,
 						ub_average_number_of_trials::Int64,
 						output_file_path::String)
 
@@ -44,6 +45,7 @@ function write_input(	file_path::String,
 	write_key(file_stream, "gamma_initial", gamma_initial)
 	write_key(file_stream, "gamma_adaptive", gamma_adaptive)
 	write_key(file_stream, "delta_gamma", delta_gamma)
+	write_key(file_stream, "weighting_scheme", weighting_scheme)
 	write_key(file_stream, "ub_average_number_of_trials", ub_average_number_of_trials)
 	write_key(file_stream, "output_file_path", output_file_path)
 

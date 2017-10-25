@@ -22,6 +22,7 @@ function read_input(file_path::String)
 	gamma_initial::Float64 = read_key(file_string, "gamma_initial", Float64)
 	gamma_adaptive::Bool = read_key(file_string, "gamma_adaptive", Bool)
 	delta_gamma::Float64 = read_key(file_string, "delta_gamma", Float64)
+	weighting_scheme::String = read_key(file_string, "weighting_scheme", String)
 	ub_average_number_of_trials::Int64 = read_key(file_string, "ub_average_number_of_trials", Int64)
 	output_file_path::String = read_key(file_string, "output_file_path", String)
 
@@ -45,6 +46,7 @@ function read_input(file_path::String)
 		gamma_initial,
 		gamma_adaptive,
 		delta_gamma,
+		weighting_scheme,
 		ub_average_number_of_trials,
 		output_file_path)
 end
