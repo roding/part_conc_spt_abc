@@ -25,7 +25,7 @@ function test_part_conc_spt_abc()
 	Lx::Float64 = 60.0 # µm.
 	Ly::Float64 = 60.0 # µm.
 	Lz::Float64 = 10.0 # µm.
-	number_of_frames::Array{Int64, 1} = 250 * ones(50)
+	number_of_frames::Array{Int64, 1} = 250 * ones(10)
 	deltat::Float64 = 0.05 # seconds
 	kmin::Int64 = 2
 	model::String = "discrete-fixed-depth"
@@ -70,9 +70,9 @@ function test_part_conc_spt_abc()
 	ub_az::Float64 = 4.0 * maximum(az_real)
 	number_of_abc_samples::Int64 = 128
 	gamma_initial::Float64 = 15.0
-	gamma_adaptive::Bool = false
+	gamma_adaptive::Bool = true#false
 	delta_gamma::Float64 = 0.01
-	ub_average_number_of_trials::Int64 = 500
+	ub_average_number_of_trials::Int64 = 50#500
 	output_file_path::String = abspath("output.xml")
 	write_input(input_file_path,
 				data_file_path,
