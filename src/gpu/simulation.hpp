@@ -25,7 +25,6 @@ enum class ESimScalar
 enum class ESimCount
 {
 	uint32
-	//TODO
 };
 
 struct SimulationConfig
@@ -33,6 +32,9 @@ struct SimulationConfig
 	ESimScalar scalarType = ESimScalar::floatType;
 	ESimCount countType = ESimCount::uint32;
 
+	int verbosity;
+
+	std::size_t maxIter;
 	std::string gpuSpec;
 };
 

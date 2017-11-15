@@ -26,15 +26,18 @@ namespace
 	
 	struct Config_
 	{
-		EAction_ action     = EAction_::compute;
+		EAction_ action      = EAction_::compute;
 		
-		std::string input   = "./input.xml";  // main input "input.xml"
-		std::string data;     // if set, overrides the data.xml path from the input
-		std::string output;   // if set, overrides the output.xml path from the input
+		std::string input    = "./input.xml";  // main input "input.xml"
+		std::string data;      // if set, overrides the data.xml path from the input
+		std::string output;    // if set, overrides the output.xml path from the input
 
-		ESimScalar scalar   = ESimScalar::floatType;
+		ESimScalar scalar    = ESimScalar::floatType;
+
+		int verbosity        = 0;
 		
-		std::string gpuSpec;
+		std::size_t maxIter  = 0;
+		std::string gpuSpec  = "1/30";
 
 		std::string self;
 	};
@@ -67,22 +70,19 @@ int main( int aArgc, char* aArgv[] ) try
 				cfg
 			);
 
-			//TODO: select devices
-
 			SimulationConfig scfg;
-			scfg.scalarType = cfg.scalar;
-			scfg.gpuSpec = cfg.gpuSpec;
+			scfg.scalarType  = cfg.scalar;
+			scfg.maxIter     = cfg.maxIter;
+			scfg.gpuSpec     = cfg.gpuSpec;
+			scfg.verbosity   = cfg.verbosity;
 
 			auto rng = make_prng<SimHostRNG>();
 			auto sim = make_simulation( rng, param, scfg );
 
 			sim->run( rng );
 			sim->write_results( param );
-
 			break;
 		}
-
-		default: assert(false);
 	}
 
 	return 0;
@@ -115,10 +115,14 @@ namespace
   --data, -d <file>     : override data XML file location(*)
   --output, -o <file>   : override output XML file destination(*)
 
+  --gpus, -g <gpuspec>  : select GPUs and queues
   --scalar, -s {f,d}    : select scalar type (𝗳loat or 𝗱ouble)
 
-  --gpus, -g <gpuspec>  : select GPUs and queues
+  --max-steps, -S <N>   : abort after <N> steps (for profiling)
 
+  --quiet, -q           : decrease verbosity
+  --verbose, -v         : increase verbosity (repeat for further increases)
+  
   --help, -h            : print this help and exit
   --list-devices        : list compute devices and exit
 )";
@@ -168,11 +172,21 @@ namespace
 				help_( stdout, aArgv[0] );
 				std::exit( 0 );
 			}
+			else if( flag_( "--quiet", "-q" ) )
+			{
+				--cfg.verbosity;
+			}
+			else if( flag_( "--verbose", "-v" ) )
+			{
+				++cfg.verbosity;
+			}
 			else if( arg_( "--input", "-i", cfg.input ) )
 			{}
 			else if( arg_( "--data", "-d", cfg.data ) )
 			{}
 			else if( arg_( "--output", "-o", cfg.output ) )
+			{}	
+			else if( arg_( "--gpus", "-g", cfg.gpuSpec ) )
 			{}
 			else if( flag_( "--scalar", "-s" ) )
 			{
@@ -186,11 +200,15 @@ namespace
 
 				++arg;
 			}
-			else if( flag_( "--gpus", "-g" ) )
+			else if( flag_( "--max-steps", "-S" ) )
 			{
-				if( arg+1 >= aArgc ) throw std::runtime_error( tfm::format( "Command line argument %s requires an additional argument", aArgv[arg] ) );
+				if( arg+1 >= aArgc ) throw std::runtime_error( tfm::format( "Command line argument %s requires an additinal integer argument", aArgv[arg] ) );
 
-				cfg.gpuSpec = aArgv[arg+1];
+				char dummy;
+				int iret = std::sscanf( aArgv[arg+1], "%zu%c", &cfg.maxIter, &dummy );
+
+				if( 1 != iret ) throw std::runtime_error( tfm::format( "Command line argument %s requires an additional positive integer argument and not %s", aArgv[arg], aArgv[arg+1] ) );
+
 				++arg;
 			}
 			else if( flag_( "--list-devices" ) ) cfg.action = EAction_::listDevices;
