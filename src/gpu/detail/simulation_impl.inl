@@ -172,13 +172,13 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 
 Scalar lambdaAvg = Scalar(0); //XXX-debug
 Scalar lambdaCount = Scalar(0); //XXX-debug
-int iter = 0; //XXX-debug-profile
+//int iter = 0; //XXX-debug-profile
 
 	bool isConverged = false;
 	while( !isConverged )
 	{
-if( iter++ > 5 ) //XXX-debug-profile
-	break; //XXX-debug-profile
+//if( iter++ > 5 ) //XXX-debug-profile
+//	break; //XXX-debug-profile
 
 		mGamma -= mDeltaGamma;
 		mEpsilon = std::pow( Scalar(10), mGamma );
