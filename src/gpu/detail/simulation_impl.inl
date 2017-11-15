@@ -348,7 +348,7 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 			std::printf( "  Wall time: %6.2f ms for this iteration\n", std::chrono::duration_cast<Fms_>(infoIterEnd-infoIterStart).count() );
 
 #			if SIM_KERNEL_TIMINGS
-			std::printf( "  GPU: average times: %4.2f ms total (%4.2f sim, %4.2f dist)\n", timeSimTotal/timeSimCount, timeDistTotal/timeDistCount, timeTotalTotal/timeTotalCount );
+			std::printf( "  GPU: average times: %4.2f ms total (%4.2f sim, %4.2f dist)\n", timeTotalTotal/timeTotalCount, timeSimTotal/timeSimCount, timeDistTotal/timeDistCount );
 #			endif // ~ SIM_KERNEL_TIMINGS
 		}
 
