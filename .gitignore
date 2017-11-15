@@ -10,5 +10,4 @@ deps/deps.jl
 *.dat
 *.asv
 *.mat
-*.xml
 *.m~

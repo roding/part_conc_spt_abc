@@ -1,0 +1,24 @@
+<input>
+	<data_file_path>/home/sms/part_conc_spt_abc_paper1/data/data_20171018_175nm_500nm.xml</data_file_path>
+	<model>discrete-variable-depth</model>
+	<number_of_components>2</number_of_components>
+	<weighting_scheme>pmc-standard</weighting_scheme>
+	<Lx>80.0</Lx>
+	<Ly>80.0</Ly>
+	<Lz>20.0</Lz>
+	<kmin>3</kmin>
+	<number_of_de_bins>1000</number_of_de_bins>
+	<ub_de>5.0</ub_de>
+	<lb_m>0.1</lb_m>
+	<ub_m>5.0</ub_m>
+	<lb_c>5.0e8</lb_c>
+	<ub_c>5.0e9</ub_c>
+	<lb_az>0.5</lb_az>
+	<ub_az>5.0</ub_az>
+	<number_of_abc_samples>128</number_of_abc_samples>
+	<gamma_initial>15.0</gamma_initial>
+	<gamma_adaptive>true</gamma_adaptive>
+	<delta_gamma>0.01</delta_gamma>
+	<ub_average_number_of_trials>500</ub_average_number_of_trials>
+	<output_file_path>/home/sms/part_conc_test/output.xml</output_file_path>
+</input>

@@ -24,7 +24,7 @@ namespace detail
 {
 	// "uncorrected" 1/N variance
 	template< typename tForwardIt > inline
-	auto var_( tForwardIt aBeg, tForwardIt aEnd ) 
+	auto var_( tForwardIt aBeg, tForwardIt aEnd )
 		-> typename std::iterator_traits<tForwardIt>::value_type
 	{
 		using Ty_ = typename std::iterator_traits<tForwardIt>::value_type;
@@ -116,7 +116,7 @@ SimulationT<tArgs...>::SimulationT( input::Parameters const& aPar, HostRng& aRng
 	resize( mTauAz, mZCount );
 
 	//mActiveSamples.reserve( mAbcCount );
-	
+
 	prepare_( aPar, aRng, aCfg );
 }
 template< class... tArgs > inline
@@ -132,7 +132,7 @@ SimulationT<tArgs...>::~SimulationT()
 	for( auto& queue : mDevQueues )
 	{
 		//TODO cudaSetDevice();
-		
+
 		queue.result.free_cuda_resources();
 		DeviceRandom::cleanup( queue.randomState );
 
@@ -166,7 +166,7 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 printf( "pre-initial-gamma\n" );
 	if( mGamma < Scalar(0) )
 		mGamma = compute_initial_gamma_( aRng );
-printf( "after initial-gamma\n" );	
+printf( "after initial-gamma\n" );
 
 	mEpsilon = std::pow( Scalar(10), mGamma );
 
@@ -174,10 +174,15 @@ printf( "after initial-gamma\n" );
 
 Scalar lambdaAvg = Scalar(0); //XXX-debug
 Scalar lambdaCount = Scalar(0); //XXX-debug
+int iter = 0;
+
 
 	bool isConverged = false;
 	while( !isConverged )
 	{
+		if( iter++ > 5 )
+			break;
+
 		mGamma -= mDeltaGamma;
 		mEpsilon = std::pow( Scalar(10), mGamma );
 
@@ -222,7 +227,7 @@ lambdaAvg = lambdaCount = Scalar(0); //XXX-debug
 
 					//XXX- could be templated on ComponentCount
 					std::iota( sample.indices.begin(), sample.indices.end(), 0 );
-					std::sort( sample.indices.begin(), sample.indices.end(), 
+					std::sort( sample.indices.begin(), sample.indices.end(),
 						[&sample] (std::size_t aX, std::size_t aY) {
 							return sample.mBis[aX] < sample.mBis[aY];
 						}
@@ -234,7 +239,7 @@ lambdaAvg = lambdaCount = Scalar(0); //XXX-debug
 						sample.mTmp[i] = sample.mBis[sample.indices[i]];
 						sample.cTmp[i] = sample.cBis[sample.indices[i]];
 					}
-				
+
 					std::swap( sample.mTmp, sample.mBis );
 					std::swap( sample.cTmp, sample.cBis );
 
@@ -255,14 +260,14 @@ lambdaAvg = lambdaCount = Scalar(0); //XXX-debug
 
 lambdaAvg += lambda; // XXX-debug
 lambdaCount += Scalar(1); // XXX-debug
-			
+
 					assert( sample.particleCounts.size() == mSystemSetup.jobCount );
 					for( auto& count : sample.particleCounts )
 						count = poisson(aRng);
 
 
 					std::copy_n( sample.azBis.data(), mZCount, sample.halfAz );
-					
+
 					Scalar acc = Scalar(0);
 					for( std::size_t i = 0; i < mComponentCount; ++i )
 					{
@@ -312,7 +317,7 @@ lambdaCount += Scalar(1); // XXX-debug
 		assert( 0 == activeJobs );
 		assert( mResults.empty() );
 
-printf( "trials max/min: %3u/%3u; eps = %g; avg lambda = %g\n", *std::max_element(trials.begin(),trials.end()), *std::min_element(trials.begin(),trials.end()), mEpsilon, lambdaAvg/lambdaCount ); // XXX-debug
+printf( "trials max/min/sum: %3u/%3u/%3u; eps = %g; avg lambda = %g\n", *std::max_element(trials.begin(),trials.end()), *std::min_element(trials.begin(),trials.end()), std::accumulate(trials.begin(),trials.end(), 0), mEpsilon, lambdaAvg/lambdaCount ); // XXX-debug
 
 #if SIM_KERNEL_TIMINGS
 printf( "  averages: %4.2fms sim, %4.2fms dist, %4.2fms total\n", timeSimTotal/timeSimCount, timeDistTotal/timeDistCount, timeTotalTotal/timeTotalCount ); //XXX-debug
@@ -338,7 +343,7 @@ printf( "  averages: %4.2fms sim, %4.2fms dist, %4.2fms total\n", timeSimTotal/t
 
 			mDist[i] = sample.distBis;
 		}
-		
+
 		compute_tau_();
 
 		// finished?
@@ -403,7 +408,7 @@ void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aR
 
 	// weighting scheme
 	mWeightingSchemeFn = nullptr;
-	
+
 	switch( aPar.weightingScheme )
 	{
 		case EWeightingScheme::pmcStandard: {
@@ -433,11 +438,11 @@ void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aR
 	for( auto& sample : mSamples )
 	{
 		sample.parent = this;
-		
+
 		resize( sample.mBis, mComponentCount );
 		resize( sample.cBis, mComponentCount );
 		resize( sample.azBis, mZCount );
-		
+
 		resize( sample.indices, mComponentCount );
 
 		resize( sample.mTmp, mComponentCount );
@@ -453,7 +458,7 @@ void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aR
 	}
 
 	// generate and upload reference histogram
-	Matrix<Count,aspect::MatrixRowMajor> reference( mKMax, mDEBinCount, Count(0) ); 
+	Matrix<Count,aspect::MatrixRowMajor> reference( mKMax, mDEBinCount, Count(0) );
 
 	assert( aPar.Ks.size() == aPar.DEs.size() );
 	for( std::size_t i = 0; i < aPar.Ks.size(); ++i )
@@ -476,7 +481,7 @@ void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aR
 	{
 		auto rv = reference.row(r);
 		std::partial_sum( rv.begin(), rv.end(), rv.begin() );
-	} 
+	}
 
 
 	// allocate per-GPU data
@@ -499,14 +504,14 @@ void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aR
 		for( std::size_t i = 0; i < jobCount; ++i )
 			counts[i] = int_cast<Count>(aPar.frameCounts[i]);
 
-		auto const b = (jobCount+24-1)/24;
-		auto const t = 32*24;
+		auto const b = (jobCount+4-1)/4;
+		auto const t = 32*4;
 
 		Count* fc = nullptr;
 		CUDA_CHECKED cudaSetDevice( devID );
 		CUDA_CHECKED cudaMalloc( &fc, sizeof(Count)*jobCount );
 		CUDA_CHECKED cudaMemcpy( fc, counts.data(), sizeof(Count)*jobCount, cudaMemcpyHostToDevice );
-		
+
 		mDevGlobal.emplace_back( CudaDevGlobal_{
 			int(devID),
 			queueCount,
@@ -537,7 +542,7 @@ void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aR
 
 			if( i >= devGlobal.queueCount )
 				continue;
-			
+
 			cudaStream_t stream;
 			CUDA_CHECKED cudaSetDevice( devGlobal.device );
 			CUDA_CHECKED cudaStreamCreate( &stream );
@@ -578,7 +583,7 @@ auto SimulationT<tArgs...>::compute_initial_gamma_( HostRng& aRng ) -> Scalar
 	// XXX-FIXME-quick hack with a supersized side of copy-pasta
 	auto copyOfSamples = mSamples;
 	std::size_t pendingJobs = 0;
-	
+
 printf( "queueing %u jobs...\n", 0+mAbcCount );
 	assert( copyOfSamples.size() == mAbcCount );
 	for( std::size_t sidx = 0; sidx < mAbcCount; ++sidx )
@@ -605,7 +610,7 @@ printf( "queueing %u jobs...\n", 0+mAbcCount );
 
 
 		std::copy_n( sample.azBis.data(), mZCount, sample.halfAz );
-					
+
 		Scalar acc = Scalar(0);
 		for( std::size_t i = 0; i < mComponentCount; ++i )
 		{
@@ -623,7 +628,7 @@ printf( "queueing %u jobs...\n", 0+mAbcCount );
 	}
 
 	printf( "Queued: %zu jobs\n", pendingJobs );
-	
+
 	while( pendingJobs )
 	{
 		auto const results = mResults.wait();
@@ -636,7 +641,7 @@ printf( "queueing %u jobs...\n", 0+mAbcCount );
 			CUDA_CHECKED it->error;
 
 			sample_dev_clean_( sample, dev );
-		
+
 			--pendingJobs;
 		}
 		printf( "  still pending: %zu\n", pendingJobs );
@@ -651,10 +656,10 @@ printf( "queueing %u jobs...\n", 0+mAbcCount );
 
 	std::size_t const n = mAbcCount / 2;
 	std::nth_element( distances.begin(), distances.begin()+n, distances.begin() );
-	
+
 	auto const median = distances[n];
 
-	// 
+	//
 	return std::log10( median );
 }
 
@@ -720,12 +725,12 @@ void SimulationT<tArgs...>::job_queue_( std::size_t, Sample_& aSample )
 	sample_dev_init_( aSample, dev, queue );
 
 	CUDA_CHECKED cudaSetDevice( dev.device );
-	
+
 	{
 #		if SIM_KERNEL_TIMINGS
 		cudaEventRecord( aSample.simStart, queue.stream );
 #		endif // ~ SIM_KERNEL_TIMINGS
-		
+
 		cusim::K_simulate_system<<<dev.blocks,dev.threads,0,queue.stream>>>(
 			mSystemSetup,
 			aSample.sampleRunData,
@@ -737,7 +742,7 @@ void SimulationT<tArgs...>::job_queue_( std::size_t, Sample_& aSample )
 		cudaEventRecord( aSample.simStop, queue.stream );
 #		endif // ~ SIM_KERNEL_TIMINGS
 	}
-	
+
 	{
 #		if SIM_KERNEL_TIMINGS
 		cudaEventRecord( aSample.distStart, queue.stream );
@@ -769,8 +774,8 @@ void SimulationT<tArgs...>::job_queue_( std::size_t, Sample_& aSample )
 	cudaEventRecord( aSample.totalStop, queue.stream ); // WARN: stared by dev_init_()
 #	endif // ~ SIM_KERNEL_TIMINGS
 
-	CUDA_CHECKED cudaStreamAddCallback( 
-		queue.stream, 
+	CUDA_CHECKED cudaStreamAddCallback(
+		queue.stream,
 		&SimulationT::cuda_stream_callback_,
 		const_cast<Sample_*>(&aSample),
 		0
@@ -781,7 +786,7 @@ template< typename... tArgs > inline
 void SimulationT<tArgs...>::sample_dev_init_( Sample_& aSample, CudaDevGlobal_& aDev, CudaDevQueue_& aQueue )
 {
 	CUDA_CHECKED cudaSetDevice( aDev.device );
-	
+
 #	if SIM_KERNEL_TIMINGS
 	aSample.simStart = aDev.timeEvents.alloc();
 	aSample.simStop = aDev.timeEvents.alloc();
@@ -793,23 +798,23 @@ void SimulationT<tArgs...>::sample_dev_init_( Sample_& aSample, CudaDevGlobal_& 
 	cudaEventRecord( aSample.totalStart, aQueue.stream ); // WARN: must end outside.
 #	endif // ~ SIM_KERNEL_TIMINGS
 
-	aQueue.result.clear_async( aQueue.stream );
+	//aQueue.result.clear_async( aQueue.stream );
 
-	upload_from_host_ptr( 
+	upload_from_host_ptr(
 		aSample.sampleRunData.halfAz,
 		aSample.halfAz,
 		mZCount,
 		[&aDev] () { return aDev.halfAzPool.alloc(); },
 		aQueue.stream
 	);
-	upload_from_host_ptr( 
+	upload_from_host_ptr(
 		aSample.sampleRunData.preCompProb,
 		aSample.preCompProb,
 		mComponentCount,
 		[&aDev] () { return aDev.preCompProbPool.alloc(); },
 		aQueue.stream
 	);
-	upload_from_host_ptr( 
+	upload_from_host_ptr(
 		aSample.sampleRunData.randWalkStddev,
 		aSample.randWalkStddev,
 		mComponentCount,
@@ -834,19 +839,19 @@ template< typename... tArgs > inline
 void SimulationT<tArgs...>::sample_dev_clean_( Sample_& aSample, CudaDevGlobal_& aDev )
 {
 	CUDA_CHECKED cudaSetDevice( aDev.device );
-	
+
 	aDev.particleCountPool.free( aSample.sampleRunData.particles );
 	aDev.resultDistancePool.free( aSample.devResultDistance );
 
-	clean_gpu_cache( 
+	clean_gpu_cache(
 		aSample.sampleRunData.halfAz,
 		[&aDev] (Scalar* aPtr) { aDev.halfAzPool.free( aPtr ); }
 	);
-	clean_gpu_cache( 
+	clean_gpu_cache(
 		aSample.sampleRunData.preCompProb,
 		[&aDev] (Scalar* aPtr) { aDev.preCompProbPool.free( aPtr ); }
 	);
-	clean_gpu_cache( 
+	clean_gpu_cache(
 		aSample.sampleRunData.randWalkStddev,
 		[&aDev] (Scalar* aPtr) { aDev.randWalkStddevPool.free( aPtr ); }
 	);
@@ -861,7 +866,7 @@ void SimulationT<tArgs...>::sample_dev_clean_( Sample_& aSample, CudaDevGlobal_&
 		timeSimTotal += sim; timeSimCount += 1;
 		timeDistTotal += dist; timeDistCount += 1;
 		timeTotalTotal += tot; timeTotalCount += 1;
-		
+
 		aDev.timeEvents.free( aSample.simStart );
 		aDev.timeEvents.free( aSample.simStop );
 		aDev.timeEvents.free( aSample.distStart );
@@ -888,7 +893,7 @@ void SimulationT<tArgs...>::write_results_ugly_( input::Parameters const& aPar )
 		std::strftime( date, 255, "%F %T%z", std::localtime(&time) ); // no put_time() on GCC
 		char host[256] = {};
 		::gethostname( host, 255 );
-		
+
 		std::fprintf( fof, "<output>\n" );
 		std::fprintf( fof, "\t<meta>\n" );
 		std::fprintf( fof, "\t\t<app>accel</app>\n" );
@@ -903,7 +908,7 @@ void SimulationT<tArgs...>::write_results_ugly_( input::Parameters const& aPar )
 		std::fprintf( fof, "\t<number_of_abc_samples>%u</number_of_abc_samples>\n", 0+mAbcCount );
 		std::fprintf( fof, "\n" );
 
-		std::fprintf( fof, "\t<epsilon>%.18g</epsilon>\n", mEpsilon ); 
+		std::fprintf( fof, "\t<epsilon>%.18g</epsilon>\n", mEpsilon );
 		std::fprintf( fof, "\t<m>" );
 		{
 			auto i = mM.lbegin();
@@ -965,7 +970,7 @@ void SimulationT<tArgs...>::cuda_stream_callback_( cudaStream_t, cudaError_t aEr
 	auto& sample = *static_cast<Sample_*>(aUser);
 	auto* self = sample.parent;
 
-	self->mResults.queue( Result_{ 
+	self->mResults.queue( Result_{
 		&sample,
 		aError
 	} );

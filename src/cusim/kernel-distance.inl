@@ -13,7 +13,7 @@ namespace cusim
 
 			auto x1 = __shfl_up( aValue, 2 );
 			aValue += (aWTID >= 2) ? x1 : 0;
-			
+
 			auto x2 = __shfl_up( aValue, 4 );
 			aValue += (aWTID >= 4) ? x2 : 0;
 
@@ -88,7 +88,7 @@ namespace cusim
 				"mul.wide.u32 q0, t0, 4;\n\t"
 				"add.s64 q1, %1, q0;\n\t"
 				"cvta.to.shared.u64 base, q1;\n\t"
-				
+
 				"st.shared.u32 [base+64], %0;\n\t"
 
 				"ld.shared.u32 t1, [base+60];\n\t" // 64-1*4 = 60
@@ -129,7 +129,7 @@ namespace cusim
 			return aValue;
 		}
 	}
-	
+
 	template< typename tReal, typename tCount > __global__
 	void /*__launch_bounds__(1024,1)*/ K_distance( tReal* aDistance, unsigned aN, unsigned aM, tCount* aCur, tCount const* aRef )
 	{
@@ -151,7 +151,7 @@ namespace cusim
 		//buff[warp][wtid] = 0;
 
 		__syncthreads();
-		
+
 		// column-wise prefix sums
 		for( auto row = warp; row < aN; row += blockDim.y )
 		{
@@ -167,7 +167,7 @@ namespace cusim
 
 				if( col < aM )
 					aCur[row*aM+col] = sum;
-				
+
 				base = __shfl( sum, 31 );
 			}
 		}
@@ -220,6 +220,15 @@ namespace cusim
 
 			if( 0 == wtid )
 				*aDistance = fin;
+		}
+
+		// zero out the histogram for the next invocation
+		for( auto row = warp; row < aN; row += blockDim.y )
+		{
+			for( auto col = wtid; col < m32; col += 32 )
+			{
+					aCur[row*aM+col] = 0;
+			}
 		}
 	}
 }
