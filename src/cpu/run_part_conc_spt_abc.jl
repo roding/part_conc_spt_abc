@@ -65,29 +65,6 @@ function run_part_conc_spt_abc()
 		ub_average_number_of_trials::Int64,
 		output_file_path::String) = read_input(input_file_path)
 
-	println(data_file_path)
-	println(model)
-	println(number_of_components)
-	println(Lx)
-	println(Ly)
-	println(Lz)
-	println(kmin)
-	println(number_of_de_bins)
-	println(ub_de)
-	println(lb_m)
-	println(ub_m)
-	println(lb_c)
-	println(ub_c)
-	println(lb_az)
-	println(ub_az)
-	println(number_of_abc_samples)
-	println(gamma_initial)
-	println(gamma_adaptive)
-	println(delta_gamma)
-	println(weighting_scheme)
-	println(ub_average_number_of_trials)
-	println(output_file_path)
-
 	# Read data.
 	(	ax::Float64,
 		ay::Float64,

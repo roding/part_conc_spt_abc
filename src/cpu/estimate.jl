@@ -74,10 +74,10 @@ function estimate(model::String,
 		tau_az[current_component] = sqrt( 2.0 * var(az[current_component, :], corrected = false) )
 	end
 
-	# The rest of the iterations.
+	# Adaptive gamma selection
 	gamma::Float64 = 0.0
 	if gamma_adaptive
-		for current_abc_sample = 1:number_of_abc_samples
+		@sync @parallel for current_abc_sample = 1:number_of_abc_samples
 			H_sim = simulate(	model,
 								m[:, current_abc_sample],
 								c[:, current_abc_sample],
@@ -93,13 +93,14 @@ function estimate(model::String,
 								number_of_de_bins,
 								ub_de)
 
-			dist[current_abc_sample] = distance(H, H_sim)
+			dist_star[current_abc_sample] = distance(H, H_sim)
 		end
-		gamma = log10(median(dist))
+		gamma = log10(median(dist_star))
 	else
 		gamma = gamma_initial
 	end
 
+	# The rest of the iterations.
 	epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = zeros(number_of_abc_samples)
 	is_converged::Bool = false
