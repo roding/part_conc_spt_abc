@@ -11,8 +11,9 @@ workspace "part_conc_accel"
 	vectorextensions "AVX"
 
 	CUDAgencode = {
-		"arch=compute_52,code=sm_52",
-		"arch=compute_60,code=sm_60"
+		--"arch=compute_52,code=sm_52",
+		--"arch=compute_60,code=sm_60",
+		"arch=compute_61,code=sm_61"
 	};
 	CUDAflags = {
 		"--expt-relaxed-constexpr",
@@ -78,12 +79,13 @@ workspace "part_conc_accel"
 
 	-- system libraries
 	filter "system:linux"
+		includedirs "/opt/cuda/include"
+		includedirs "/usr/local/cuda-8.0/include"
+		libdirs "/opt/cuda/lib64/"
+		libdirs "/usr/local/cuda-8.0/lib64"
+		links "cudart_static"
 		links "dl"
 		links "rt"
-		
-		includedirs "/opt/cuda/include"
-		libdirs "/opt/cuda/lib64/"
-		links "cudart_static"
 	filter "system:windows"
 	
 	filter "*"

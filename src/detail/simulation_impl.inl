@@ -163,9 +163,11 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 	AVec_<Count> trials;
 	resize( trials, mAbcCount );
 
+printf( "pre-initial-gamma\n" );
 	if( mGamma < Scalar(0) )
 		mGamma = compute_initial_gamma_( aRng );
-	
+printf( "after initial-gamma\n" );	
+
 	mEpsilon = std::pow( Scalar(10), mGamma );
 
 	std::vector<std::size_t> waitingSamples( mAbcCount );
@@ -497,8 +499,8 @@ void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aR
 		for( std::size_t i = 0; i < jobCount; ++i )
 			counts[i] = int_cast<Count>(aPar.frameCounts[i]);
 
-		auto const b = (jobCount+8-1)/8;
-		auto const t = 32*8;
+		auto const b = (jobCount+24-1)/24;
+		auto const t = 32*24;
 
 		Count* fc = nullptr;
 		CUDA_CHECKED cudaSetDevice( devID );
@@ -577,6 +579,7 @@ auto SimulationT<tArgs...>::compute_initial_gamma_( HostRng& aRng ) -> Scalar
 	auto copyOfSamples = mSamples;
 	std::size_t pendingJobs = 0;
 	
+printf( "queueing %u jobs...\n", 0+mAbcCount );
 	assert( copyOfSamples.size() == mAbcCount );
 	for( std::size_t sidx = 0; sidx < mAbcCount; ++sidx )
 	{
@@ -618,6 +621,8 @@ auto SimulationT<tArgs...>::compute_initial_gamma_( HostRng& aRng ) -> Scalar
 		job_queue_( sidx, sample );
 		++pendingJobs;
 	}
+
+	printf( "Queued: %zu jobs\n", pendingJobs );
 	
 	while( pendingJobs )
 	{
@@ -634,6 +639,7 @@ auto SimulationT<tArgs...>::compute_initial_gamma_( HostRng& aRng ) -> Scalar
 		
 			--pendingJobs;
 		}
+		printf( "  still pending: %zu\n", pendingJobs );
 	}
 
 	// find median distance
