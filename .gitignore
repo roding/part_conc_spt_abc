@@ -11,3 +11,5 @@ deps/deps.jl
 *.asv
 *.mat
 *.m~
+.*.swp
+.*.swo
