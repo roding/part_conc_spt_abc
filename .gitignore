@@ -1,3 +1,8 @@
+bin/
+lib/
+build/
+*.make
+Makefile
 *.jl.cov
 *.jl.*.cov
 *.jl.mem
