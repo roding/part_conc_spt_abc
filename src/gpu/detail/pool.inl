@@ -1,4 +1,4 @@
-#include "support/cuda_error.hpp"
+#include "../support/cuda_error.hpp"
 
 #include <cassert>
 

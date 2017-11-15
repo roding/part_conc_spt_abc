@@ -149,14 +149,14 @@ workspace "part_conc_accel"
 
 		includedirs "external"
 
-		files{ "src/support/**.cpp" }
+		files{ "src/gpu/support/**.cpp" }
 
 	project "shared"
 		kind "StaticLib"
 
 		includedirs "external"
 
-		files{ "src/shared/**.cpp" }
+		files{ "src/gpu/shared/**.cpp" }
 
 	project "accel"
 		kind "ConsoleApp"
@@ -164,7 +164,7 @@ workspace "part_conc_accel"
 		includedirs "external"
 		includedirs "src"
 
-		files{ "src/*.cpp", "external/**.cpp", "src/*.cu" }
+		files{ "src/gpu/*.cpp", "external/**.cpp", "src/gpu/*.cu" }
 		links "shared"
 		links "support"
 

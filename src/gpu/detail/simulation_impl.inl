@@ -14,11 +14,11 @@
 
 #include <tinyformat/tinyformat.h>
 
-#include "shared/errors.hpp"
-#include "support/cuda_error.hpp"
+#include "../shared/errors.hpp"
+#include "../support/cuda_error.hpp"
 
-#include "cusim/kernel-distance.cuh"
-#include "cusim/kernel-simulate.cuh"
+#include "../cusim/kernel-distance.cuh"
+#include "../cusim/kernel-simulate.cuh"
 
 namespace detail
 {

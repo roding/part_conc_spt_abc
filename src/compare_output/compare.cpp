@@ -1,7 +1,7 @@
 #include <cmath>
 #include <cstdio>
 
-#include "../shared/output.hpp"
+#include "../gpu/shared/output.hpp"
 
 namespace
 {

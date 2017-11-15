@@ -1,4 +1,4 @@
-#include "support/utility.hpp"
+#include "../support/utility.hpp"
 
 #define RANDOM_TEMPL_ template< class tEng, typename tReal, class tNDist, class tUDist >
 #define RANDOM_CLASS_ Random<tEng,tReal,tNDist,tUDist>
