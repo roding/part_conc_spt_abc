@@ -514,7 +514,7 @@ void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aR
 			queueCount,
 			cusim::Histogram2D<Count>( mKMax, mDEBinCount, reference.data() ),
 			Pool<Count>( jobCount ),
-			Pool<Scalar>( 1 ),
+			MappedPool<Scalar>( 1 ),
 			Pool<Scalar>( mZCount ),
 			Pool<Scalar>( mComponentCount ),
 			Pool<Scalar>( mComponentCount ),
@@ -757,13 +757,13 @@ void SimulationT<tArgs...>::job_queue_( std::size_t, Sample_& aSample )
 #		endif // ~ SIM_KERNEL_TIMINGS
 	}
 
-	CUDA_CHECKED cudaMemcpyAsync(  //TODO: write this instead into mapped host mem above?
+	/*CUDA_CHECKED cudaMemcpyAsync(  //TODO: write this instead into mapped host mem above?
 		&aSample.distBis,
 		aSample.devResultDistance,
 		sizeof(float),
 		cudaMemcpyDeviceToHost,
 		queue.stream
-	);
+	);*/
 
 #	if SIM_KERNEL_TIMINGS
 	cudaEventRecord( aSample.totalStop, queue.stream ); // WARN: stared by dev_init_()
@@ -793,6 +793,8 @@ void SimulationT<tArgs...>::sample_dev_init_( Sample_& aSample, CudaDevGlobal_& 
 	cudaEventRecord( aSample.totalStart, aQueue.stream ); // WARN: must end outside.
 #	endif // ~ SIM_KERNEL_TIMINGS
 
+	// NOTE: the histogram is cleared on allocation, and K_distance zeroes it
+	// before returning -- there's no need to clear it one more time.
 	//aQueue.result.clear_async( aQueue.stream );
 
 	upload_from_host_ptr(
@@ -826,7 +828,10 @@ void SimulationT<tArgs...>::sample_dev_init_( Sample_& aSample, CudaDevGlobal_& 
 		aQueue.stream
 	);
 
-	aSample.devResultDistance = aDev.resultDistancePool.alloc();
+	auto hp = aDev.resultDistancePool.alloc();
+	aSample.hostResultDistance = std::get<0>(hp);
+	aSample.devResultDistance = std::get<1>(hp);
+
 	aSample.sampleRunData.frames = aDev.devFrameCounts;
 	aSample.sampleRunData.particles = particleCounts;
 }
@@ -836,7 +841,7 @@ void SimulationT<tArgs...>::sample_dev_clean_( Sample_& aSample, CudaDevGlobal_&
 	CUDA_CHECKED cudaSetDevice( aDev.device );
 
 	aDev.particleCountPool.free( aSample.sampleRunData.particles );
-	aDev.resultDistancePool.free( aSample.devResultDistance );
+	aDev.resultDistancePool.free( aSample.hostResultDistance, aSample.devResultDistance );
 
 	clean_gpu_cache(
 		aSample.sampleRunData.halfAz,
@@ -964,6 +969,8 @@ void SimulationT<tArgs...>::cuda_stream_callback_( cudaStream_t, cudaError_t aEr
 
 	auto& sample = *static_cast<Sample_*>(aUser);
 	auto* self = sample.parent;
+
+	sample.distBis = *sample.hostResultDistance;
 
 	self->mResults.queue( Result_{
 		&sample,

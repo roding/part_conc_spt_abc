@@ -173,6 +173,7 @@ class SimulationT final : public Simulation
 
 			SystemRunData sampleRunData;
 			Scalar* devResultDistance;
+			Scalar* hostResultDistance;
 
 #			if SIM_KERNEL_TIMINGS
 			cudaEvent_t simStart, simStop;
@@ -196,7 +197,9 @@ class SimulationT final : public Simulation
 			cusim::Histogram2D<Count> reference;
 
 			Pool<Count> particleCountPool;
-			Pool<Scalar> resultDistancePool;
+			//Pool<Scalar> resultDistancePool;
+			MappedPool<Scalar> resultDistancePool;
+
 			Pool<Scalar> halfAzPool; //XXX-NOTE: only needed if ZCount_ is dynamic
 			Pool<Scalar> preCompProbPool; //XXX-NOTE: only needed if CCount_ is dynamic
 			Pool<Scalar> randWalkStddevPool; //XXX-NOTE: only needed if CCount_ is dyn.
