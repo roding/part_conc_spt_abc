@@ -148,19 +148,19 @@ function estimate(model::String,
 				az_bis = az_bis[p]
 
 				H_sim = simulate(	model,
-								m_bis,
-								c_bis,
-								ax,
-								ay,
-								az_bis,
-								Lx,
-								Ly,
-								Lz,
-								number_of_frames,
-								deltat,
-								kmin,
-								number_of_de_bins,
-								ub_de)
+									m_bis,
+									c_bis,
+									ax,
+									ay,
+									az_bis,
+									Lx,
+									Ly,
+									Lz,
+									number_of_frames,
+									deltat,
+									kmin,
+									number_of_de_bins,
+									ub_de)
 
 				dist_bis = distance(H, H_sim)
 

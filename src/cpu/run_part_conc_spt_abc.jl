@@ -106,6 +106,8 @@ function run_part_conc_spt_abc()
 										K,
 										DE)
 
+	t_exec_ns::Int64 = convert(Int64, time_ns()) - t_start_ns
+	t_exec::Float64 = convert(Float64, t_exec_ns) / 1e9
 	write_output(	output_file_path,
 					model,
 					number_of_components,
@@ -115,7 +117,8 @@ function run_part_conc_spt_abc()
 					az,
 					dist,
 					w,
-					epsilon)
+					epsilon,
+					t_exec)
 	println(join(("Output written to ", output_file_path, ".")))
 
 	(	model,
@@ -126,7 +129,8 @@ function run_part_conc_spt_abc()
 		az,
 		dist,
 		w,
-		epsilon) = read_output(output_file_path)
+		epsilon,
+		t_exec) = read_output(output_file_path)
 
 	return 0
 end
