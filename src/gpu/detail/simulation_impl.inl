@@ -131,7 +131,7 @@ SimulationT<tArgs...>::~SimulationT()
 
 	for( auto& queue : mDevQueues )
 	{
-		//TODO cudaSetDevice();
+		CUDA_CHECKED cudaSetDevice( mDevGlobal[queue.devidx].device );
 
 		queue.result.free_cuda_resources();
 		DeviceRandom::cleanup( queue.randomState );
@@ -140,7 +140,7 @@ SimulationT<tArgs...>::~SimulationT()
 	}
 	for( auto& dev : mDevGlobal )
 	{
-		//TODO cudaSetDevice();
+		CUDA_CHECKED cudaSetDevice( dev.device );
 
 		dev.reference.free_cuda_resources();
 		dev.particleCountPool.free_cuda_resources();
@@ -163,10 +163,8 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 	AVec_<Count> trials;
 	resize( trials, mAbcCount );
 
-printf( "pre-initial-gamma\n" );
 	if( mGamma < Scalar(0) )
 		mGamma = compute_initial_gamma_( aRng );
-printf( "after initial-gamma\n" );
 
 	mEpsilon = std::pow( Scalar(10), mGamma );
 
@@ -174,14 +172,13 @@ printf( "after initial-gamma\n" );
 
 Scalar lambdaAvg = Scalar(0); //XXX-debug
 Scalar lambdaCount = Scalar(0); //XXX-debug
-int iter = 0;
-
+int iter = 0; //XXX-debug-profile
 
 	bool isConverged = false;
 	while( !isConverged )
 	{
-		if( iter++ > 5 )
-			break;
+if( iter++ > 5 ) //XXX-debug-profile
+	break; //XXX-debug-profile
 
 		mGamma -= mDeltaGamma;
 		mEpsilon = std::pow( Scalar(10), mGamma );
@@ -485,7 +482,7 @@ void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aR
 
 
 	// allocate per-GPU data
-	char const* spec = aCfg.gpuSpec.empty() ? "1/4" : aCfg.gpuSpec.c_str(); // XXX
+	char const* spec = aCfg.gpuSpec.empty() ? "1/30" : aCfg.gpuSpec.c_str(); // XXX
 	unsigned maxQueueCount = 0;
 	while( spec )
 	{
@@ -553,6 +550,8 @@ void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aR
 				cusim::Histogram2D<Count>( mKMax, mDEBinCount ),
 				DeviceRandom::initialize( devGlobal.totalThreads, aRng ),
 			} );
+
+			mDevQueues.back().result.clear();
 		}
 	}
 
@@ -584,7 +583,6 @@ auto SimulationT<tArgs...>::compute_initial_gamma_( HostRng& aRng ) -> Scalar
 	auto copyOfSamples = mSamples;
 	std::size_t pendingJobs = 0;
 
-printf( "queueing %u jobs...\n", 0+mAbcCount );
 	assert( copyOfSamples.size() == mAbcCount );
 	for( std::size_t sidx = 0; sidx < mAbcCount; ++sidx )
 	{
@@ -627,8 +625,6 @@ printf( "queueing %u jobs...\n", 0+mAbcCount );
 		++pendingJobs;
 	}
 
-	printf( "Queued: %zu jobs\n", pendingJobs );
-
 	while( pendingJobs )
 	{
 		auto const results = mResults.wait();
@@ -644,7 +640,6 @@ printf( "queueing %u jobs...\n", 0+mAbcCount );
 
 			--pendingJobs;
 		}
-		printf( "  still pending: %zu\n", pendingJobs );
 	}
 
 	// find median distance

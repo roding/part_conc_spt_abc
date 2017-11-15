@@ -227,7 +227,7 @@ namespace cusim
 		{
 			for( auto col = wtid; col < m32; col += 32 )
 			{
-					aCur[row*aM+col] = 0;
+				aCur[row*aM+col] = 0;
 			}
 		}
 	}

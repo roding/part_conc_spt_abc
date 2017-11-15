@@ -3,8 +3,19 @@
 
 namespace cusim
 {
-	// N and M are expected to be relatively small
-	
+	/** Compute cumulative histogram distance
+	 * 
+	 * Compute the cumulative histogram distance.
+	 *
+	 * <b>IMPORTANT:</b>
+	 *  - the reference \a aSATReference is a cumulative histogram
+	 *  - the input histogram \a aCur will be reset to zero by `K_distance`
+	 *
+	 * `K_distance` assumes that the values of \a aN and \a aM are relatively
+	 * small: a single block of \f$32\times32\f$ performs the computation. 32
+	 * columns/rows are handled in parallel while 32 threads iterate over the
+	 * elements of the column/row.
+	 */
 	template< 
 		typename tReal,
 		typename tCount
@@ -14,7 +25,7 @@ namespace cusim
 		tReal* aDistance,
 		unsigned aN, 
 		unsigned aM, 
-		tCount* aCur,  // WARNING: destructive (in-place)
+		tCount* aCur, // !NOTE! reset to zero by the kernel
 		tCount const* aSATReference
 	);
 }
