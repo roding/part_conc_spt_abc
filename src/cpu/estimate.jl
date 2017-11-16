@@ -95,19 +95,19 @@ function estimate(model::String,
 
 			dist_star[current_abc_sample] = distance(H, H_sim)
 		end
-		gamma = log10(median(dist_star))
+		gamma = median(dist_star)
 	else
 		gamma = gamma_initial
 	end
 
 	# The rest of the iterations.
-	epsilon::Float64 = 10^gamma
+	#epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = zeros(number_of_abc_samples)
 	is_converged::Bool = false
 	while !is_converged
 		trial_count = zeros(number_of_abc_samples)
 		gamma = gamma - delta_gamma
-		epsilon = 10^gamma
+		#epsilon = 10^gamma
 		cum_w = cumsum(w)
 		@sync @parallel for current_abc_sample = 1:number_of_abc_samples
 			dist_bis = Inf
@@ -116,7 +116,7 @@ function estimate(model::String,
 			c_bis = c[:, current_abc_sample]
 			az_bis = az[:, current_abc_sample]
 
-			while dist_bis > epsilon && mean(trial_count) < convert(Float64, ub_average_number_of_trials)
+			while dist_bis > gamma && mean(trial_count) < convert(Float64, ub_average_number_of_trials)
 				idx = rand_weighted_index(cum_w)
 
 				m_prim = m[:, idx]
@@ -215,6 +215,7 @@ function estimate(model::String,
 					println((round(gamma, 2), sum(trial_count), round(mean(trial_count), 2), round(mean(m), 2), round(mean(c), 2), round(mean(az), 2)))
 				elseif number_of_components == 2
 					println((round(gamma, 2), sum(trial_count), round(mean(trial_count), 2), round(mean(m[1, :]), 2), round(mean(m[2, :]), 2), round(mean(c[1, :]), 2), round(mean(c[2, :]), 2), round(mean(az[1, :]), 2), round(mean(az[2, :]), 2)))
+					println((mean(w), std(w), minimum(w), maximum(w)))
 				end
 			end
 		end
