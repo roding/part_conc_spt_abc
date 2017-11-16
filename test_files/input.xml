@@ -15,7 +15,7 @@
 	<ub_c>5.0e9</ub_c>
 	<lb_az>0.5</lb_az>
 	<ub_az>5.0</ub_az>
-	<number_of_abc_samples>128</number_of_abc_samples>
+	<number_of_abc_samples>1000</number_of_abc_samples>
 	<gamma_initial>15.0</gamma_initial>
 	<gamma_adaptive>true</gamma_adaptive>
 	<delta_gamma>0.01</delta_gamma>
