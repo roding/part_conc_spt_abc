@@ -326,6 +326,9 @@ class SimulationT final : public Simulation
 
 		std::size_t mNextQueue = 0;
 
+		int mVerbosity;
+		std::size_t mMaxIter;
+
 #		if SIM_KERNEL_TIMINGS
 		float timeSimTotal, timeSimCount;
 		float timeDistTotal, timeDistCount;

@@ -160,25 +160,37 @@ SimulationT<tArgs...>::~SimulationT()
 template< typename... tArgs > inline
 void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 {
+	using Clock_ = std::chrono::high_resolution_clock;
+	
+	std::vector<std::size_t> waitingSamples( mAbcCount );
+
 	AVec_<Count> trials;
 	resize( trials, mAbcCount );
 
+	Scalar infoLambdaAcc, infoLambdaCount;
+	Clock_::time_point infoIterStart, infoIterEnd;
+
 	if( mGamma < Scalar(0) )
+	{
+		if( mVerbosity >= 0 ) std::printf( "Compute intial γ...\n" );
 		mGamma = compute_initial_gamma_( aRng );
+		if( mVerbosity >= 0 ) std::printf( "  initial γ = %g\n", mGamma );
+	}
 
 	mEpsilon = std::pow( Scalar(10), mGamma );
 
-	std::vector<std::size_t> waitingSamples( mAbcCount );
+	if( mVerbosity >= 0 ) std::printf( "Begin main iterations...\n" );
 
-Scalar lambdaAvg = Scalar(0); //XXX-debug
-Scalar lambdaCount = Scalar(0); //XXX-debug
-//int iter = 0; //XXX-debug-profile
-
+	std::size_t iter = 0;
 	bool isConverged = false;
+
 	while( !isConverged )
 	{
-//if( iter++ > 5 ) //XXX-debug-profile
-//	break; //XXX-debug-profile
+		if( mMaxIter != 0 && ++iter >= mMaxIter )
+		{
+			std::printf( "NOTE: --max-steps reached. stopping.\n" );
+			break;
+		}
 
 		mGamma -= mDeltaGamma;
 		mEpsilon = std::pow( Scalar(10), mGamma );
@@ -192,17 +204,18 @@ Scalar lambdaCount = Scalar(0); //XXX-debug
 		for( auto& sample : mSamples )
 			sample.distBis  = std::numeric_limits<Scalar>::infinity();
 
+		
+		infoIterStart = Clock_::now();
+		infoLambdaAcc = infoLambdaCount = Scalar(0);
+
 #		if SIM_KERNEL_TIMINGS
 		timeSimCount = timeDistCount = timeTotalCount = 0.0f;
 		timeSimTotal = timeDistTotal = timeTotalTotal = 0.0f;
 #		endif // ~ SIM_KERNEL_COUNT
 
-lambdaAvg = lambdaCount = Scalar(0); //XXX-debug
-
 		std::size_t activeJobs = mAbcCount, pendingJobs = 0;
 		while( activeJobs )
 		{
-			//printf( "waitingSamples: %zu, pendingJobs = %zu\n", waitingSamples.size(), pendingJobs );
 			for( auto sidx : waitingSamples )
 			{
 				auto& sample = mSamples[sidx];
@@ -255,8 +268,8 @@ lambdaAvg = lambdaCount = Scalar(0); //XXX-debug
 					Scalar const lambda = csum * mVolumeFactor;
 					std::poisson_distribution<Count> poisson(lambda);
 
-lambdaAvg += lambda; // XXX-debug
-lambdaCount += Scalar(1); // XXX-debug
+					infoLambdaAcc += lambda;
+					infoLambdaCount += Scalar(1);
 
 					assert( sample.particleCounts.size() == mSystemSetup.jobCount );
 					for( auto& count : sample.particleCounts )
@@ -311,14 +324,33 @@ lambdaCount += Scalar(1); // XXX-debug
 			}
 		}
 
+		infoIterEnd = Clock_::now();
+
 		assert( 0 == activeJobs );
 		assert( mResults.empty() );
 
-printf( "trials max/min/sum: %3u/%3u/%3u; eps = %g; avg lambda = %g\n", *std::max_element(trials.begin(),trials.end()), *std::min_element(trials.begin(),trials.end()), std::accumulate(trials.begin(),trials.end(), 0), mEpsilon, lambdaAvg/lambdaCount ); // XXX-debug
+		if( mVerbosity >= 0 )
+		{
+			using Fms_ = std::chrono::duration<float,std::milli>;
+			
+			Count totalTrials = 0;
+			Count maxTrials = 0, minTrials = std::numeric_limits<Count>::max();
+			
+			for( auto x : trials )
+			{
+				totalTrials += x;
+				if( x > maxTrials ) maxTrials = x;
+				if( x < minTrials ) minTrials = x;
+			}
 
-#if SIM_KERNEL_TIMINGS
-printf( "  averages: %4.2fms sim, %4.2fms dist, %4.2fms total\n", timeSimTotal/timeSimCount, timeDistTotal/timeDistCount, timeTotalTotal/timeTotalCount ); //XXX-debug
-#endif // ~ SIM_KERNEL_TIMINGS
+			std::printf( "Trials: total[min/max]: %4u[%4u/%4u]; ε = %.2g, λ̅ = %.1f\n", totalTrials, minTrials, maxTrials, mEpsilon, infoLambdaAcc/infoLambdaCount );
+
+			std::printf( "  Wall time: %6.2f ms for this iteration\n", std::chrono::duration_cast<Fms_>(infoIterEnd-infoIterStart).count() );
+
+#			if SIM_KERNEL_TIMINGS
+			std::printf( "  GPU: average times: %4.2f ms total (%4.2f sim, %4.2f dist)\n", timeTotalTotal/timeTotalCount, timeSimTotal/timeSimCount, timeDistTotal/timeDistCount );
+#			endif // ~ SIM_KERNEL_TIMINGS
+		}
 
 		// evaluate weighting scheme; this updates mW
 		(this->*mWeightingSchemeFn)();
@@ -403,6 +435,9 @@ void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aR
 	mDeltaGamma = aPar.deltaGamma;
 	mAvgTrialCount = Scalar(aPar.avgTrialCount);
 
+	mMaxIter = aCfg.maxIter;
+	mVerbosity = aCfg.verbosity;
+
 	// weighting scheme
 	mWeightingSchemeFn = nullptr;
 
@@ -480,16 +515,19 @@ void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aR
 		std::partial_sum( rv.begin(), rv.end(), rv.begin() );
 	}
 
-
 	// allocate per-GPU data
-	char const* spec = aCfg.gpuSpec.empty() ? "1/30" : aCfg.gpuSpec.c_str(); // XXX
 	unsigned maxQueueCount = 0;
+
+	char const* spec = aCfg.gpuSpec.c_str();
 	while( spec )
 	{
 		unsigned devID, queueCount = 1;
 		int iret = std::sscanf( spec, "%u/%u", &devID, &queueCount );
 		if( 1 != iret && 2 != iret )
 			throw error::InvalidGPUSpec( "Didn't understand gpuspec '%s'", spec );
+
+		if( mVerbosity >= 2 )
+			std::printf( "Note: using device %u with %u queues\n", devID, queueCount );
 
 		--devID;
 
@@ -530,6 +568,9 @@ void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aR
 			spec = nullptr;
 	}
 
+	if( mVerbosity >= 2 )
+		std::printf( "Note: using a total of %zu GPUs\n", mDevGlobal.size() );
+
 	// allocate per-queue data
 	for( std::size_t i = 0; i < maxQueueCount; ++i )
 	{
@@ -554,6 +595,9 @@ void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aR
 			mDevQueues.back().result.clear();
 		}
 	}
+
+	if( mVerbosity >= 2 )
+		std::printf( "Note: using a total of %zu queues\n", mDevQueues.size() );
 
 	if( mDevQueues.empty() )
 		throw error::InvalidGPUSpec( "No GPU queues were created." );
@@ -756,14 +800,6 @@ void SimulationT<tArgs...>::job_queue_( std::size_t, Sample_& aSample )
 		cudaEventRecord( aSample.distStop, queue.stream );
 #		endif // ~ SIM_KERNEL_TIMINGS
 	}
-
-	/*CUDA_CHECKED cudaMemcpyAsync(  //TODO: write this instead into mapped host mem above?
-		&aSample.distBis,
-		aSample.devResultDistance,
-		sizeof(float),
-		cudaMemcpyDeviceToHost,
-		queue.stream
-	);*/
 
 #	if SIM_KERNEL_TIMINGS
 	cudaEventRecord( aSample.totalStop, queue.stream ); // WARN: stared by dev_init_()

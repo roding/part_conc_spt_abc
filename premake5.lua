@@ -11,7 +11,7 @@ workspace "part_conc_accel"
 	vectorextensions "AVX"
 
 	CUDAgencode = {
-		--"arch=compute_52,code=sm_52",
+		"arch=compute_52,code=sm_52",
 		--"arch=compute_60,code=sm_60",
 		"arch=compute_61,code=sm_61"
 	};
