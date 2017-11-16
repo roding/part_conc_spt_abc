@@ -303,9 +303,11 @@ class SimulationT final : public Simulation
 
 		CAMat_<Scalar> mM, mC;
 		ZAMat_<Scalar> mAz;
-		AVec_<Scalar> mDist, mW, mPreW, mWStar; //TODO: mWStar only if pmcStandard
+		AVec_<Scalar> mDist, mW, mPreW;
 		CVec_<Scalar> mTauM, mTauC;
 		ZVec_<Scalar> mTauAz;
+		
+		AVec_<Scalar> mWStar; //TODO: mWStar only if pmcStandard;
 
 		WeightingFun_ mWeightingSchemeFn;
 
@@ -335,6 +337,12 @@ class SimulationT final : public Simulation
 		float timeTotalTotal, timeTotalCount;
 #		endif // ~ SIM_KERNEL_TIMINGS
 };
+
+namespace detail
+{
+	[[noreturn]] void throw_logic_error_( char const* );
+	[[noreturn]] void throw_invalid_gpuspec_( char const* );
+}
 
 #include "detail/simulation_impl.inl"
 #endif // SIMULATION_IMPL_CUH_FC0DF63C_0AB8_4BBA_A6C8_60BDAC5F91DE

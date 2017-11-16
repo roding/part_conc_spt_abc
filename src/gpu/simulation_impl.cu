@@ -1,10 +1,13 @@
 #include "simulation_impl.cuh"
 
+#include <stdexcept>
+
 #include <cstddef>
 #include <cstdint>
 
 #include <tinyformat/tinyformat.h>
 
+#include "shared/errors.hpp"
 #include "support/utility.hpp"
 
 #include "simulation.hpp"
@@ -88,4 +91,17 @@ std::unique_ptr<Simulation> make_simulation( SimHostRNG& aRng, input::Parameters
 	}
 
 	throw std::runtime_error( tfm::format( "make_simulation(): Model %s not handled\n", to_string(aPar.model) ) );
+}
+
+
+namespace detail
+{
+	[[noreturn]] void throw_logic_error_( char const* aErrMsg )
+	{
+		throw std::logic_error( aErrMsg ); //XXX-named error
+	}
+	[[noreturn]] void throw_invalid_gpuspec_( char const* aErrMsg )
+	{
+		throw error::InvalidGPUSpec( aErrMsg );
+	}
 }
