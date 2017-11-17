@@ -3,7 +3,6 @@
 #include <utility>
 #include <iterator>
 #include <algorithm>
-#include <stdexcept>
 
 #include <cmath>
 #include <ctime>
@@ -14,7 +13,6 @@
 
 #include <tinyformat/tinyformat.h>
 
-#include "../shared/errors.hpp"
 #include "../support/cuda_error.hpp"
 
 #include "../cusim/kernel-distance.cuh"
@@ -393,14 +391,11 @@ template< class... tArgs > inline
 void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aRng, SimulationConfig const& aCfg )
 {
 	if( mComponentCount != aPar.componentCount )
-	{
-		throw std::logic_error( tfm::format( "SimulationT: component count doesn't match the component count of the input parameters (%ld vs %ld)", long(mComponentCount), long(aPar.componentCount) ) );
-	}
+		detail::throw_logic_error_( "SimlationT: component count doesn't match the component count of the input parameters" );
+		
 	if( kModel != aPar.model )
-	{
-		throw std::logic_error( tfm::format( "SimulationT: fixed model (see sim_arg::Model) doesn't match the model specified by the input parameters (%s vs %s).", to_string(kModel), to_string(aPar.model) ) );
-	}
-
+		detail::throw_logic_error_( "SimulationT: fixed model parameter doesn't match model specified by the input parameters" );
+		
 	// initialize parameters
 	auto const& frameCounts = aPar.frameCounts;
 	mKMax = 1 + *std::max_element(frameCounts.begin(), frameCounts.end() );
@@ -524,7 +519,7 @@ void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aR
 		unsigned devID, queueCount = 1;
 		int iret = std::sscanf( spec, "%u/%u", &devID, &queueCount );
 		if( 1 != iret && 2 != iret )
-			throw error::InvalidGPUSpec( "Didn't understand gpuspec '%s'", spec );
+			detail::throw_invalid_gpuspec_( "Don't understand provided gpuspec" );
 
 		if( mVerbosity >= 2 )
 			std::printf( "Note: using device %u with %u queues\n", devID, queueCount );
@@ -600,7 +595,7 @@ void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aR
 		std::printf( "Note: using a total of %zu queues\n", mDevQueues.size() );
 
 	if( mDevQueues.empty() )
-		throw error::InvalidGPUSpec( "No GPU queues were created." );
+		detail::throw_invalid_gpuspec_( "No GPU queues were created! Check gpuspec." );
 }
 
 template< typename... tArgs > inline
