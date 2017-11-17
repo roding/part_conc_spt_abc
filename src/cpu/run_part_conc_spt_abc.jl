@@ -79,7 +79,9 @@ function run_part_conc_spt_abc()
 		az::Array{Float64, 2},
 		dist::Array{Float64, 1},
 		w::Array{Float64, 1},
-		gamma::Float64) = estimate(	model,
+		gamma::Float64,
+		number_of_iterations::Int64,
+		number_of_simulations::Int64) = estimate(	model,
 										number_of_components,
 										Lx,
 										Ly,
@@ -117,8 +119,11 @@ function run_part_conc_spt_abc()
 					az,
 					dist,
 					w,
+					weighting_scheme,
 					gamma,
-					t_exec)
+					t_exec,
+					number_of_iterations,
+					number_of_simulations)
 	println(join(("Output written to ", output_file_path, ".")))
 
 	(	model,
@@ -129,8 +134,11 @@ function run_part_conc_spt_abc()
 		az,
 		dist,
 		w,
+		weighting_scheme,
 		gamma,
-		t_exec) = read_output(output_file_path)
+		t_exec,
+		number_of_iterations,
+		number_of_simulations) = read_output(output_file_path)
 
 	return 0
 end

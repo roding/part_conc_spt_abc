@@ -78,6 +78,8 @@ function estimate(model::String,
 		tau_az[current_component] = sqrt( 2.0 * var(az[current_component, :], corrected = false) )
 	end
 
+	number_of_simulations::Int64 = 0
+
 	# Adaptive gamma selection
 	gamma::Float64 = 0.0
 	if gamma_adaptive
@@ -100,6 +102,8 @@ function estimate(model::String,
 			dist_star[current_abc_sample] = distance(H, H_sim)
 		end
 		gamma = median(dist_star)
+
+		number_of_simulations = number_of_abc_samples
 	else
 		gamma = gamma_initial
 	end
@@ -107,6 +111,8 @@ function estimate(model::String,
 	# The rest of the iterations.
 	trial_count::SharedArray{Int64, 1} = zeros(number_of_abc_samples)
 	is_converged::Bool = false
+	number_of_iterations::Int64 = 0
+
 	while !is_converged
 		trial_count = zeros(number_of_abc_samples)
 		gamma = gamma - delta_gamma
@@ -167,6 +173,8 @@ function estimate(model::String,
 				dist_bis = distance(H, H_sim)
 
 				trial_count[current_abc_sample] = trial_count[current_abc_sample] + 1
+
+
 			end
 
 			m_star[:, current_abc_sample] = m_bis
@@ -181,6 +189,10 @@ function estimate(model::String,
 		end
 
 		if !is_converged # Only compute new stuff if we are going to do one more iteration.
+
+			number_of_iterations += 1
+			number_of_simulations += convert(Int64, sum(trial_count))
+
 			if weighting_scheme == "pmc-standard"
 				for current_abc_sample = 1:number_of_abc_samples
 					w_star[current_abc_sample] = 0.0
@@ -229,5 +241,5 @@ function estimate(model::String,
 
 	gamma = gamma + delta_gamma # Save the gamma value for the last complete iteration.
 
-	return (m, 10.^log10c, az, dist, w, gamma)
+	return (m, 10.^log10c, az, dist, w, gamma, number_of_iterations, number_of_simulations)
 end

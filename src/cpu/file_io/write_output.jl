@@ -7,8 +7,11 @@ function write_output(	file_path::String,
 					az::Array{Float64, 2},
 					dist::Array{Float64, 1},
 					w::Array{Float64, 1},
+					weighting_scheme::String,
 					gamma::Float64,
-					t_exec::Float64)
+					t_exec::Float64,
+					number_of_iterations::Int64,
+					number_of_simulations::Int64)
 
 	file_stream::IOStream = open(file_path, "w")
 
@@ -22,8 +25,11 @@ function write_output(	file_path::String,
 	write_key(file_stream, "az", az[:])
 	write_key(file_stream, "dist", dist)
 	write_key(file_stream, "w", w)
+	write_key(file_stream, "weighting_scheme", weighting_scheme)
 	write_key(file_stream, "gamma", gamma)
 	write_key(file_stream, "t_exec", t_exec)
+	write_key(file_stream, "number_of_iterations", number_of_iterations)
+	write_key(file_stream, "number_of_simulations", number_of_simulations)
 
 	@printf(file_stream, "%s", "</output>")
 
