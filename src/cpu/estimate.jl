@@ -50,7 +50,7 @@ function estimate(model::String,
 	az_star::SharedArray{Float64, 2} = zeros(number_of_components, number_of_abc_samples)
 	dist_star::SharedArray{Float64, 1} = zeros(number_of_abc_samples)
 
-	# Initialize assuming that epsilon = inf so that everything is accepted.
+	# Initialize assuming that gamma = inf so that everything is accepted.
 	m = lb_m + (ub_m - lb_m) * rand(number_of_components, number_of_abc_samples)
 	c = lb_c + (ub_c - lb_c) * rand(number_of_components, number_of_abc_samples)
 	if model == "discrete-fixed-depth"
@@ -101,13 +101,11 @@ function estimate(model::String,
 	end
 
 	# The rest of the iterations.
-	#epsilon::Float64 = 10^gamma
 	trial_count::SharedArray{Int64, 1} = zeros(number_of_abc_samples)
 	is_converged::Bool = false
 	while !is_converged
 		trial_count = zeros(number_of_abc_samples)
 		gamma = gamma - delta_gamma
-		#epsilon = 10^gamma
 		cum_w = cumsum(w)
 		@sync @parallel for current_abc_sample = 1:number_of_abc_samples
 			dist_bis = Inf
@@ -221,5 +219,7 @@ function estimate(model::String,
 		end
 	end
 
-	return (m, c, az, dist, w, epsilon)
+	gamma = gamma + delta_gamma # Save the gamma value for the last complete iteration.
+
+	return (m, c, az, dist, w, gamma)
 end

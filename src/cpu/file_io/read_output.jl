@@ -11,7 +11,7 @@ function read_output(file_path::String)
 	az::Array{Float64, 2} = reshape(read_key(file_string, "az", Array{Float64, 1}), (number_of_components, number_of_abc_samples))
 	dist::Array{Float64, 1} = read_key(file_string, "dist", Array{Float64, 1})
 	w::Array{Float64, 1} = read_key(file_string, "w", Array{Float64, 1})
-	epsilon::Float64 = read_key(file_string, "epsilon", Float64)
+	gamma::Float64 = read_key(file_string, "gamma", Float64)
 	t_exec::Float64 = read_key(file_string, "t_exec", Float64)
 
 	return (
@@ -23,6 +23,6 @@ function read_output(file_path::String)
 		az,
 		dist,
 		w,
-		epsilon,
+		gamma,
 		t_exec)
 end

@@ -7,7 +7,7 @@ function write_output(	file_path::String,
 					az::Array{Float64, 2},
 					dist::Array{Float64, 1},
 					w::Array{Float64, 1},
-					epsilon::Float64,
+					gamma::Float64,
 					t_exec::Float64)
 
 	file_stream::IOStream = open(file_path, "w")
@@ -22,7 +22,7 @@ function write_output(	file_path::String,
 	write_key(file_stream, "az", az[:])
 	write_key(file_stream, "dist", dist)
 	write_key(file_stream, "w", w)
-	write_key(file_stream, "epsilon", epsilon)
+	write_key(file_stream, "gamma", gamma)
 	write_key(file_stream, "t_exec", t_exec)
 
 	@printf(file_stream, "%s", "</output>")
