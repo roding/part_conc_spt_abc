@@ -174,7 +174,6 @@ function estimate(model::String,
 
 				trial_count[current_abc_sample] = trial_count[current_abc_sample] + 1
 
-
 			end
 
 			m_star[:, current_abc_sample] = m_bis
@@ -183,16 +182,15 @@ function estimate(model::String,
 			dist_star[current_abc_sample] = dist_bis
 		end
 
+		number_of_simulations += convert(Int64, sum(trial_count))
+		number_of_iterations += 1
+
 		if mean(trial_count) >= ub_average_number_of_trials
 			is_converged = true
 			println("Converged.")
 		end
 
 		if !is_converged # Only compute new stuff if we are going to do one more iteration.
-
-			number_of_iterations += 1
-			number_of_simulations += convert(Int64, sum(trial_count))
-
 			if weighting_scheme == "pmc-standard"
 				for current_abc_sample = 1:number_of_abc_samples
 					w_star[current_abc_sample] = 0.0
