@@ -184,11 +184,15 @@ function estimate(model::String,
 						term = 1.0
 						for current_component = 1:number_of_components
 							term = term * normpdf(m_star[current_component, current_abc_sample] - m[current_component, i], 0.0, tau_m[current_component])
+							println((1, normpdf(m_star[current_component, current_abc_sample] - m[current_component, i], 0.0, tau_m[current_component])))
 							term = term * normpdf(c_star[current_component, current_abc_sample] - c[current_component, i], 0.0, tau_c[current_component])
+							println((2, normpdf(c_star[current_component, current_abc_sample] - c[current_component, i], 0.0, tau_c[current_component])))
 							term = term * normpdf(az_star[current_component, current_abc_sample] - az[current_component, i], 0.0, tau_az[current_component])
+							println((3, normpdf(az_star[current_component, current_abc_sample] - az[current_component, i], 0.0, tau_az[current_component])))
 						end
 						w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * term
 					end
+					println((1, w_star))
 					w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
 				end
 				w = w_star / sum(w_star)
