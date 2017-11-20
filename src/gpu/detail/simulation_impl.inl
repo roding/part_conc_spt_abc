@@ -70,7 +70,8 @@ namespace detail
 	{
 		using Scalar_ = typename std::iterator_traits<tRandomIt>::value_type;
 		Scalar_ const rr = std::uniform_real_distribution<Scalar_>{0,1}(aRng);
-		return std::distance( aBeg, std::lower_bound( aBeg, aEnd, rr ) );
+		auto const it = std::lower_bound( aBeg, aEnd, rr );
+		return std::min( std::distance(aBeg,aEnd)-1, std::distance(aBeg,it) );
 	}
 
 	// displace_()
@@ -225,6 +226,7 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 				{
 					//XXX-TODO: move this into a separate function (sample_update_()?)
 					auto const idx = detail::wrand_idx_( aRng, mPreW.begin(), mPreW.end() );
+					assert( idx < mAbcCount );
 
 					for( std::size_t i = 0; i < mComponentCount; ++i )
 					{
