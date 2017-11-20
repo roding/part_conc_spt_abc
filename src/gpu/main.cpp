@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 
@@ -89,7 +90,7 @@ int main( int aArgc, char* aArgv[] ) try
 
 			auto output = sim->output();
 			{
-				output.meta["runtime_ms"] = tfm::format( "%u", std::chrono::duration_cast<std::chrono::duration<double,std::milli>>(end-start).count() );
+				output.meta["runtime_ms"] = tfm::format( "%u", std::chrono::duration_cast<std::chrono::duration<std::uint64_t,std::milli>>(end-start).count() );
 
 				// no put_time() on GCC. :-(
 				auto startTime = SysClock_::to_time_t(start);
