@@ -102,6 +102,12 @@ int main( int aArgc, char* aArgv[] ) try
 
 				std::strftime( buff, 255, "%F %T%z", std::localtime(&endTime) );
 				output.meta["finished_at"] = buff;
+
+#				ifdef NDEBUG
+				output.meta["debug"] = "false";
+#				else
+				output.meta["debug"] = "true";
+#				endif
 			}
 			
 			output::write( param.outputFilePath.c_str(), output );
