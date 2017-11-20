@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 
+#include <cstdio>
 #include <cassert>
 #include <cstdlib>
 
@@ -75,6 +76,13 @@ namespace
 
 namespace output
 {
+	Output load( char const* ) //XXX-stub; 
+	{
+		return {};
+	}
+	
+
+#	if 0
 	Output load( char const* aPath ) try
 	{
 		// Load main "output" XML
@@ -166,5 +174,86 @@ namespace output
 	catch( ... )
 	{
 		std::throw_with_nested( error::XMLLoadError( "Error loading '%s'", aPath ) );
+	}
+#	endif
+}
+
+
+namespace output
+{
+	void write( char const* aPath, Output const& aOutput )
+	{
+		if( auto fof = std::fopen( aPath, "wb" ) )
+		{
+			std::fprintf( fof, "<output>\n" );
+
+			// write simulation params
+			std::fprintf( fof, "\t<model>%s</model>\n", to_string(aOutput.model).c_str() );
+			std::fprintf( fof, "\t<weighting_scheme>%s</weighting_scheme>\n", to_string(aOutput.weightingScheme).c_str() );
+			std::fprintf( fof, "\t<number_of_abc_samples>%zu</number_of_abc_samples>\n", aOutput.abcSampleCount );
+			std::fprintf( fof, "\t<number_of_components>%zu</number_of_components>\n", aOutput.componentCount );
+			std::fprintf( fof, "\t<number_of_z_components>%zu</number_of_z_components>\n", aOutput.zComponentCount );
+			std::fprintf( fof, "\n" );
+
+			// write meta data
+			std::fprintf( fof, "\t<meta>\n" );
+			for( auto it = aOutput.meta.begin(); it != aOutput.meta.end(); ++it )
+			{
+				std::fprintf( fof, "\t\t<%s>%s</%s>\n", it->first.c_str(), it->second.c_str(), it->first.c_str() );
+			}
+			std::fprintf( fof, "\t</meta>\n" );
+			std::fprintf( fof, "\n" );
+
+			// write results
+			std::fprintf( fof, "\t<converged>%s</converged>\n", aOutput.converged ? "true" : "false" );
+			std::fprintf( fof, "\t<epsilon>%.18g</epsilon>\n", aOutput.epsilon );
+			std::fprintf( fof, "\t<m>" );
+			{
+				auto i = aOutput.m.begin();
+				for( auto const  e = aOutput.m.end()-1; i != e; ++i )
+					std::fprintf( fof, "%.18g, ", *i );
+				std::fprintf( fof, "%.18g", *i );
+			}
+			std::fprintf( fof, "\t</m>\n" );
+
+			std::fprintf( fof, "\t<c>" );
+			{
+				auto i = aOutput.c.begin();
+				for( auto const e = aOutput.c.end()-1; i != e; ++i )
+					std::fprintf( fof, "%.18g, ", *i );
+				std::fprintf( fof, "%.18g", *i );
+			}
+			std::fprintf( fof, "\t</c>\n" );
+
+			std::fprintf( fof, "\t<az>" );
+			{
+				auto i = aOutput.az.begin();
+				for( auto const e = aOutput.az.end()-1; i != e; ++i )
+					std::fprintf( fof, "%.18g, ", *i );
+				std::fprintf( fof, "%.18g", *i );
+			}
+			std::fprintf( fof, "\t</az>\n" );
+
+			std::fprintf( fof, "\t<dist>" );
+			{
+				auto i = aOutput.dist.begin();
+				for( auto const e = aOutput.dist.end()-1; i != e; ++i )
+					std::fprintf( fof, "%.18g, ", *i );
+				std::fprintf( fof, "%.18g", *i );
+			}
+			std::fprintf( fof, "\t</dist>\n" );
+
+			std::fprintf( fof, "\t<w>" );
+			{
+				auto i = aOutput.w.begin();
+				for( auto const e = aOutput.w.end()-1; i != e; ++i )
+					std::fprintf( fof, "%.18g, ", *i );
+				std::fprintf( fof, "%.18g", *i );
+			}
+			std::fprintf( fof, "\t</w>\n" );
+
+			std::fprintf( fof, "</output>\n" );
+			std::fclose( fof );
+		}
 	}
 }

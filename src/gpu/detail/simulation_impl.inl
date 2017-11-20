@@ -101,6 +101,7 @@ SimulationT<tArgs...>::SimulationT( input::Parameters const& aPar, HostRng& aRng
 	, mM( mComponentCount, mAbcCount )
 	, mC( mComponentCount, mAbcCount )
 	, mAz( mZCount, mAbcCount )
+	, mConverged(false)
 {
 	resize( mDist, mAbcCount, Scalar(0) );
 	resize( mW, mAbcCount );
@@ -159,6 +160,10 @@ template< typename... tArgs > inline
 void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 {
 	using Clock_ = std::chrono::high_resolution_clock;
+
+	mConverged = false;
+	mInfoIterations = mInfoSimulations = 0;
+
 	
 	std::vector<std::size_t> waitingSamples( mAbcCount );
 
@@ -178,13 +183,11 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 	mEpsilon = std::pow( Scalar(10), mGamma );
 
 	if( mVerbosity >= 0 ) std::printf( "Begin main iterations...\n" );
-
-	std::size_t iter = 0;
-	bool isConverged = false;
-
-	while( !isConverged )
+	while( !mConverged )
 	{
-		if( mMaxIter != 0 && ++iter >= mMaxIter )
+		++mInfoIterations;
+
+		if( mMaxIter != 0 && mInfoIterations >= mMaxIter )
 		{
 			std::printf( "NOTE: --max-steps reached. stopping.\n" );
 			break;
@@ -315,7 +318,9 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 
 					auto const sidx = &sample - mSamples.data();
 					++trials[sidx];
+
 					--pendingJobs;
+					++mInfoSimulations;
 
 					waitingSamples.push_back( sidx );
 				}
@@ -376,16 +381,51 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 		// finished?
 		if( detail::mean_<Scalar>( trials.begin(), trials.end() ) >= mAvgTrialCount )
 		{
-			isConverged = true;
+			mConverged = true;
 		}
 	}
 }
 template< typename... tArgs > inline
-void SimulationT<tArgs...>::write_results( input::Parameters const& aPar )
+output::Output SimulationT<tArgs...>::output()
 {
-	write_results_ugly_( aPar );
-}
+	output::Output ret;
+	ret.model             = kModel;
+	ret.weightingScheme   = [&] () {
+		if( &SimulationT::weighting_scheme_inv_dist_sq_ == mWeightingSchemeFn )
+			return EWeightingScheme::inverseDistSq;
+		else if( &SimulationT::weighting_scheme_pmc_standard_ == mWeightingSchemeFn )
+			return EWeightingScheme::pmcStandard;
 
+		return EWeightingScheme(~0u);
+	}();
+
+	ret.abcSampleCount    = std::size_t(mAbcCount);
+	ret.componentCount    = std::size_t(mComponentCount);
+	ret.zComponentCount   = std::size_t(mZCount);
+
+	ret.converged         = mConverged;
+	ret.epsilon           = mEpsilon;
+
+	ret.m.assign( mM.lbegin(), mM.lend() );
+	ret.c.assign( mC.lbegin(), mC.lend() );
+	ret.az.assign( mAz.lbegin(), mAz.lend() );
+	ret.dist.assign( mDist.begin(), mDist.end() );
+	ret.w.assign( mW.begin(), mW.end() );
+
+	ret.meta["simulator"] = "gpu";
+	ret.meta["iterations"] = tfm::format( "%u", mInfoIterations );
+	ret.meta["simulations"] = tfm::format( "%u", mInfoSimulations );
+	ret.meta["gpus"] = tfm::format( "%u", mDevGlobal.size() );
+
+	for( std::size_t i = 0; i < mDevGlobal.size(); ++i )
+	{
+		auto const& dev = mDevGlobal[i];
+		ret.meta[tfm::format( "gpu%d_id", i )] = tfm::format( "%d", dev.device );
+		ret.meta[tfm::format( "gpu%d_queues", i )] = tfm::format( "%d", dev.queueCount );
+	}
+
+	return ret;
+}
 
 template< class... tArgs > inline
 void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aRng, SimulationConfig const& aCfg )
@@ -906,88 +946,6 @@ void SimulationT<tArgs...>::sample_dev_clean_( Sample_& aSample, CudaDevGlobal_&
 		aDev.timeEvents.free( aSample.totalStop );
 	}
 #	endif // ~ SIM_KERNEL_TIMINGS
-}
-
-
-template< typename... tArgs > inline
-void SimulationT<tArgs...>::write_results_ugly_( input::Parameters const& aPar )
-{
-	/* Not that any of this code is going to win any beauty prizes, but the
-	 * following *really* isn't.
-	 */
-	if( auto fof = std::fopen( aPar.outputFilePath.c_str(), "wb" ) )
-	{
-		auto now = std::chrono::system_clock::now();
-		auto time = std::chrono::system_clock::to_time_t(now);
-
-		char date[256];
-		std::strftime( date, 255, "%F %T%z", std::localtime(&time) ); // no put_time() on GCC
-		char host[256] = {};
-		::gethostname( host, 255 );
-
-		std::fprintf( fof, "<output>\n" );
-		std::fprintf( fof, "\t<meta>\n" );
-		std::fprintf( fof, "\t\t<app>accel</app>\n" );
-		std::fprintf( fof, "\t\t<date>%s</date>\n", date );
-		std::fprintf( fof, "\t\t<machine>%s</machine>\n", host );
-		std::fprintf( fof, "\t\t<cuda gpus=\"%zu\" queues=\"%zu\" />\n", mDevGlobal.size(), mDevQueues.size() );
-		std::fprintf( fof, "\t</meta>\n" );
-		std::fprintf( fof, "\n" );
-		std::fprintf( fof, "\t<model>%s</model>\n", to_string(kModel).c_str() );
-		std::fprintf( fof, "\t<number_of_components>%u</number_of_components>\n", 0+mComponentCount );
-		std::fprintf( fof, "\t<number_of_z_values>%u</number_of_z_values>\n", 0+mZCount );
-		std::fprintf( fof, "\t<number_of_abc_samples>%u</number_of_abc_samples>\n", 0+mAbcCount );
-		std::fprintf( fof, "\n" );
-
-		std::fprintf( fof, "\t<epsilon>%.18g</epsilon>\n", mEpsilon );
-		std::fprintf( fof, "\t<m>" );
-		{
-			auto i = mM.lbegin();
-			for( auto const  e = mM.lend()-1; i != e; ++i )
-				std::fprintf( fof, "%.18g, ", *i );
-			std::fprintf( fof, "%.18g", *i );
-		}
-		std::fprintf( fof, "\t</m>\n" );
-
-		std::fprintf( fof, "\t<c>" );
-		{
-			auto i = mC.lbegin();
-			for( auto const e = mC.lend()-1; i != e; ++i )
-				std::fprintf( fof, "%.18g, ", *i );
-			std::fprintf( fof, "%.18g", *i );
-		}
-		std::fprintf( fof, "\t</c>\n" );
-
-		std::fprintf( fof, "\t<az>" );
-		{
-			auto i = mAz.lbegin();
-			for( auto const e = mAz.lend()-1; i != e; ++i )
-				std::fprintf( fof, "%.18g, ", *i );
-			std::fprintf( fof, "%.18g", *i );
-		}
-		std::fprintf( fof, "\t</az>\n" );
-
-		std::fprintf( fof, "\t<dist>" );
-		{
-			auto i = mDist.begin();
-			for( auto const e = mDist.end()-1; i != e; ++i )
-				std::fprintf( fof, "%.18g, ", *i );
-			std::fprintf( fof, "%.18g", *i );
-		}
-		std::fprintf( fof, "\t</dist>\n" );
-
-		std::fprintf( fof, "\t<w>" );
-		{
-			auto i = mW.begin();
-			for( auto const e = mW.end()-1; i != e; ++i )
-				std::fprintf( fof, "%.18g, ", *i );
-			std::fprintf( fof, "%.18g", *i );
-		}
-		std::fprintf( fof, "\t</w>\n" );
-
-		std::fprintf( fof, "</output>\n" );
-		std::fclose( fof );
-	}
 }
 
 template< typename... tArgs > inline

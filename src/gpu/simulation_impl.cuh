@@ -123,7 +123,7 @@ class SimulationT final : public Simulation
 
 	public:
 		void run( SimHostRNG& ) override;
-		void write_results( input::Parameters const& ) override;
+		output::Output output() override;
 
 	private:
 		using AbcCount_ = DynamicValue<unsigned>;
@@ -281,8 +281,6 @@ class SimulationT final : public Simulation
 		void sample_dev_init_( Sample_&, CudaDevGlobal_&, CudaDevQueue_& );
 		void sample_dev_clean_( Sample_&, CudaDevGlobal_& );
 
-		void write_results_ugly_( input::Parameters const& );
-
 		static void CUDART_CB cuda_stream_callback_(
 			cudaStream_t,
 			cudaError_t,
@@ -328,8 +326,12 @@ class SimulationT final : public Simulation
 
 		std::size_t mNextQueue = 0;
 
-		int mVerbosity;
+		bool mConverged;
 		std::size_t mMaxIter;
+
+		int mVerbosity;
+
+		std::size_t mInfoIterations, mInfoSimulations;
 
 #		if SIM_KERNEL_TIMINGS
 		float timeSimTotal, timeSimCount;

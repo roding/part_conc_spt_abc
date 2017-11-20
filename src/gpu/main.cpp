@@ -1,3 +1,4 @@
+#include <chrono>
 #include <string>
 #include <vector>
 #include <typeinfo>
@@ -50,6 +51,8 @@ namespace
 
 int main( int aArgc, char* aArgv[] ) try
 {
+	using SysClock_ = std::chrono::system_clock;
+	
 	Config_ const cfg = parse_command_line_( aArgc, aArgv );
 
 	switch( cfg.action )
@@ -79,8 +82,28 @@ int main( int aArgc, char* aArgv[] ) try
 			auto rng = make_prng<SimHostRNG>();
 			auto sim = make_simulation( rng, param, scfg );
 
+			auto const start = SysClock_::now();
 			sim->run( rng );
-			sim->write_results( param );
+			auto const end = SysClock_::now();
+
+
+			auto output = sim->output();
+			{
+				output.meta["runtime_ms"] = tfm::format( "%u", std::chrono::duration_cast<std::chrono::duration<double,std::milli>>(end-start).count() );
+
+				// no put_time() on GCC. :-(
+				auto startTime = SysClock_::to_time_t(start);
+				auto endTime = SysClock_::to_time_t(end);
+				
+				char buff[256];
+				std::strftime( buff, 255, "%F %T%z", std::localtime(&startTime) );
+				output.meta["started_at"] = buff;
+
+				std::strftime( buff, 255, "%F %T%z", std::localtime(&endTime) );
+				output.meta["finished_at"] = buff;
+			}
+			
+			output::write( param.outputFilePath.c_str(), output );
 			break;
 		}
 	}

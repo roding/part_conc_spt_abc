@@ -14,6 +14,7 @@
 
 #include "shared/input.hpp"
 #include "shared/common.hpp"
+#include "shared/output.hpp"
 
 using SimHostRNG = std::mt19937;
 
@@ -43,7 +44,7 @@ struct Simulation
 	virtual ~Simulation() = 0;
 
 	virtual void run( SimHostRNG& ) = 0;
-	virtual void write_results( input::Parameters const& ) = 0;
+	virtual output::Output output() = 0;
 };
 
 /** Create `Simulation` instance
