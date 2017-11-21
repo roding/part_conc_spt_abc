@@ -1,30 +1,31 @@
-function [  distribution_class, ...
+function [  model, ...
             number_of_components, ...
             number_of_abc_samples, ...
             m, ...
-            s, ...
             c, ...
             az, ...
             dist, ...
             w, ...
-            epsilon] = read_output(file_path)
+            weighting_scheme, ...
+            gamma, ...
+            t_exec, ...
+            number_of_iterations, ...
+            number_of_simulations] = read_output(file_path)
 
     file_string = fileread(file_path);
 
-    distribution_class = read_key(file_string, 'distribution_class', 'string');
-    number_of_components = read_key(file_string, 'number_of_components', 'scalar');
-    number_of_abc_samples = read_key(file_string, 'number_of_abc_samples', 'scalar');
+    model = read_key(file_string, 'model', 'string');
+	number_of_components = read_key(file_string, 'number_of_components', 'scalar');
+	number_of_abc_samples = read_key(file_string, 'number_of_abc_samples', 'scalar');
+	m = reshape(read_key(file_string, 'm', 'array'), [number_of_components, number_of_abc_samples]);
+	c = reshape(read_key(file_string, 'c', 'array'), [number_of_components, number_of_abc_samples]);
+	az = reshape(read_key(file_string, 'az', 'array'), [number_of_components, number_of_abc_samples]);
+	dist = read_key(file_string, 'dist', 'array');
+	w = read_key(file_string, 'w', 'array');
+	weighting_scheme = read_key(file_string, 'weighting_scheme', 'string');
+	gamma = read_key(file_string, 'gamma', 'scalar');
+	t_exec = read_key(file_string, 't_exec', 'scalar');
+	number_of_iterations = read_key(file_string, 'number_of_iterations', 'scalar');
+	number_of_simulations = read_key(file_string, 'number_of_simulations', 'scalar');
     
-    m = read_key(file_string, 'm', 'array');
-    m = reshape(m, [number_of_components, number_of_abc_samples]);
-    s = read_key(file_string, 's', 'array');
-    s = reshape(s, [number_of_components, number_of_abc_samples]);
-    c = read_key(file_string, 'c', 'array');
-    c = reshape(c, [number_of_components, number_of_abc_samples]);    
-    
-    az = read_key(file_string, 'az', 'array');
-    dist = read_key(file_string, 'dist', 'array');
-    w = read_key(file_string, 'w', 'array');
-    epsilon = read_key(file_string, 'epsilon', 'scalar');
-
 end
