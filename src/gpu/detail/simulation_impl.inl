@@ -90,6 +90,23 @@ namespace detail
 
 		return bis;
 	}
+
+	// mat2vec_()
+	template< typename tOut, class tMatrix > inline
+	std::vector<tOut> mat2vec_( tMatrix const& aMat )
+	{
+		std::vector<tOut> ret;
+		ret.reserve( aMat.n() * aMat.m() );
+
+		for( std::size_t i = 0; i < aMat.m(); ++i )
+		{
+			auto const c = aMat.col( i );
+			for( auto x : c )
+				ret.push_back( x );
+		}
+		
+		return ret;
+	}
 }
 
 
@@ -408,10 +425,9 @@ output::Output SimulationT<tArgs...>::output()
 	ret.converged         = mConverged;
 	ret.epsilon           = mEpsilon;
 
-	//TODO: output column major (or just differently from this)
-	ret.m.assign( mM.lbegin(), mM.lend() );
-	ret.c.assign( mC.lbegin(), mC.lend() );
-	ret.az.assign( mAz.lbegin(), mAz.lend() );
+	ret.m = detail::mat2vec_<double>( mM );
+	ret.c = detail::mat2vec_<double>( mC );
+	ret.az = detail::mat2vec_<double>( mAz );
 	ret.dist.assign( mDist.begin(), mDist.end() );
 	ret.w.assign( mW.begin(), mW.end() );
 
