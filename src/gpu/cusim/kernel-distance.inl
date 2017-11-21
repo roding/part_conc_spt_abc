@@ -3,10 +3,18 @@ namespace cusim
 {
 	namespace detail
 	{
-#		if 1
 		template< typename tCount > __device__ inline
 		tCount warp_prefix( unsigned aWTID, tCount aValue )
-		{
+		{	
+			/* The PTX version results in much tighter code than the C version.
+			 * The C version produces four instructions per step (a ISETP,
+			 * IADD, SHFL and SEL); the inline PTX version gets it down to two
+			 * (SHFL + predicated IADD).
+			 *
+			 * Incidentally, the PTX code is shown as an example for the shfl
+			 * instruction in the PTX ISA document. See
+			 * http://docs.nvidia.com/cuda/parallel-thread-execution/index.html
+			 */
 #			if 0
 			auto x0 = __shfl_up( aValue, 1 );
 			aValue += (aWTID >= 1) ? x0 : 0;
@@ -23,15 +31,6 @@ namespace cusim
 			auto x4 = __shfl_up( aValue, 16 );
 			aValue += (aWTID >= 16) ? x4 : 0;
 #			else
-			/* This version results in much tighter code than the C version
-			 * above. The C version produces four instructions per step (a
-			 * ISETP, IADD, SHFL and SEL); the inline version gets it down to
-			 * two (SHFL + predicated IADD).
-			 *
-			 * Incidentally, the below PTX is shown in as an example for the
-			 * shfl instruction in the PTX ISA document. See
-			 * http://docs.nvidia.com/cuda/parallel-thread-execution/index.html
-			 */
 			__asm__ volatile( "{\n\t"
 				".reg .u32 t0;\n\t"
 				".reg .pred valid;\n\t"
@@ -58,65 +57,6 @@ namespace cusim
 
 			return aValue;
 		}
-#		else
-		/* Early test: use shared memory to communicate values between threads.
-		 * This version uses a total of 48 values per warp, with the first 16
-		 * set to zero. This avoids the branches/predicated instructions seen
-		 * in the code above.
-		 *
-		 * Brief ad-hoc benchmarking shows that it's not really worth it in
-		 * terms of performance, though, as both versions clock in at roughly
-		 * the same elapsed times on my test GPU.
-		 *
-		 * Uses inline PTX, since we want to avoid an extra fenches/syncs; this
-		 * however gives the CUDA/C++ compiler freedom to mess up the method
-		 * (probably rightly so).
-		 */
-		template< typename tCount > __device__ inline
-		tCount warp_prefix( unsigned aWTID, tCount aValue, tCount* aSmem )
-		{
-			__asm__ volatile( "{\n\t"
-
-				".reg .u32 t0;\n\t"
-				".reg .u32 t1;\n\t"
-				".reg .u32 t2;\n\t"
-				".reg .u64 q0;\n\t"
-				".reg .u64 q1;\n\t"
-				".reg .u64 base;\n\t"
-
-				"mov.u32 t0, %%tid.x;\n\t"
-				"mul.wide.u32 q0, t0, 4;\n\t"
-				"add.s64 q1, %1, q0;\n\t"
-				"cvta.to.shared.u64 base, q1;\n\t"
-
-				"st.shared.u32 [base+64], %0;\n\t"
-
-				"ld.shared.u32 t1, [base+60];\n\t" // 64-1*4 = 60
-				"add.s32 t2, %0, t1;\n\t"
-				"st.shared.u32 [base+64], t2;\n\t"
-
-				"ld.shared.u32 t1, [base+56];\n\t" // 64-2*4 = 56
-				"add.s32 t2, t2, t1;\n\t"
-				"st.shared.u32 [base+64], t2;\n\t"
-
-				"ld.shared.u32 t1, [base+48];\n\t" // 64-4*4 = 48
-				"add.s32 t2, t2, t1;\n\t"
-				"st.shared.u32 [base+64], t2;\n\t"
-
-				"ld.shared.u32 t1, [base+32];\n\t" // 64-8*4 = 32
-				"add.s32 t2, t2, t1;\n\t"
-				"st.shared.u32 [base+64], t2;\n\t"
-
-				"ld.shared.u32 t1, [base];\n\t" // 64-16*4 = 0
-				"add.s32 %0, t2, t1;\n\t"
-
-				"}\n\t"
-				: "+r"(aValue)
-				: "l"(aSmem)
-			);
-			return aValue;
-		}
-#		endif
 
 		template< typename tReal > __device__ inline
 		tReal reduce0( tReal aValue )
@@ -134,7 +74,6 @@ namespace cusim
 	void /*__launch_bounds__(1024,1)*/ K_distance( tReal* aDistance, unsigned aN, unsigned aM, tCount* aCur, tCount const* aRef )
 	{
 		__shared__ tReal totals[32]; //XXX-FIXME: number of warps in block.
-		//__shared__ tCount buff[32][48];
 
 		auto const warp = threadIdx.y;
 		auto const wtid = threadIdx.x;
@@ -148,7 +87,6 @@ namespace cusim
 			totals[wtid] = tReal(0);
 		}
 
-		//buff[warp][wtid] = 0;
 
 		__syncthreads();
 
