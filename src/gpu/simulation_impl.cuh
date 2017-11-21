@@ -310,7 +310,7 @@ class SimulationT final : public Simulation
 		WeightingFun_ mWeightingSchemeFn;
 
 		Scalar mDeltaT;
-		Scalar mGamma, mEpsilon, mDeltaGamma;
+		Scalar mGamma, mDeltaGamma;
 
 		Scalar mAvgTrialCount;
 

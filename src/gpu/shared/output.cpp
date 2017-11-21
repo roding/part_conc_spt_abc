@@ -206,7 +206,7 @@ namespace output
 
 			// write results
 			std::fprintf( fof, "\t<converged>%s</converged>\n", aOutput.converged ? "true" : "false" );
-			std::fprintf( fof, "\t<epsilon>%.18g</epsilon>\n", aOutput.epsilon );
+			std::fprintf( fof, "\t<gamma>%.18g</gamma>\n", aOutput.gamma );
 			std::fprintf( fof, "\t<m>" );
 			{
 				auto i = aOutput.m.begin();

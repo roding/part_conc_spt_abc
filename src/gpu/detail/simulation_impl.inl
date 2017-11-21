@@ -198,8 +198,6 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 		if( mVerbosity >= 0 ) std::printf( "  initial γ = %g\n", mGamma );
 	}
 
-	mEpsilon = std::pow( Scalar(10), mGamma );
-
 	if( mVerbosity >= 0 ) std::printf( "Begin main iterations...\n" );
 	while( !mConverged )
 	{
@@ -212,7 +210,6 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 		}
 
 		mGamma -= mDeltaGamma;
-		mEpsilon = std::pow( Scalar(10), mGamma );
 
 		std::fill_n( trials.begin(), mAbcCount, Count(0) );
 		std::partial_sum( mW.begin(), mW.end(), mPreW.begin() );
@@ -239,7 +236,7 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 			{
 				auto& sample = mSamples[sidx];
 
-				if( sample.distBis > mEpsilon && detail::mean_<Scalar>( trials.begin(), trials.end() ) < mAvgTrialCount )
+				if( sample.distBis > mGamma && detail::mean_<Scalar>( trials.begin(), trials.end() ) < mAvgTrialCount )
 				{
 					//XXX-TODO: move this into a separate function (sample_update_()?)
 					auto const idx = detail::wrand_idx_( aRng, mPreW.begin(), mPreW.end() );
@@ -333,6 +330,8 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 
 					CUDA_CHECKED it->error;
 
+					sample.distBis = std::log10( *sample.hostResultDistance );
+
 					sample_dev_clean_( sample, dev );
 
 					auto const sidx = &sample - mSamples.data();
@@ -365,7 +364,7 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 				if( x < minTrials ) minTrials = x;
 			}
 
-			std::printf( "Trials: total[min/max]: %4u[%4u/%4u]; ε = %.2g, λ̅ = %.1f\n", totalTrials, minTrials, maxTrials, mEpsilon, infoLambdaAcc/infoLambdaCount );
+			std::printf( "Trials: total[min/max]: %4u[%4u/%4u]; γ = %.2g, λ̅ = %.1f\n", totalTrials, minTrials, maxTrials, mGamma, infoLambdaAcc/infoLambdaCount );
 
 			std::printf( "  Wall time: %6.2f ms for this iteration\n", std::chrono::duration_cast<Fms_>(infoIterEnd-infoIterStart).count() );
 
@@ -423,7 +422,7 @@ output::Output SimulationT<tArgs...>::output()
 	ret.zComponentCount   = std::size_t(mZCount);
 
 	ret.converged         = mConverged;
-	ret.epsilon           = mEpsilon;
+	ret.gamma             = mGamma;
 
 	ret.m = detail::mat2vec_<double>( mM );
 	ret.c = detail::mat2vec_<double>( mC );
@@ -734,13 +733,15 @@ auto SimulationT<tArgs...>::compute_initial_gamma_( HostRng& aRng ) -> Scalar
 
 			CUDA_CHECKED it->error;
 
+			sample.distBis = std::log10( *sample.hostResultDistance );
+
 			sample_dev_clean_( sample, dev );
 
 			--pendingJobs;
 		}
 	}
 
-	// find median distance; the result is log10 thereof
+	// find median (log-10) distance
 	AVec_<Scalar> distances;
 	resize( distances, mAbcCount );
 
@@ -750,7 +751,7 @@ auto SimulationT<tArgs...>::compute_initial_gamma_( HostRng& aRng ) -> Scalar
 	std::size_t const n = mAbcCount / 2;
 	std::nth_element( distances.begin(), distances.begin()+n, distances.end() );
 
-	return std::log10( distances[n] );
+	return distances[n];
 }
 
 template< typename... tArgs > inline
@@ -974,8 +975,6 @@ void SimulationT<tArgs...>::cuda_stream_callback_( cudaStream_t, cudaError_t aEr
 
 	auto& sample = *static_cast<Sample_*>(aUser);
 	auto* self = sample.parent;
-
-	sample.distBis = *sample.hostResultDistance;
 
 	self->mResults.queue( Result_{
 		&sample,

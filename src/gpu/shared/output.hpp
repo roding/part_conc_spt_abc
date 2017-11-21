@@ -28,7 +28,7 @@ namespace output
 		std::vector<double> w;
 
 		bool converged;
-		double epsilon;
+		double gamma;
 
 		std::unordered_map<std::string,std::string> meta;
 	};
