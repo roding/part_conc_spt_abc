@@ -740,7 +740,7 @@ auto SimulationT<tArgs...>::compute_initial_gamma_( HostRng& aRng ) -> Scalar
 		}
 	}
 
-	// find median distance
+	// find median distance; the result is log10 thereof
 	AVec_<Scalar> distances;
 	resize( distances, mAbcCount );
 
@@ -748,12 +748,9 @@ auto SimulationT<tArgs...>::compute_initial_gamma_( HostRng& aRng ) -> Scalar
 		distances[i] = copyOfSamples[i].distBis;
 
 	std::size_t const n = mAbcCount / 2;
-	std::nth_element( distances.begin(), distances.begin()+n, distances.begin() );
+	std::nth_element( distances.begin(), distances.begin()+n, distances.end() );
 
-	auto const median = distances[n];
-
-	//
-	return std::log10( median );
+	return std::log10( distances[n] );
 }
 
 template< typename... tArgs > inline
