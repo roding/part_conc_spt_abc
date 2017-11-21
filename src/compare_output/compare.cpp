@@ -27,16 +27,13 @@ int main( int aArgc, char* aArgv[] ) try
 	auto a = output::load( aArgv[1] );
 	auto b = output::load( aArgv[2] );
 
-	std::printf( "A: by %s on %s (%s)\n", a.producerName.c_str(), a.machine.c_str(), a.date.c_str() );
-	std::printf( "B: by %s on %s (%s)\n", b.producerName.c_str(), b.machine.c_str(), b.date.c_str() );
+	//TODO: fixme!
+	//std::printf( "A: by %s on %s (%s)\n", a.producerName.c_str(), a.machine.c_str(), a.date.c_str() );
+	//std::printf( "B: by %s on %s (%s)\n", b.producerName.c_str(), b.machine.c_str(), b.date.c_str() );
 
 	auto am = avg_( a.m.begin(), a.m.end() );
 	auto bm = avg_( b.m.begin(), b.m.end() );
 	std::printf( "m    : %18g vs %18g (δ = %18g)\n", am, bm, std::abs(am-bm) );
-
-	auto as = avg_( a.s.begin(), a.s.end() );
-	auto bs = avg_( b.s.begin(), b.s.end() );
-	std::printf( "s    : %18g vs %18g (δ = %18g)\n", as, bs, std::abs(as-bs) );
 
 	auto ac = avg_( a.c.begin(), a.c.end() );
 	auto bc = avg_( b.c.begin(), b.c.end() );
@@ -54,7 +51,7 @@ int main( int aArgc, char* aArgv[] ) try
 	auto bw = avg_( b.w.begin(), b.w.end() );
 	std::printf( "w    : %18g vs %18g (δ = %18g)\n", aw, bw, std::abs(aw-bw) );
 
-	std::printf( "eps  : %18g vs %18g (δ = %18g)\n", a.epsilon, b.epsilon, std::abs(a.epsilon-b.epsilon) );
+	std::printf( "eps  : %18g vs %18g (δ = %18g)\n", a.gamma, b.gamma, std::abs(a.gamma-b.gamma) );
 
 	return 0;
 }
