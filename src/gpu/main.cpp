@@ -232,7 +232,7 @@ namespace
 			}
 			else if( flag_( "--max-steps", "-S" ) )
 			{
-				if( arg+1 >= aArgc ) throw std::runtime_error( tfm::format( "Command line argument %s requires an additinal integer argument", aArgv[arg] ) );
+				if( arg+1 >= aArgc ) throw std::runtime_error( tfm::format( "Command line argument %s requires an additional integer argument", aArgv[arg] ) );
 
 				char dummy;
 				int iret = std::sscanf( aArgv[arg+1], "%zu%c", &cfg.maxIter, &dummy );

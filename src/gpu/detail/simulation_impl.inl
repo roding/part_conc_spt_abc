@@ -408,6 +408,7 @@ output::Output SimulationT<tArgs...>::output()
 	ret.converged         = mConverged;
 	ret.epsilon           = mEpsilon;
 
+	//TODO: output column major (or just differently from this)
 	ret.m.assign( mM.lbegin(), mM.lend() );
 	ret.c.assign( mC.lbegin(), mC.lend() );
 	ret.az.assign( mAz.lbegin(), mAz.lend() );
@@ -433,7 +434,7 @@ template< class... tArgs > inline
 void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aRng, SimulationConfig const& aCfg )
 {
 	if( mComponentCount != aPar.componentCount )
-		detail::throw_logic_error_( "SimlationT: component count doesn't match the component count of the input parameters" );
+		detail::throw_logic_error_( "SimulationT: component count doesn't match the component count of the input parameters" );
 		
 	if( kModel != aPar.model )
 		detail::throw_logic_error_( "SimulationT: fixed model parameter doesn't match model specified by the input parameters" );
