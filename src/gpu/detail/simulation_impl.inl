@@ -2,6 +2,7 @@
 #include <numeric>
 #include <utility>
 #include <iterator>
+#include <typeinfo>
 #include <algorithm>
 
 #include <cmath>
@@ -430,10 +431,10 @@ output::Output SimulationT<tArgs...>::output()
 	ret.dist.assign( mDist.begin(), mDist.end() );
 	ret.w.assign( mW.begin(), mW.end() );
 
-	ret.meta["simulator"] = "gpu";
-	ret.meta["iterations"] = tfm::format( "%u", mInfoIterations );
-	ret.meta["simulations"] = tfm::format( "%u", mInfoSimulations );
-	ret.meta["gpus"] = tfm::format( "%u", mDevGlobal.size() );
+	ret.meta["simulator"]    = "gpu";
+	ret.meta["iterations"]   = tfm::format( "%u", mInfoIterations );
+	ret.meta["simulations"]  = tfm::format( "%u", mInfoSimulations );
+	ret.meta["gpus"]         = tfm::format( "%u", mDevGlobal.size() );
 
 	for( std::size_t i = 0; i < mDevGlobal.size(); ++i )
 	{
@@ -441,6 +442,9 @@ output::Output SimulationT<tArgs...>::output()
 		ret.meta[tfm::format( "gpu%d_id", i )] = tfm::format( "%d", dev.device );
 		ret.meta[tfm::format( "gpu%d_queues", i )] = tfm::format( "%d", dev.queueCount );
 	}
+
+	ret.meta["hostScalarType"]    = typeid(HScalar).name();
+	ret.meta["deviceScalarType"]  = typeid(DScalar).name();
 
 	return ret;
 }
