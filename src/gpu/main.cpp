@@ -152,17 +152,17 @@ namespace
 	void help_( FILE* aStream, char const* aSelfName )
 	{
 		static char const* const kFlagText = R"(Flags:
-  --input, -i <file>        : select input XML file
-  --data, -d <file>        : override data XML file location(*)
-  --output, -o <file>      : override output XML file destination(*)
+  --input, -i 𝒇𝒊𝒍𝒆         : select input XML file
+  --data, -d 𝒇𝒊𝒍𝒆          : override data XML file location(*)
+  --output, -o 𝒇𝒊𝒍𝒆        : override output XML file destination(*)
 
-  --gpus, -g <gpuspec>     : select GPUs and queues
+  --gpus, -g 𝒈𝒑𝒖𝒔𝒑𝒆𝒄       : select GPUs and queues
 
   --host-scalar, -hs {f,d} : select host code scalar type (𝗳loat or 𝗱ouble)
-  --dev-scalar, -ds {f,d}  : select host code scalar type (𝗳loat or 𝗱ouble)
+  --dev-scalar, -ds {f,d}  : select device code scalar type (𝗳loat or 𝗱ouble)
 
-  --max-steps, -S <N>      : abort after <N> steps
-  --fixed-seed, -F <N>     : use a fixed seed <N> for random number generation
+  --max-steps, -S 𝒏        : abort after 𝒏 steps
+  --fixed-seed, -F 𝒏       : use a fixed seed 𝒏 for random number generation
 
   --quiet, -q              : decrease verbosity
   --verbose, -v            : increase verbosity (repeat for further increases)
@@ -172,7 +172,7 @@ namespace
 )";
 
 		static char const* const kNotesText = R"(
-<gpuspec> is a comma separated list of GPU IDs (as shown by --list-devices).
+𝒈𝒑𝒖𝒔𝒑𝒆𝒄 is a comma separated list of GPU IDs (as shown by --list-devices).
 Optionally, a queue count can be added to each GPU ID by appending a "/N".
 For example "-g 1/5,2" would select GPUs 1 and 2, with 5 queues on GPU 1."
 

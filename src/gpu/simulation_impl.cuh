@@ -3,6 +3,10 @@
  *
  * Provides SimulationT<>, a template with god-object-like ambitions. It
  * implements running a complete estimation on selected GPUs.
+ *
+ * TODO:
+ *   - rename CountType to DeviceCount; probably don't need a HostCount...
+ *   - normal distribution via sim_arg ?
  */
 /*-***************************************************************** -}}}1- */
 
@@ -69,8 +73,6 @@ namespace sim_arg
 
 	
 	/** Aspect: count type
-	 * 
-	 * TODO: HostCount + DeviceCount
 	 *
 	 * Type used for counting the number of trials, and in the histogram. The
 	 * values are integral and larger than or equal to zero.
@@ -80,19 +82,23 @@ namespace sim_arg
 
 	/** Aspect: host random engine type
      *
-	 * TODO: DeviceRandomEngine, Device...
-	 *
-	 * High-quality host-side random engine type. TODO-simulation engine types.
+	 * Host random number engine.
 	 */
 	template< class tRng >
 	using HostRng = named::TypeArgument< struct HostRng_, std::mt19937, tRng >;
+	/** Aspect: device random engine type
+	 *
+	 * Device random number engine
+	 */
+	template< class tRng >
+	using DeviceRng = named::TypeArgument< struct DevRng_, curng::EngineLCG48_32, tRng >;
 
 	/** Aspect: component count
 	 *
 	 * Component count. By default uses a dynamic value, derived from the input
 	 * parameters. Can optionally be fixed to a static value with `StaticValue`.
 	 *
-	 * Static values one and two are further optimized (TODO).
+	 * Static values one and two are further optimized.
 	 */
 	template< class tCCount >
 	using ComponentCount = named::TypeArgument< struct CompCount_, DynamicValue<unsigned>, tCCount >;
@@ -117,10 +123,12 @@ class SimulationT final : public Simulation
 		using DScalar = named::get_type_t<sim_arg::DeviceScalar, tArgs...>;
 
 		using Count = named::get_type_t<sim_arg::CountType, tArgs...>;
+
+		using DevRng = named::get_type_t<sim_arg::DeviceRng, tArgs...>;
 		using HostRng = named::get_type_t<sim_arg::HostRng, tArgs...>;
 
-		using DeviceRandom = Random< /*TODO: proper selection via tArgs*/
-			curng::EngineLCG48_32,
+		using DeviceRandom = Random<
+			DevRng,
 			DScalar,
 			curng::NormalBoxMuller,
 			curng::UniformReal
@@ -212,7 +220,6 @@ class SimulationT final : public Simulation
 			cusim::Histogram2D<Count> reference;
 
 			Pool<Count> particleCountPool;
-			//Pool<Scalar> resultDistancePool;
 			MappedPool<DScalar> resultDistancePool;
 
 			Pool<DScalar> halfAzPool; //XXX-NOTE: only needed if ZCount_ is dynamic

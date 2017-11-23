@@ -30,8 +30,7 @@ enum class ESimCount
 
 struct SimulationConfig
 {
-	//ESimScalar scalarType = ESimScalar::floatType;
-	ESimScalar hostScalarType = ESimScalar::floatType; //XXX
+	ESimScalar hostScalarType = ESimScalar::doubleType;
 	ESimScalar deviceScalarType = ESimScalar::floatType;
 	
 	ESimCount countType = ESimCount::uint32;
