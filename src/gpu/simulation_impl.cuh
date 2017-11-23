@@ -45,14 +45,32 @@
 
 namespace sim_arg
 {
-	/** Aspect: scalar type
+	/** Aspect: Simulation model
 	 *
-	 * Scalar type used for floating-point computations. May be either float or
-	 * double (and possibly long double).
+	 * Statically determined simulation model.
+	 */
+	template< EModel tModel >
+	using Model = named::ValueArgument< struct Model_, EModel, EModel::discreteFixedZ, tModel >;
+
+	/** Aspect: host scalar type
+	 *
+	 * Scalar type used for floating-point computations on the host. May be 
+	 * either float or double (and possibly long double).
 	 */
 	template< typename tType > 
-	using ScalarType = named::TypeArgument< struct ScalarType_, float, tType >;
+	using HostScalar = named::TypeArgument< struct HostScalar_, float, tType >;
+	/** Aspect: device scalar type
+	 *
+	 * Scalar type used for floating-point computations on the device. May be 
+	 * either float or double (and possibly long double).
+	 */
+	template< typename tType > 
+	using DeviceScalar = named::TypeArgument< struct DeviceScalar_, float, tType >;
+
+	
 	/** Aspect: count type
+	 * 
+	 * TODO: HostCount + DeviceCount
 	 *
 	 * Type used for counting the number of trials, and in the histogram. The
 	 * values are integral and larger than or equal to zero.
@@ -61,6 +79,8 @@ namespace sim_arg
 	using CountType = named::TypeArgument< struct CountType_, std::uint32_t, tType >;
 
 	/** Aspect: host random engine type
+     *
+	 * TODO: DeviceRandomEngine, Device...
 	 *
 	 * High-quality host-side random engine type. TODO-simulation engine types.
 	 */
@@ -83,13 +103,6 @@ namespace sim_arg
 	 */
 	template< class tMatLayout >
 	using MatrixLayout = named::TypeArgument< struct MatLayout_, aspect::MatrixRowMajor, tMatLayout >;
-	
-	/** Aspect: Simulation model
-	 *
-	 * Statically determined simulation model.
-	 */
-	template< EModel tModel >
-	using Model = named::ValueArgument< struct Model_, EModel, EModel::discreteFixedZ, tModel >;
 };
 
 
@@ -98,18 +111,20 @@ template< class... tArgs >
 class SimulationT final : public Simulation
 {
 	public:
-		using Scalar = named::get_type_t<sim_arg::ScalarType, tArgs...>;
+		static constexpr EModel kModel = named::get_value<EModel, sim_arg::Model, tArgs...>::value;
+
+		using HScalar = named::get_type_t<sim_arg::HostScalar, tArgs...>;
+		using DScalar = named::get_type_t<sim_arg::DeviceScalar, tArgs...>;
+
 		using Count = named::get_type_t<sim_arg::CountType, tArgs...>;
 		using HostRng = named::get_type_t<sim_arg::HostRng, tArgs...>;
 
 		using DeviceRandom = Random< /*TODO: proper selection via tArgs*/
 			curng::EngineLCG48_32,
-			Scalar,
+			DScalar,
 			curng::NormalBoxMuller,
 			curng::UniformReal
 		>;
-
-		static constexpr EModel kModel = named::get_value<EModel, sim_arg::Model, tArgs...>::value;
 
 		struct SystemSetup;
 		struct SystemRunData;
@@ -155,25 +170,25 @@ class SimulationT final : public Simulation
 		{
 			SimulationT* parent;
 
-			CVec_<Scalar> mBis, cBis;
-			ZVec_<Scalar> azBis;
-			Scalar distBis;
+			CVec_<HScalar> mBis, cBis;
+			ZVec_<HScalar> azBis;
+			HScalar distBis;
 
 			CVec_<std::size_t> indices;
-			CVec_<Scalar> mTmp, cTmp;
-			ZVec_<Scalar> azTmp;
+			CVec_<HScalar> mTmp, cTmp;
+			ZVec_<HScalar> azTmp;
 
-			Scalar* halfAz;
-			Scalar* preCompProb;
-			Scalar* randWalkStddev;
+			DScalar* halfAz;
+			DScalar* preCompProb;
+			DScalar* randWalkStddev;
 
 			std::vector<Count> particleCounts;
 
 			int device; //TODO: split this off elsewhere???
 
 			SystemRunData sampleRunData;
-			Scalar* devResultDistance;
-			Scalar* hostResultDistance;
+			DScalar* devResultDistance;
+			DScalar* hostResultDistance;
 
 #			if SIM_KERNEL_TIMINGS
 			cudaEvent_t simStart, simStop;
@@ -198,11 +213,11 @@ class SimulationT final : public Simulation
 
 			Pool<Count> particleCountPool;
 			//Pool<Scalar> resultDistancePool;
-			MappedPool<Scalar> resultDistancePool;
+			MappedPool<DScalar> resultDistancePool;
 
-			Pool<Scalar> halfAzPool; //XXX-NOTE: only needed if ZCount_ is dynamic
-			Pool<Scalar> preCompProbPool; //XXX-NOTE: only needed if CCount_ is dynamic
-			Pool<Scalar> randWalkStddevPool; //XXX-NOTE: only needed if CCount_ is dyn.
+			Pool<DScalar> halfAzPool; //XXX-NOTE: only needed if ZCount_ is dynamic
+			Pool<DScalar> preCompProbPool; //XXX-NOTE: only needed if CCount_ is dynamic
+			Pool<DScalar> randWalkStddevPool; //XXX-NOTE: only needed if CCount_ is dyn.
 
 			dim3 blocks, threads;
 			std::size_t totalThreads;
@@ -233,7 +248,7 @@ class SimulationT final : public Simulation
 		 */
 		struct SystemSetup
 		{
-			using value_type = Scalar;
+			using value_type = DScalar;
 			using count_type = Count;
 
 			using CompCount = CCount_;
@@ -256,7 +271,7 @@ class SimulationT final : public Simulation
 
 		struct SystemRunData
 		{
-			using value_type = Scalar;
+			using value_type = DScalar;
 			using count_type = Count;
 			
 			count_type const* frames; //TODO: could be SystemSetup. :-/
@@ -271,7 +286,7 @@ class SimulationT final : public Simulation
 		void prepare_( input::Parameters const&, HostRng&, SimulationConfig const& );
 
 		void compute_tau_();
-		auto compute_initial_gamma_( HostRng& ) -> Scalar;
+		auto compute_initial_gamma_( HostRng& ) -> HScalar;
 
 		void weighting_scheme_pmc_standard_();
 		void weighting_scheme_inv_dist_sq_();
@@ -296,27 +311,27 @@ class SimulationT final : public Simulation
 
 		std::size_t mKMax;
 		std::size_t mDEBinCount;
-		Scalar mDEBinWidth;
-		Scalar mVolumeFactor;
+		HScalar mDEBinWidth;
+		HScalar mVolumeFactor;
 
-		CAMat_<Scalar> mM, mC;
-		ZAMat_<Scalar> mAz;
-		AVec_<Scalar> mDist, mW, mPreW;
-		CVec_<Scalar> mTauM, mTauC;
-		ZVec_<Scalar> mTauAz;
+		CAMat_<HScalar> mM, mC;
+		ZAMat_<HScalar> mAz;
+		AVec_<HScalar> mDist, mW, mPreW;
+		CVec_<HScalar> mTauM, mTauC;
+		ZVec_<HScalar> mTauAz;
 		
-		AVec_<Scalar> mWStar; //TODO: mWStar only if pmcStandard;
+		AVec_<HScalar> mWStar; //TODO: mWStar only if pmcStandard;
 
 		WeightingFun_ mWeightingSchemeFn;
 
-		Scalar mDeltaT;
-		Scalar mGamma, mDeltaGamma;
+		HScalar mDeltaT;
+		HScalar mGamma, mDeltaGamma;
 
-		Scalar mAvgTrialCount;
+		HScalar mAvgTrialCount;
 
-		Scalar mLowerM, mUpperM;
-		Scalar mLowerC, mUpperC;
-		Scalar mLowerAz, mUpperAz;
+		HScalar mLowerM, mUpperM;
+		HScalar mLowerC, mUpperC;
+		HScalar mLowerAz, mUpperAz;
 
 		AVec_<Sample_> mSamples;
 		Queue<Result_> mResults;

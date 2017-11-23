@@ -28,69 +28,80 @@ namespace
 	template< unsigned tVal >
 	using SVal_ = StaticValue<unsigned,tVal>;
 	
-	template< EModel tModel, class tCCount, typename tScalar, typename tCount >
+	template< class... tFixed >
 	SimPtr_ finalize_( SimHostRNG& aRng, Param_ aPar, Conf_ aCfg )
 	{
 		return make_unique<SimulationT<
-			sim_arg::ScalarType<tScalar>,
-			sim_arg::CountType<tCount>,
-			sim_arg::ComponentCount<tCCount>,
-			sim_arg::Model<tModel>,
+			tFixed...,
 			sim_arg::HostRng<SimHostRNG>
 		>>( aPar, aRng, aCfg );
 	}
 
-	template< EModel tModel, class tCCount, typename tScalar >
-	SimPtr_ fix_ctype_( SimHostRNG& aRng, Param_ aPar, Conf_ aCfg )
+	template< class... tFixed >
+	SimPtr_ fix_count_( SimHostRNG& aRng, Param_ aPar, Conf_ aCfg )
 	{
 		switch( aCfg.countType )
 		{
 			case ESimCount::uint32: 
-				return finalize_<tModel,tCCount,float,std::uint32_t>(aRng,aPar,aCfg);
+				return finalize_<tFixed..., sim_arg::CountType<std::uint32_t>>(aRng,aPar,aCfg);
 		}
 
 		throw std::runtime_error( tfm::format( "Count type ESimCount(%ld) not handled", long(aCfg.countType) ) );
 	}
 
-	template< EModel tModel, class tCCount >
-	SimPtr_ fix_count_( SimHostRNG& aRng, Param_ aPar, Conf_ aCfg )
+	template< class... tFixed >
+	SimPtr_ fix_dscalar_( SimHostRNG& aRng, Param_ aPar, Conf_ aCfg )
 	{
-		switch( aCfg.scalarType )
+		switch( aCfg.deviceScalarType )
 		{
 			case ESimScalar::floatType: 
-				return fix_ctype_<tModel,tCCount,float>(aRng,aPar,aCfg);
+				return fix_count_< tFixed..., sim_arg::DeviceScalar<float> >(aRng,aPar,aCfg);
 			case ESimScalar::doubleType:
-				return fix_ctype_<tModel,tCCount,double>(aRng,aPar,aCfg);
+				return fix_count_< tFixed..., sim_arg::DeviceScalar<double> >(aRng,aPar,aCfg);
 		}
 
-		throw std::runtime_error( tfm::format( "Scalar type ESimScalar(%ld) not handled", long(aCfg.scalarType) ) );
+		throw std::runtime_error( tfm::format( "Device scalar type: scalar type ESimScalar(%ld) not supported", long(aCfg.deviceScalarType) ) );
 	}
-	template< EModel tModel >
-	SimPtr_ fix_model_( SimHostRNG& aRng, Param_ aPar, Conf_ aCfg )
+	template< class... tFixed >
+	SimPtr_ fix_hscalar_( SimHostRNG& aRng, Param_ aPar, Conf_ aCfg )
+	{
+		switch( aCfg.hostScalarType )
+		{
+			case ESimScalar::floatType: 
+				return fix_dscalar_< tFixed..., sim_arg::HostScalar<float> >(aRng,aPar,aCfg);
+			case ESimScalar::doubleType:
+				return fix_dscalar_< tFixed..., sim_arg::HostScalar<double> >(aRng,aPar,aCfg);
+		}
+
+		throw std::runtime_error( tfm::format( "Host scalar type: scalar type ESimScalar(%ld) not supported", long(aCfg.hostScalarType) ) );
+	}
+
+	template< class... tFixed >
+	SimPtr_ fix_ccount_( SimHostRNG& aRng, Param_ aPar, Conf_ aCfg )
 	{
 		switch( aPar.componentCount )
 		{
-			case 1: return fix_count_<tModel, SVal_<1>>( aRng, aPar, aCfg );
-			case 2: return fix_count_<tModel, SVal_<2>>( aRng, aPar, aCfg );
+			case 1: return fix_hscalar_< tFixed..., sim_arg::ComponentCount<SVal_<1>> >( aRng, aPar, aCfg );
+			case 2: return fix_hscalar_< tFixed..., sim_arg::ComponentCount<SVal_<2>> >( aRng, aPar, aCfg );
 		}
 		
-		return fix_count_<tModel, DVal_>( aRng, aPar, aCfg );
+		return fix_hscalar_<tFixed..., sim_arg::ComponentCount<DVal_> >( aRng, aPar, aCfg );
 	}
 }
 
 std::unique_ptr<Simulation> make_simulation( SimHostRNG& aRng, input::Parameters const& aPar, SimulationConfig const& aCfg )
 {
-	// Fix the distribution class
+	// Fix the EModel
 	switch( aPar.model )
 	{
 		case EModel::discreteFixedZ: 
-			return fix_model_<EModel::discreteFixedZ>( aRng, aPar, aCfg );
+			return fix_ccount_< sim_arg::Model<EModel::discreteFixedZ> >( aRng, aPar, aCfg );
 
 		case EModel::discreteVariableZ: 
-			return fix_model_<EModel::discreteVariableZ>( aRng, aPar, aCfg );
+			return fix_ccount_< sim_arg::Model<EModel::discreteVariableZ> >( aRng, aPar, aCfg );
 	}
 
-	throw std::runtime_error( tfm::format( "make_simulation(): Model %s not handled\n", to_string(aPar.model) ) );
+	throw std::runtime_error( tfm::format( "make_simulation(): EModel %s not handled\n", to_string(aPar.model) ) );
 }
 
 

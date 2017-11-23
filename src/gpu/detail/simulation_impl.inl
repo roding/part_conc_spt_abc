@@ -121,7 +121,7 @@ SimulationT<tArgs...>::SimulationT( input::Parameters const& aPar, HostRng& aRng
 	, mAz( mZCount, mAbcCount )
 	, mConverged(false)
 {
-	resize( mDist, mAbcCount, Scalar(0) );
+	resize( mDist, mAbcCount, HScalar(0) );
 	resize( mW, mAbcCount );
 	resize( mPreW, mAbcCount );
 	resize( mWStar, mAbcCount );
@@ -188,10 +188,10 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 	AVec_<Count> trials;
 	resize( trials, mAbcCount );
 
-	Scalar infoLambdaAcc, infoLambdaCount;
+	HScalar infoLambdaAcc, infoLambdaCount;
 	Clock_::time_point infoIterStart, infoIterEnd;
 
-	if( mGamma < Scalar(0) )
+	if( mGamma < HScalar(0) )
 	{
 		if( mVerbosity >= 0 ) std::printf( "Compute intial γ...\n" );
 		mGamma = compute_initial_gamma_( aRng );
@@ -218,11 +218,11 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 		std::iota( waitingSamples.begin(), waitingSamples.end(), 0 );
 
 		for( auto& sample : mSamples )
-			sample.distBis  = std::numeric_limits<Scalar>::infinity();
+			sample.distBis  = std::numeric_limits<HScalar>::infinity();
 
 		
 		infoIterStart = Clock_::now();
-		infoLambdaAcc = infoLambdaCount = Scalar(0);
+		infoLambdaAcc = infoLambdaCount = HScalar(0);
 
 #		if SIM_KERNEL_TIMINGS
 		timeSimCount = timeDistCount = timeTotalCount = 0.0f;
@@ -236,7 +236,7 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 			{
 				auto& sample = mSamples[sidx];
 
-				if( sample.distBis > mGamma && detail::mean_<Scalar>( trials.begin(), trials.end() ) < mAvgTrialCount )
+				if( sample.distBis > mGamma && detail::mean_<HScalar>( trials.begin(), trials.end() ) < mAvgTrialCount )
 				{
 					//XXX-TODO: move this into a separate function (sample_update_()?)
 					auto const idx = detail::wrand_idx_( aRng, mPreW.begin(), mPreW.end() );
@@ -281,12 +281,12 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 					}
 
 
-					Scalar const csum = std::accumulate( sample.cBis.begin(), sample.cBis.end(), Scalar(0) );
-					Scalar const lambda = csum * mVolumeFactor;
+					HScalar const csum = std::accumulate( sample.cBis.begin(), sample.cBis.end(), HScalar(0) );
+					HScalar const lambda = csum * mVolumeFactor;
 					std::poisson_distribution<Count> poisson(lambda);
 
 					infoLambdaAcc += lambda;
-					infoLambdaCount += Scalar(1);
+					infoLambdaCount += HScalar(1);
 
 					assert( sample.particleCounts.size() == mSystemSetup.jobCount );
 					for( auto& count : sample.particleCounts )
@@ -295,16 +295,16 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 
 					std::copy_n( sample.azBis.data(), mZCount, sample.halfAz );
 
-					Scalar acc = Scalar(0);
+					HScalar acc = HScalar(0);
 					for( std::size_t i = 0; i < mComponentCount; ++i )
 					{
 						acc += sample.cBis[i] / csum;
-						sample.preCompProb[i] = acc;
+						sample.preCompProb[i] = DScalar(acc);
 					}
 
 					for( std::size_t i = 0; i < mComponentCount; ++i )
 					{
-						sample.randWalkStddev[i] = std::sqrt( Scalar(2)*sample.mBis[i]*mDeltaT );
+						sample.randWalkStddev[i] = DScalar(std::sqrt( HScalar(2)*sample.mBis[i]*mDeltaT ));
 					}
 
 					job_queue_( sidx, sample );
@@ -330,7 +330,7 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 
 					CUDA_CHECKED it->error;
 
-					sample.distBis = std::log10( *sample.hostResultDistance );
+					sample.distBis = std::log10( HScalar(*sample.hostResultDistance) );
 
 					sample_dev_clean_( sample, dev );
 
@@ -397,7 +397,7 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 		compute_tau_();
 
 		// finished?
-		if( detail::mean_<Scalar>( trials.begin(), trials.end() ) >= mAvgTrialCount )
+		if( detail::mean_<HScalar>( trials.begin(), trials.end() ) >= mAvgTrialCount )
 		{
 			mConverged = true;
 		}
@@ -459,34 +459,34 @@ void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aR
 	mKMax = 1 + *std::max_element(frameCounts.begin(), frameCounts.end() );
 
 	mDEBinCount = aPar.deBinCount;
-	mDEBinWidth = Scalar(aPar.de.upper / aPar.deBinCount);
+	mDEBinWidth = HScalar(aPar.de.upper / aPar.deBinCount);
 
-	mVolumeFactor = Scalar(aPar.Lx*aPar.Ly*aPar.Lz / Scalar(1e12));
+	mVolumeFactor = HScalar(aPar.Lx*aPar.Ly*aPar.Lz / HScalar(1e12));
 
-	mLowerM = Scalar(aPar.m.lower);    mUpperM = Scalar(aPar.m.upper);
-	mLowerC = Scalar(aPar.c.lower);    mUpperC = Scalar(aPar.c.upper);
-	mLowerAz = Scalar(aPar.az.lower);  mUpperAz = Scalar(aPar.az.upper);
+	mLowerM = HScalar(aPar.m.lower);    mUpperM = HScalar(aPar.m.upper);
+	mLowerC = HScalar(aPar.c.lower);    mUpperC = HScalar(aPar.c.upper);
+	mLowerAz = HScalar(aPar.az.lower);  mUpperAz = HScalar(aPar.az.upper);
 
 
-	std::uniform_real_distribution<Scalar> mDist( mLowerM, mUpperM );
+	std::uniform_real_distribution<HScalar> mDist( mLowerM, mUpperM );
 	std::generate( mM.lbegin(), mM.lend(), [&] { return mDist(aRng); } );
 
-	std::uniform_real_distribution<Scalar> cDist( mLowerC, mUpperC );
+	std::uniform_real_distribution<HScalar> cDist( mLowerC, mUpperC );
 	std::generate( mC.lbegin(), mC.lend(), [&] { return cDist(aRng); } );
 
-	std::uniform_real_distribution<Scalar> azDist( mLowerAz, mUpperAz );
+	std::uniform_real_distribution<HScalar> azDist( mLowerAz, mUpperAz );
 	std::generate( mAz.lbegin(), mAz.lend(), [&] { return azDist(aRng); } );
 
 
-	std::fill( mW.begin(), mW.end(), Scalar(1)/mAbcCount );
+	std::fill( mW.begin(), mW.end(), HScalar(1)/mAbcCount );
 	std::partial_sum( mW.begin(), mW.end(), mPreW.begin() );
 
 	compute_tau_();
 
-	mGamma = aPar.adaptiveGamma ? Scalar(-1) : aPar.gamma;
-	mDeltaT = Scalar(aPar.deltaT);
+	mGamma = aPar.adaptiveGamma ? HScalar(-1) : aPar.gamma;
+	mDeltaT = HScalar(aPar.deltaT);
 	mDeltaGamma = aPar.deltaGamma;
-	mAvgTrialCount = Scalar(aPar.avgTrialCount);
+	mAvgTrialCount = HScalar(aPar.avgTrialCount);
 
 	mMaxIter = aCfg.maxIter;
 	mVerbosity = aCfg.verbosity;
@@ -510,14 +510,14 @@ void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aR
 	mSystemSetup.jobCount = int_cast<Count>(aPar.frameCounts.size());
 	mSystemSetup.kmin = int_cast<Count>(aPar.kmin);
 
-	mSystemSetup.deltaT = Scalar(aPar.deltaT);
+	mSystemSetup.deltaT = DScalar(aPar.deltaT);
 
-	mSystemSetup.halfLx = 0.5f * Scalar(aPar.Lx);
-	mSystemSetup.halfLy = 0.5f * Scalar(aPar.Ly);
-	mSystemSetup.halfLz = 0.5f * Scalar(aPar.Lz);
+	mSystemSetup.halfLx = DScalar(0.5) * DScalar(aPar.Lx);
+	mSystemSetup.halfLy = DScalar(0.5) * DScalar(aPar.Ly);
+	mSystemSetup.halfLz = DScalar(0.5) * DScalar(aPar.Lz);
 
-	mSystemSetup.halfAx = 0.5f * Scalar(aPar.ax);
-	mSystemSetup.halfAy = 0.5f * Scalar(aPar.ay);
+	mSystemSetup.halfAx = DScalar(0.5) * DScalar(aPar.ax);
+	mSystemSetup.halfAy = DScalar(0.5) * DScalar(aPar.ay);
 
 	// initialize sample
 	for( auto& sample : mSamples )
@@ -605,10 +605,10 @@ void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aR
 			queueCount,
 			cusim::Histogram2D<Count>( mKMax, mDEBinCount, reference.data() ),
 			Pool<Count>( jobCount ),
-			MappedPool<Scalar>( 1 ),
-			Pool<Scalar>( mZCount ),
-			Pool<Scalar>( mComponentCount ),
-			Pool<Scalar>( mComponentCount ),
+			MappedPool<DScalar>( 1 ),
+			Pool<DScalar>( mZCount ),
+			Pool<DScalar>( mComponentCount ),
+			Pool<DScalar>( mComponentCount ),
 			dim3( b, 1, 1 ),
 			dim3( t, 1, 1 ),
 			b * t,
@@ -674,7 +674,7 @@ void SimulationT<tArgs...>::compute_tau_()
 	}
 }
 template< typename... tArgs > inline
-auto SimulationT<tArgs...>::compute_initial_gamma_( HostRng& aRng ) -> Scalar
+auto SimulationT<tArgs...>::compute_initial_gamma_( HostRng& aRng ) -> HScalar
 {
 	// XXX-FIXME-quick hack with a supersized side of copy-pasta
 	auto copyOfSamples = mSamples;
@@ -695,8 +695,8 @@ auto SimulationT<tArgs...>::compute_initial_gamma_( HostRng& aRng ) -> Scalar
 			sample.azBis[i] = mAz(i,sidx);
 		}
 
-		Scalar const csum = std::accumulate( sample.cBis.begin(), sample.cBis.end(), Scalar(0) );
-		Scalar const lambda = csum * mVolumeFactor;
+		HScalar const csum = std::accumulate( sample.cBis.begin(), sample.cBis.end(), HScalar(0) );
+		HScalar const lambda = csum * mVolumeFactor;
 		std::poisson_distribution<Count> poisson(lambda);
 
 		assert( sample.particleCounts.size() == mSystemSetup.jobCount );
@@ -706,16 +706,16 @@ auto SimulationT<tArgs...>::compute_initial_gamma_( HostRng& aRng ) -> Scalar
 
 		std::copy_n( sample.azBis.data(), mZCount, sample.halfAz );
 
-		Scalar acc = Scalar(0);
+		HScalar acc = HScalar(0);
 		for( std::size_t i = 0; i < mComponentCount; ++i )
 		{
 			acc += sample.cBis[i] / csum;
-			sample.preCompProb[i] = acc;
+			sample.preCompProb[i] = DScalar(acc);
 		}
 
 		for( std::size_t i = 0; i < mComponentCount; ++i )
 		{
-			sample.randWalkStddev[i] = std::sqrt( Scalar(2)*sample.mBis[i]*mDeltaT );
+			sample.randWalkStddev[i] = DScalar(std::sqrt( HScalar(2)*sample.mBis[i]*mDeltaT ));
 		}
 
 		job_queue_( sidx, sample );
@@ -742,11 +742,11 @@ auto SimulationT<tArgs...>::compute_initial_gamma_( HostRng& aRng ) -> Scalar
 	}
 
 	// find median (log-10) distance
-	AVec_<Scalar> distances;
+	AVec_<HScalar> distances;
 	resize( distances, mAbcCount );
 
 	for( std::size_t i = 0; i < mAbcCount; ++i )
-		distances[i] = copyOfSamples[i].distBis;
+		distances[i] = HScalar(copyOfSamples[i].distBis);
 
 	std::size_t const n = mAbcCount / 2;
 	std::nth_element( distances.begin(), distances.begin()+n, distances.end() );
@@ -757,27 +757,27 @@ auto SimulationT<tArgs...>::compute_initial_gamma_( HostRng& aRng ) -> Scalar
 template< typename... tArgs > inline
 void SimulationT<tArgs...>::weighting_scheme_pmc_standard_()
 {
-	Scalar wsum = Scalar(0);
+	HScalar wsum = HScalar(0);
 	for( std::size_t abc = 0; abc < mAbcCount; ++abc )
 	{
-		mWStar[abc] = Scalar(0);
+		mWStar[abc] = HScalar(0);
 		for( std::size_t i = 0; i < mAbcCount; ++i )
 		{
-			Scalar term = Scalar(1);
+			HScalar term = HScalar(1);
 			for( std::size_t c = 0; c < mComponentCount; ++c )
 			{
-				term *= detail::normpdf_( mSamples[abc].mBis[c] - mM(c,i), Scalar(0), mTauM[c] );
-				term *= detail::normpdf_( mSamples[abc].cBis[c] - mC(c,i), Scalar(0), mTauC[c] );
+				term *= detail::normpdf_( mSamples[abc].mBis[c] - mM(c,i), HScalar(0), mTauM[c] );
+				term *= detail::normpdf_( mSamples[abc].cBis[c] - mC(c,i), HScalar(0), mTauC[c] );
 			}
 			for( std::size_t z = 0; z < mZCount; ++z )
 			{
-				term *= detail::normpdf_( mSamples[abc].azBis[z] - mAz(z,i), Scalar(0), mTauAz[z] );
+				term *= detail::normpdf_( mSamples[abc].azBis[z] - mAz(z,i), HScalar(0), mTauAz[z] );
 			}
 
 			mWStar[abc] += mW[abc] * term;
 		}
 
-		mWStar[abc] = Scalar(1) / mWStar[abc];
+		mWStar[abc] = HScalar(1) / mWStar[abc];
 		wsum += mWStar[abc];
 	}
 
@@ -787,11 +787,11 @@ void SimulationT<tArgs...>::weighting_scheme_pmc_standard_()
 template< typename... tArgs > inline
 void SimulationT<tArgs...>::weighting_scheme_inv_dist_sq_()
 {
-	Scalar wsum = Scalar(0);
+	HScalar wsum = HScalar(0);
 	for( std::size_t i = 0; i < mAbcCount; ++i )
 	{
 		auto const& sample = mSamples[i];
-		auto const w = Scalar(1) / (sample.distBis*sample.distBis);
+		auto const w = HScalar(1) / (sample.distBis*sample.distBis);
 
 		mW[i] = w;
 		wsum += w;
@@ -825,7 +825,7 @@ void SimulationT<tArgs...>::job_queue_( std::size_t, Sample_& aSample )
 		cusim::K_simulate_system<<<dev.blocks,dev.threads,0,queue.stream>>>(
 			mSystemSetup,
 			aSample.sampleRunData,
-			cusim::HistogramRecorder<Count,Scalar>(queue.result,mDEBinWidth),
+			cusim::HistogramRecorder<Count,DScalar>(queue.result,mDEBinWidth),
 			queue.randomState
 		);
 
@@ -933,15 +933,15 @@ void SimulationT<tArgs...>::sample_dev_clean_( Sample_& aSample, CudaDevGlobal_&
 
 	clean_gpu_cache(
 		aSample.sampleRunData.halfAz,
-		[&aDev] (Scalar* aPtr) { aDev.halfAzPool.free( aPtr ); }
+		[&aDev] (DScalar* aPtr) { aDev.halfAzPool.free( aPtr ); }
 	);
 	clean_gpu_cache(
 		aSample.sampleRunData.preCompProb,
-		[&aDev] (Scalar* aPtr) { aDev.preCompProbPool.free( aPtr ); }
+		[&aDev] (DScalar* aPtr) { aDev.preCompProbPool.free( aPtr ); }
 	);
 	clean_gpu_cache(
 		aSample.sampleRunData.randWalkStddev,
-		[&aDev] (Scalar* aPtr) { aDev.randWalkStddevPool.free( aPtr ); }
+		[&aDev] (DScalar* aPtr) { aDev.randWalkStddevPool.free( aPtr ); }
 	);
 
 #	if SIM_KERNEL_TIMINGS

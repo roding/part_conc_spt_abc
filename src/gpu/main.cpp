@@ -28,21 +28,22 @@ namespace
 	
 	struct Config_
 	{
-		EAction_ action      = EAction_::compute;
+		EAction_ action         = EAction_::compute;
 		
-		std::string input    = "./input.xml";  // main input "input.xml"
+		std::string input       = "./input.xml";  // main input "input.xml"
 		std::string data;      // if set, overrides the data.xml path from the input
 		std::string output;    // if set, overrides the output.xml path from the input
 
-		ESimScalar scalar    = ESimScalar::floatType;
+		ESimScalar hostScalar   = ESimScalar::doubleType;
+		ESimScalar devScalar    = ESimScalar::floatType;
 
-		int verbosity        = 0;
+		int verbosity           = 0;
 		
-		std::string gpuSpec  = "1/30";
+		std::string gpuSpec     = "1/30";
 
-		std::size_t maxIter  = 0;
+		std::size_t maxIter     = 0;
 
-		bool fixedSeed       = false;
+		bool fixedSeed          = false;
 		std::uint32_t seedValue;
 
 		std::string self;
@@ -79,10 +80,11 @@ int main( int aArgc, char* aArgv[] ) try
 			);
 
 			SimulationConfig scfg;
-			scfg.scalarType  = cfg.scalar;
-			scfg.maxIter     = cfg.maxIter;
-			scfg.gpuSpec     = cfg.gpuSpec;
-			scfg.verbosity   = cfg.verbosity;
+			scfg.hostScalarType    = cfg.hostScalar;
+			scfg.deviceScalarType  = cfg.devScalar;
+			scfg.maxIter           = cfg.maxIter;
+			scfg.gpuSpec           = cfg.gpuSpec;
+			scfg.verbosity         = cfg.verbosity;
 
 			auto rng = [&] () {
 				if( cfg.fixedSeed )
@@ -150,21 +152,23 @@ namespace
 	void help_( FILE* aStream, char const* aSelfName )
 	{
 		static char const* const kFlagText = R"(Flags:
-  --input, -i <file>    : select input XML file
-  --data, -d <file>     : override data XML file location(*)
-  --output, -o <file>   : override output XML file destination(*)
+  --input, -i <file>        : select input XML file
+  --data, -d <file>        : override data XML file location(*)
+  --output, -o <file>      : override output XML file destination(*)
 
-  --gpus, -g <gpuspec>  : select GPUs and queues
-  --scalar, -s {f,d}    : select scalar type (𝗳loat or 𝗱ouble)
+  --gpus, -g <gpuspec>     : select GPUs and queues
 
-  --max-steps, -S <N>   : abort after <N> steps
-  --fixed-seed, -F <N>  : use a fixed seed <N> for random number generation
+  --host-scalar, -hs {f,d} : select host code scalar type (𝗳loat or 𝗱ouble)
+  --dev-scalar, -ds {f,d}  : select host code scalar type (𝗳loat or 𝗱ouble)
 
-  --quiet, -q           : decrease verbosity
-  --verbose, -v         : increase verbosity (repeat for further increases)
+  --max-steps, -S <N>      : abort after <N> steps
+  --fixed-seed, -F <N>     : use a fixed seed <N> for random number generation
+
+  --quiet, -q              : decrease verbosity
+  --verbose, -v            : increase verbosity (repeat for further increases)
   
-  --help, -h            : print this help and exit
-  --list-devices        : list compute devices and exit
+  --help, -h               : print this help and exit
+  --list-devices           : list compute devices and exit
 )";
 
 		static char const* const kNotesText = R"(
@@ -228,14 +232,26 @@ namespace
 			{}	
 			else if( arg_( "--gpus", "-g", cfg.gpuSpec ) )
 			{}
-			else if( flag_( "--scalar", "-s" ) )
+			else if( flag_( "--host-scalar", "-hs" ) )
 			{
 				if( arg+1 >= aArgc ) throw std::runtime_error( tfm::format( "Command line argument %s requires an additional argument f or d", aArgv[arg] ) );
 
 				if( 0 == strcmp( "f", aArgv[arg+1] ) ) 
-					cfg.scalar = ESimScalar::floatType;
+					cfg.hostScalar = ESimScalar::floatType;
 				else if( 0 == strcmp( "d", aArgv[arg+1] ) ) 
-					cfg.scalar = ESimScalar::doubleType;
+					cfg.hostScalar = ESimScalar::doubleType;
+				else throw std::runtime_error( tfm::format( "Scalar type must be either 'f' (float) or 'd' (double) and not '%s'", aArgv[arg+1] ) );
+
+				++arg;
+			}
+			else if( flag_( "--dev-scalar", "-ds" ) )
+			{
+				if( arg+1 >= aArgc ) throw std::runtime_error( tfm::format( "Command line argument %s requires an additional argument f or d", aArgv[arg] ) );
+
+				if( 0 == strcmp( "f", aArgv[arg+1] ) ) 
+					cfg.devScalar = ESimScalar::floatType;
+				else if( 0 == strcmp( "d", aArgv[arg+1] ) ) 
+					cfg.devScalar = ESimScalar::doubleType;
 				else throw std::runtime_error( tfm::format( "Scalar type must be either 'f' (float) or 'd' (double) and not '%s'", aArgv[arg+1] ) );
 
 				++arg;
