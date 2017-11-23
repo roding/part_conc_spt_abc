@@ -79,8 +79,8 @@ namespace detail
 	}
 
 	// mat2vec_()
-	template< typename tOut, class tMatrix > inline
-	std::vector<tOut> mat2vec_( tMatrix const& aMat )
+	template< typename tOut, class tMatrix, class tTransform > inline
+	std::vector<tOut> mat2vec_( tMatrix const& aMat, tTransform&& aTransform )
 	{
 		std::vector<tOut> ret;
 		ret.reserve( aMat.n() * aMat.m() );
@@ -89,10 +89,16 @@ namespace detail
 		{
 			auto const c = aMat.col( i );
 			for( auto x : c )
-				ret.push_back( x );
+				ret.push_back( aTransform(tOut(x)) );
 		}
 		
 		return ret;
+	}
+
+	template< typename tOut, class tMatrix > inline
+	std::vector<tOut> mat2vec_( tMatrix const& aMat )
+	{
+		return mat2vec_<tOut>( aMat, [] (tOut aX) { return aX; } );
 	}
 }
 
@@ -256,6 +262,11 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 					std::swap( sample.mTmp, sample.mBis );
 					std::swap( sample.cTmp, sample.cBis );
 
+					// convert from log-concentration to concentration
+					for( std::size_t i = 0; i < mComponentCount; ++i )
+						sample.powCBis[i] = std::pow( HScalar(10), sample.cBis[i] );
+					
+
 					//XXX- could be templated on ZCount
 					if( mZCount > 1 )
 					{
@@ -267,7 +278,7 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 					}
 
 
-					HScalar const csum = std::accumulate( sample.cBis.begin(), sample.cBis.end(), HScalar(0) );
+					HScalar const csum = std::accumulate( sample.powCBis.begin(), sample.powCBis.end(), HScalar(0) );
 					HScalar const lambda = csum * mVolumeFactor;
 					std::poisson_distribution<Count> poisson(lambda);
 
@@ -284,7 +295,7 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 					HScalar acc = HScalar(0);
 					for( std::size_t i = 0; i < mComponentCount; ++i )
 					{
-						acc += sample.cBis[i] / csum;
+						acc += sample.powCBis[i] / csum;
 						sample.preCompProb[i] = DScalar(acc);
 					}
 
@@ -403,7 +414,7 @@ output::Output SimulationT<tArgs...>::output()
 	ret.gamma             = mGamma;
 
 	ret.m = detail::mat2vec_<double>( mM );
-	ret.c = detail::mat2vec_<double>( mC );
+	ret.c = detail::mat2vec_<double>( mC, [] (double x) { return std::pow(10.0,x); } );
 	ret.az = detail::mat2vec_<double>( mAz );
 	ret.dist.assign( mDist.begin(), mDist.end() );
 	ret.w.assign( mW.begin(), mW.end() );
@@ -444,9 +455,14 @@ void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aR
 
 	mVolumeFactor = HScalar(aPar.Lx*aPar.Ly*aPar.Lz / HScalar(1e12));
 
-	mLowerM = HScalar(aPar.m.lower);    mUpperM = HScalar(aPar.m.upper);
-	mLowerC = HScalar(aPar.c.lower);    mUpperC = HScalar(aPar.c.upper);
-	mLowerAz = HScalar(aPar.az.lower);  mUpperAz = HScalar(aPar.az.upper);
+	mLowerM = HScalar(aPar.m.lower);
+	mUpperM = HScalar(aPar.m.upper);
+
+	mLowerC = std::log10(HScalar(aPar.c.lower));
+	mUpperC = std::log10(HScalar(aPar.c.upper));
+	
+	mLowerAz = HScalar(aPar.az.lower);
+	mUpperAz = HScalar(aPar.az.upper);
 
 
 	std::uniform_real_distribution<HScalar> mDist( mLowerM, mUpperM );
@@ -670,13 +686,14 @@ auto SimulationT<tArgs...>::compute_initial_gamma_( HostRng& aRng ) -> HScalar
 		{
 			sample.mBis[i] = mM(i,sidx);
 			sample.cBis[i] = mC(i,sidx);
+			sample.powCBis[i] = std::pow( HScalar(10), sample.cBis[i] );
 		}
 		for( std::size_t i = 0; i < mZCount; ++i )
 		{
 			sample.azBis[i] = mAz(i,sidx);
 		}
 
-		HScalar const csum = std::accumulate( sample.cBis.begin(), sample.cBis.end(), HScalar(0) );
+		HScalar const csum = std::accumulate( sample.powCBis.begin(), sample.powCBis.end(), HScalar(0) );
 		HScalar const lambda = csum * mVolumeFactor;
 		std::poisson_distribution<Count> poisson(lambda);
 
@@ -690,7 +707,7 @@ auto SimulationT<tArgs...>::compute_initial_gamma_( HostRng& aRng ) -> HScalar
 		HScalar acc = HScalar(0);
 		for( std::size_t i = 0; i < mComponentCount; ++i )
 		{
-			acc += sample.cBis[i] / csum;
+			acc += sample.powCBis[i] / csum;
 			sample.preCompProb[i] = DScalar(acc);
 		}
 

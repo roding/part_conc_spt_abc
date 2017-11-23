@@ -178,7 +178,7 @@ class SimulationT final : public Simulation
 		{
 			SimulationT* parent;
 
-			CVec_<HScalar> mBis, cBis;
+			CVec_<HScalar> mBis, cBis, powCBis;
 			ZVec_<HScalar> azBis;
 			HScalar distBis;
 
