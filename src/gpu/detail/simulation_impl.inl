@@ -180,17 +180,16 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 {
 	using Clock_ = std::chrono::high_resolution_clock;
 
+	HScalar trialsTotal, trialsAvg;
+	HScalar infoLambdaAcc, infoLambdaCount;
+	Clock_::time_point infoIterStart, infoIterEnd;
+
+
 	mConverged = false;
 	mInfoIterations = mInfoSimulations = 0;
 
-	
 	std::vector<std::size_t> waitingSamples( mAbcCount );
 
-	AVec_<Count> trials;
-	resize( trials, mAbcCount );
-
-	HScalar infoLambdaAcc, infoLambdaCount;
-	Clock_::time_point infoIterStart, infoIterEnd;
 
 	if( mGamma < HScalar(0) )
 	{
@@ -211,8 +210,8 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 		}
 
 		mGamma -= mDeltaGamma;
+		trialsTotal = trialsAvg = HScalar(0);
 
-		std::fill_n( trials.begin(), mAbcCount, Count(0) );
 		std::partial_sum( mW.begin(), mW.end(), mPreW.begin() );
 
 		waitingSamples.resize( mAbcCount );
@@ -237,7 +236,7 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 			{
 				auto& sample = mSamples[sidx];
 
-				if( sample.distBis > mGamma && detail::mean_<HScalar>( trials.begin(), trials.end() ) < mAvgTrialCount )
+				if( sample.distBis > mGamma && trialsAvg < mAvgTrialCount )
 				{
 					//XXX-TODO: move this into a separate function (sample_update_()?)
 					auto const idx = detail::wrand_idx_( aRng, mPreW.begin(), mPreW.end() );
@@ -336,13 +335,15 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 					sample_dev_clean_( sample, dev );
 
 					auto const sidx = &sample - mSamples.data();
-					++trials[sidx];
+					++trialsTotal;
 
 					--pendingJobs;
 					++mInfoSimulations;
 
 					waitingSamples.push_back( sidx );
 				}
+
+				trialsAvg = trialsTotal / HScalar(mAbcCount);
 			}
 		}
 
@@ -354,18 +355,8 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 		if( mVerbosity >= 0 )
 		{
 			using Fms_ = std::chrono::duration<float,std::milli>;
-			
-			Count totalTrials = 0;
-			Count maxTrials = 0, minTrials = std::numeric_limits<Count>::max();
-			
-			for( auto x : trials )
-			{
-				totalTrials += x;
-				if( x > maxTrials ) maxTrials = x;
-				if( x < minTrials ) minTrials = x;
-			}
-
-			std::printf( "Trials: total[min/max]: %4u[%4u/%4u]; γ = %.2g, λ̅ = %.1f\n", totalTrials, minTrials, maxTrials, mGamma, infoLambdaAcc/infoLambdaCount );
+		
+			std::printf( "Trials: %4.0f; γ = %.2g, λ̅ = %.1f\n", trialsTotal, mGamma, infoLambdaAcc/infoLambdaCount );
 
 			std::printf( "  Wall time: %6.2f ms for this iteration\n", std::chrono::duration_cast<Fms_>(infoIterEnd-infoIterStart).count() );
 
@@ -398,7 +389,7 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 		compute_tau_();
 
 		// finished?
-		if( detail::mean_<HScalar>( trials.begin(), trials.end() ) >= mAvgTrialCount )
+		if( trialsAvg >= mAvgTrialCount )
 		{
 			mConverged = true;
 		}
