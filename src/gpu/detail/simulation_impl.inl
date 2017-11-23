@@ -780,7 +780,10 @@ void SimulationT<tArgs...>::weighting_scheme_pmc_standard_()
 	}
 
 	for( std::size_t abc = 0; abc < mAbcCount; ++abc )
+	{
 		mW[abc] = mWStar[abc] / wsum;
+		assert( std::isfinite( mW[abc] ) );
+	}
 }
 template< typename... tArgs > inline
 void SimulationT<tArgs...>::weighting_scheme_inv_dist_sq_()
