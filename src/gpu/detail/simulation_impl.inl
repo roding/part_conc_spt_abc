@@ -43,20 +43,6 @@ namespace detail
 		return var / count;
 	}
 
-	// mean_()
-	template< typename tScalar, typename tInputIt > inline
-	auto mean_( tInputIt aBeg, tInputIt aEnd )
-		-> decltype(std::declval<tScalar>()+*std::declval<tInputIt>())
-	{
-		using Ty_ = decltype(std::declval<tScalar>()+*std::declval<tInputIt>());
-
-		Ty_ accum = Ty_(0), count = Ty_(0);
-		for( ; aBeg != aEnd; ++aBeg, ++count )
-			accum += *aBeg;
-
-		return accum / count;
-	}
-
 	// normpdf_()
 	template< typename tScalar > inline
 	tScalar normpdf_( tScalar aX, tScalar aMu, tScalar aSigma )
