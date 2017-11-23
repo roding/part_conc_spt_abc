@@ -38,8 +38,12 @@ namespace
 
 		int verbosity        = 0;
 		
-		std::size_t maxIter  = 0;
 		std::string gpuSpec  = "1/30";
+
+		std::size_t maxIter  = 0;
+
+		bool fixedSeed       = false;
+		std::uint32_t seedValue;
 
 		std::string self;
 	};
@@ -80,7 +84,12 @@ int main( int aArgc, char* aArgv[] ) try
 			scfg.gpuSpec     = cfg.gpuSpec;
 			scfg.verbosity   = cfg.verbosity;
 
-			auto rng = make_prng<SimHostRNG>();
+			auto rng = [&] () {
+				if( cfg.fixedSeed )
+					return SimHostRNG( cfg.fixedSeed );
+
+				return make_prng<SimHostRNG>();
+			}();
 			auto sim = make_simulation( rng, param, scfg );
 
 			auto const start = SysClock_::now();
@@ -148,7 +157,8 @@ namespace
   --gpus, -g <gpuspec>  : select GPUs and queues
   --scalar, -s {f,d}    : select scalar type (𝗳loat or 𝗱ouble)
 
-  --max-steps, -S <N>   : abort after <N> steps (for profiling)
+  --max-steps, -S <N>   : abort after <N> steps
+  --fixed-seed, -F <N>  : use a fixed seed <N> for random number generation
 
   --quiet, -q           : decrease verbosity
   --verbose, -v         : increase verbosity (repeat for further increases)
@@ -238,6 +248,19 @@ namespace
 				int iret = std::sscanf( aArgv[arg+1], "%zu%c", &cfg.maxIter, &dummy );
 
 				if( 1 != iret ) throw std::runtime_error( tfm::format( "Command line argument %s requires an additional positive integer argument and not %s", aArgv[arg], aArgv[arg+1] ) );
+
+				++arg;
+			}
+			else if( flag_( "--fixed-seed", "-F" ) )
+			{
+				if( arg+1 >= aArgc ) throw std::runtime_error( tfm::format( "Command line argument %s requires an additional integer argument", aArgv[arg] ) );
+
+				char dummy;
+				int iret = std::sscanf( aArgv[arg+1], "%u%c", &cfg.seedValue, &dummy );
+
+				if( 1 != iret ) throw std::runtime_error( tfm::format( "Command line argument %s requires an additional integer argument and not %s", aArgv[arg], aArgv[arg+1] ) );
+
+				cfg.fixedSeed = true;
 
 				++arg;
 			}
