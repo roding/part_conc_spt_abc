@@ -11,6 +11,8 @@
 #include <cstdlib>
 #include <cstring>
 
+#include <unistd.h>
+
 #include <tinyformat/tinyformat.h>
 
 #include "sysinfo.hpp"
@@ -113,6 +115,10 @@ int main( int aArgc, char* aArgv[] ) try
 
 				std::strftime( buff, 255, "%F %T%z", std::localtime(&endTime) );
 				output.meta["finished_at"] = buff;
+
+				char host[256] = {};
+				if( 0 == ::gethostname( host, 255 ) )
+					output.meta["machine"] = host;
 
 #				ifdef NDEBUG
 				output.meta["debug"] = "false";
