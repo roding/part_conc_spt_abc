@@ -163,7 +163,7 @@ namespace cusim
 		// zero out the histogram for the next invocation
 		for( auto row = warp; row < aN; row += blockDim.y )
 		{
-			for( auto col = wtid; col < m32; col += 32 )
+			for( auto col = wtid; col < aM; col += 32 )
 			{
 				aCur[row*aM+col] = 0;
 			}
