@@ -1,37 +1,59 @@
-## Welcome to GitHub Pages
+## part_conc_spt_abc
 
-You can use the [editor on GitHub](https://github.com/roding/part_conc_spt_abc/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+Nanoparticle concentration measurements using single particle tracking and
+Approximate Bayesian Computation.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
 
-### Markdown
+### Instructions: Running the CPU version
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+TODO
 
-```markdown
-Syntax highlighted code block
+### Instructions: Building \& Running the GPU version
 
-# Header 1
-## Header 2
-### Header 3
+**Building the GPU version:**
 
-- Bulleted
-- List
+First generate the makefiles using [premake](https://premake.github.io/):
+```
+$ external/premake5 gmake
+```
+Note that only make-based builds have been tested. The project definition in
+`premake5.lua` includes raw `nvcc` command lines which may or may not need to
+be adjusted for other build types ("actions") supported by premake.
 
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+Next, run make:
+```
+$ make -j4
+```
+This builds the debug version. An optimized release version can be built via
+```
+$ make -j4 config=release_native
 ```
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+This should produce the main binary (`accel-<config>.exe`) in the `bin/` 
+directory.
 
-### Jekyll Themes
+**Running the GPU version:**
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/roding/part_conc_spt_abc/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+Run `bin/accel-<config>.exe --help` for an overview of command line options.
+The most important options are:
 
-### Support or Contact
+ - `-i <input>` : select input file
+ - `-o <output>` : select output file (will be overwritten!)
+ - `-g <gpuspec>` : select GPU configuration (see below)
 
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+Other command line options can typically be omitted (which will use their
+default values).
+
+If no output file is specified via `-o`, the default output file path from the
+input will be used.
+
+The `<gpuspec>` is used to select GPUs. It is a comma-separated list (no
+spaces!) of `<GPU number>/<number of queues>`. The default is `-g 1/30`, which
+uses the first available GPU with 30 asynchronous queues. For a system with two
+identical GPUs one might use `-g 1/30,2/30`. Work is distributed evently across
+the queues, so simple manual "load-balancing" can be performed by lowering the
+number of queues (e.g., for a system with a GTX1060 + a GTX960, `-g 1/30,2/21`
+turned out to be a good choice). 
+
+Available CUDA GPUs can be listed by using the `--list-devices` command line
+option.
