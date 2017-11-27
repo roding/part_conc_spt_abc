@@ -12,19 +12,6 @@ namespace cusim
 		return aVal;
 	}
 	
-__device__ void print_az_( DSInline<float,StaticValue<unsigned,1>> const& x )
-{
-	printf( "'ello? UN1: %f\n", x.value );
-}
-__device__ void print_az_( DSInline<float,StaticValue<unsigned,2>> const& x )
-{
-	printf( "'ello? UN2: %f %f\n", x.values[0], x.values[1] );
-}
-__device__ void print_az_( DSInline<float,DynamicValue<unsigned>> const& x )
-{
-	printf( "'ello? DYDYDYDYD: %f %f\n", x.values[0] );
-}
-	
 	template< 
 		class tSystemSetup,
 		class tRunData,
@@ -53,9 +40,6 @@ __device__ void print_az_( DSInline<float,DynamicValue<unsigned>> const& x )
 
 		auto const frames = aRunData.frames[warp];
 		auto const particles = aRunData.particles[warp];
-
-//printf( "Hello? %u : %u\n", unsigned(frames), unsigned(particles) );
-//print_az_(aRunData.halfAz);
 
 		//TODO: maybe cache aSystem.{Lx,Ly,Lz} locally; other aSystem stuff?
 		//TODO-check: register usage with/without caching
