@@ -776,7 +776,7 @@ void SimulationT<tArgs...>::weighting_scheme_pmc_standard_()
 				term *= detail::normpdf_( mSamples[abc].azBis[z] - mAz(z,i), HScalar(0), mTauAz[z] );
 			}
 
-			mWStar[abc] += mW[abc] * term;
+			mWStar[abc] += mW[i] * term;
 		}
 
 		mWStar[abc] = HScalar(1) / mWStar[abc];
