@@ -289,8 +289,10 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 					for( auto& count : sample.particleCounts )
 						count = poisson(aRng);
 
-
-					std::copy_n( sample.azBis.data(), mZCount, sample.halfAz );
+					for( std::size_t i = 0; i < mZCount; ++i )
+					{
+						sample.halfAz[i] = DScalar(0.5) * DScalar(sample.azBis[i]);
+					}
 
 					HScalar acc = HScalar(0);
 					for( std::size_t i = 0; i < mComponentCount; ++i )
@@ -445,7 +447,7 @@ void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aR
 		
 	if( kModel != aPar.model )
 		detail::throw_logic_error_( "SimulationT: fixed model parameter doesn't match model specified by the input parameters" );
-		
+
 	// initialize parameters
 	auto const& frameCounts = aPar.frameCounts;
 	mKMax = 1 + *std::max_element(frameCounts.begin(), frameCounts.end() );
@@ -782,6 +784,7 @@ void SimulationT<tArgs...>::weighting_scheme_pmc_standard_()
 	for( std::size_t abc = 0; abc < mAbcCount; ++abc )
 	{
 		mW[abc] = mWStar[abc] / wsum;
+
 		assert( std::isfinite( mW[abc] ) );
 	}
 }
