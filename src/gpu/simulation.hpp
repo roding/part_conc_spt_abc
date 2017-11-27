@@ -32,6 +32,7 @@ struct SimulationConfig
 {
 	ESimScalar hostScalarType = ESimScalar::doubleType;
 	ESimScalar deviceScalarType = ESimScalar::floatType;
+	ESimScalar distanceType = ESimScalar::floatType;
 	
 	ESimCount countType = ESimCount::uint32;
 

@@ -38,12 +38,25 @@ namespace
 	}
 
 	template< class... tFixed >
+	SimPtr_ fix_distance_( SimHostRNG& aRng, Param_ aPar, Conf_ aCfg )
+	{
+		switch( aCfg.distanceType )
+		{
+			case ESimScalar::floatType: 
+				return finalize_< tFixed..., sim_arg::DistanceType<float> >(aRng,aPar,aCfg);
+			case ESimScalar::doubleType:
+				return finalize_< tFixed..., sim_arg::DistanceType<double> >(aRng,aPar,aCfg);
+		}
+
+		throw std::runtime_error( tfm::format( "Distance type: scalar type ESimScalar(%ld) not supported", long(aCfg.deviceScalarType) ) );
+	}
+	template< class... tFixed >
 	SimPtr_ fix_count_( SimHostRNG& aRng, Param_ aPar, Conf_ aCfg )
 	{
 		switch( aCfg.countType )
 		{
 			case ESimCount::uint32: 
-				return finalize_<tFixed..., sim_arg::CountType<std::uint32_t>>(aRng,aPar,aCfg);
+				return fix_distance_<tFixed..., sim_arg::CountType<std::uint32_t>>(aRng,aPar,aCfg);
 		}
 
 		throw std::runtime_error( tfm::format( "Count type ESimCount(%ld) not handled", long(aCfg.countType) ) );

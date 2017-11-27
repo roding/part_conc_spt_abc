@@ -436,6 +436,7 @@ output::Output SimulationT<tArgs...>::output()
 
 	ret.meta["hostScalarType"]    = typeid(HScalar).name();
 	ret.meta["deviceScalarType"]  = typeid(DScalar).name();
+	ret.meta["distanceType"]      = typeid(Distance).name();
 
 	return ret;
 }
@@ -605,7 +606,7 @@ void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aR
 			queueCount,
 			cusim::Histogram2D<Count>( mKMax, mDEBinCount, reference.data() ),
 			Pool<Count>( jobCount ),
-			MappedPool<DScalar>( 1 ),
+			MappedPool<Distance>( 1 ),
 			Pool<DScalar>( mZCount ),
 			Pool<DScalar>( mComponentCount ),
 			Pool<DScalar>( mComponentCount ),
@@ -734,7 +735,7 @@ auto SimulationT<tArgs...>::compute_initial_gamma_( HostRng& aRng ) -> HScalar
 
 			CUDA_CHECKED it->error;
 
-			sample.distBis = std::log10( *sample.hostResultDistance );
+			sample.distBis = std::log10( HScalar(*sample.hostResultDistance) );
 
 			sample_dev_clean_( sample, dev );
 

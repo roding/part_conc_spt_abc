@@ -71,7 +71,6 @@ namespace sim_arg
 	template< typename tType > 
 	using DeviceScalar = named::TypeArgument< struct DeviceScalar_, float, tType >;
 
-	
 	/** Aspect: count type
 	 *
 	 * Type used for counting the number of trials, and in the histogram. The
@@ -79,6 +78,15 @@ namespace sim_arg
 	 */
 	template< typename tType >
 	using CountType = named::TypeArgument< struct CountType_, std::uint32_t, tType >;
+	/** Aspect: distance type
+	 *
+	 * Scalar type used for the histogram distances. May be either float or 
+	 * double. 
+	 *
+	 * TODO: could also be an integer, in theory?
+	 */
+	template< typename tType > 
+	using DistanceType = named::TypeArgument< struct DistType_, float, tType >;
 
 	/** Aspect: host random engine type
      *
@@ -123,6 +131,7 @@ class SimulationT final : public Simulation
 		using DScalar = named::get_type_t<sim_arg::DeviceScalar, tArgs...>;
 
 		using Count = named::get_type_t<sim_arg::CountType, tArgs...>;
+		using Distance = named::get_type_t<sim_arg::DistanceType, tArgs...>;
 
 		using DevRng = named::get_type_t<sim_arg::DeviceRng, tArgs...>;
 		using HostRng = named::get_type_t<sim_arg::HostRng, tArgs...>;
@@ -195,8 +204,8 @@ class SimulationT final : public Simulation
 			int device; //TODO: split this off elsewhere???
 
 			SystemRunData sampleRunData;
-			DScalar* devResultDistance;
-			DScalar* hostResultDistance;
+			Distance* devResultDistance;
+			Distance* hostResultDistance;
 
 #			if SIM_KERNEL_TIMINGS
 			cudaEvent_t simStart, simStop;
@@ -220,7 +229,7 @@ class SimulationT final : public Simulation
 			cusim::Histogram2D<Count> reference;
 
 			Pool<Count> particleCountPool;
-			MappedPool<DScalar> resultDistancePool;
+			MappedPool<Distance> resultDistancePool;
 
 			Pool<DScalar> halfAzPool; //XXX-NOTE: only needed if ZCount_ is dynamic
 			Pool<DScalar> preCompProbPool; //XXX-NOTE: only needed if CCount_ is dynamic

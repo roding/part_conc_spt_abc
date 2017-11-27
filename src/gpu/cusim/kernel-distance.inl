@@ -87,7 +87,6 @@ namespace cusim
 			totals[wtid] = tReal(0);
 		}
 
-
 		__syncthreads();
 
 		// column-wise prefix sums

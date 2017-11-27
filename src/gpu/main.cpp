@@ -38,6 +38,7 @@ namespace
 
 		ESimScalar hostScalar   = ESimScalar::doubleType;
 		ESimScalar devScalar    = ESimScalar::floatType;
+		ESimScalar distType     = ESimScalar::doubleType;
 
 		int verbosity           = 0;
 		
@@ -84,6 +85,7 @@ int main( int aArgc, char* aArgv[] ) try
 			SimulationConfig scfg;
 			scfg.hostScalarType    = cfg.hostScalar;
 			scfg.deviceScalarType  = cfg.devScalar;
+			scfg.distanceType      = cfg.distType;
 			scfg.maxIter           = cfg.maxIter;
 			scfg.gpuSpec           = cfg.gpuSpec;
 			scfg.verbosity         = cfg.verbosity;
@@ -166,6 +168,7 @@ namespace
 
   --host-scalar, -hs {f,d} : select host code scalar type (𝗳loat or 𝗱ouble)
   --dev-scalar, -ds {f,d}  : select device code scalar type (𝗳loat or 𝗱ouble)
+  --dist-type, -dt {f,d}   : select distance type (𝗳loat or 𝗱ouble)
 
   --max-steps, -S 𝒏        : abort after 𝒏 steps
   --fixed-seed, -F 𝒏       : use a fixed seed 𝒏 for random number generation
@@ -258,6 +261,18 @@ namespace
 					cfg.devScalar = ESimScalar::floatType;
 				else if( 0 == strcmp( "d", aArgv[arg+1] ) ) 
 					cfg.devScalar = ESimScalar::doubleType;
+				else throw std::runtime_error( tfm::format( "Scalar type must be either 'f' (float) or 'd' (double) and not '%s'", aArgv[arg+1] ) );
+
+				++arg;
+			}
+			else if( flag_( "--dist-type", "-dt" ) )
+			{
+				if( arg+1 >= aArgc ) throw std::runtime_error( tfm::format( "Command line argument %s requires an additional argument f or d", aArgv[arg] ) );
+
+				if( 0 == strcmp( "f", aArgv[arg+1] ) ) 
+					cfg.distType = ESimScalar::floatType;
+				else if( 0 == strcmp( "d", aArgv[arg+1] ) ) 
+					cfg.distType = ESimScalar::doubleType;
 				else throw std::runtime_error( tfm::format( "Scalar type must be either 'f' (float) or 'd' (double) and not '%s'", aArgv[arg+1] ) );
 
 				++arg;
