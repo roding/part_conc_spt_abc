@@ -127,6 +127,10 @@ int main( int aArgc, char* aArgv[] ) try
 #				else
 				output.meta["debug"] = "true";
 #				endif
+
+				output.meta["input_file"] = cfg.input;
+				if( !cfg.data.empty() )
+					output.meta["data_file"] = cfg.data;
 			}
 			
 			output::write( param.outputFilePath.c_str(), output );
