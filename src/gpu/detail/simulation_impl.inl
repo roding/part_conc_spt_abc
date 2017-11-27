@@ -786,7 +786,13 @@ void SimulationT<tArgs...>::weighting_scheme_pmc_standard_()
 	{
 		mW[abc] = mWStar[abc] / wsum;
 
-		assert( std::isfinite( mW[abc] ) );
+		/* XXX-wtf. Not quite sure what's going on, but std::isfinite() seems
+		 * to always return true, even if mW[abc] is explicitly set to a NaN
+		 * value (std::numeric_limits<HScalar>::quiet_NaN()). The much more
+		 * suspecious "x == x" check catches NaNs "just fine", though. :-/.
+		 */
+		//assert( std::isfinite( mW[abc] ) );
+		assert( mW[abc] == mW[abc] );
 	}
 }
 template< typename... tArgs > inline
