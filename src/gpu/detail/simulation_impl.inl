@@ -662,15 +662,15 @@ void SimulationT<tArgs...>::compute_tau_()
 	for( std::size_t i = 0; i < mComponentCount; ++i )
 	{
 		auto const mr = mM.row(i);
-		mTauM[i] = std::sqrt( 2 * detail::var_(mr.begin(), mr.end()) );
+		mTauM[i] = std::sqrt( HScalar(2)*detail::var_(mr.begin(), mr.end()) );
 
 		auto const mc = mC.row(i);
-		mTauC[i] = std::sqrt( 2 * detail::var_(mc.begin(), mc.end()) );
+		mTauC[i] = std::sqrt( HScalar(2)*detail::var_(mc.begin(), mc.end()) );
 	}
 	for( std::size_t i = 0; i < mZCount; ++i )
 	{
 		auto const maz = mAz.row(i);
-		mTauAz[i] = std::sqrt( 2 * detail::var_(maz.begin(), maz.end()) );
+		mTauAz[i] = std::sqrt( HScalar(2)*detail::var_(maz.begin(), maz.end()) );
 	}
 }
 template< typename... tArgs > inline
