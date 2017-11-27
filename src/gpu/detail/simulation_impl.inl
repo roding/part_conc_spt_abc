@@ -92,6 +92,7 @@ namespace detail
 				ret.push_back( aTransform(tOut(x)) );
 		}
 		
+		assert( ret.size() == aMat.n()*aMat.m() );
 		return ret;
 	}
 
@@ -293,7 +294,7 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 					{
 						sample.halfAz[i] = DScalar(0.5) * DScalar(sample.azBis[i]);
 					}
-
+						
 					HScalar acc = HScalar(0);
 					for( std::size_t i = 0; i < mComponentCount; ++i )
 					{
