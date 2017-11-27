@@ -61,11 +61,11 @@ namespace cusim
 		template< typename tReal > __device__ inline
 		tReal reduce0( tReal aValue )
 		{
-			aValue += __shfl_down( aValue, 16 );
-			aValue += __shfl_down( aValue, 8 );
-			aValue += __shfl_down( aValue, 4 );
-			aValue += __shfl_down( aValue, 2 );
-			aValue += __shfl_down( aValue, 1 );
+			aValue += __shfl_down_sync( ~0u, aValue, 16 );
+			aValue += __shfl_down_sync( ~0u, aValue, 8 );
+			aValue += __shfl_down_sync( ~0u, aValue, 4 );
+			aValue += __shfl_down_sync( ~0u, aValue, 2 );
+			aValue += __shfl_down_sync( ~0u, aValue, 1 );
 			return aValue;
 		}
 	}
@@ -106,7 +106,7 @@ namespace cusim
 				if( col < aM )
 					aCur[row*aM+col] = sum;
 
-				base = __shfl( sum, 31 );
+				base = __shfl_sync( ~0u, sum, 31 );
 			}
 		}
 
@@ -126,7 +126,7 @@ namespace cusim
 				;
 
 				tCount const sum = base + detail::warp_prefix( wtid, val );
-				base = __shfl( sum, 31 );
+				base = __shfl_sync( ~0u, sum, 31 );
 
 				if( row < aN )
 				{
