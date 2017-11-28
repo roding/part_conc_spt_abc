@@ -6,7 +6,18 @@ Approximate Bayesian Computation.
 
 ### Instructions: Running the CPU version
 
-TODO
+The code is developed using Julia 0.6.0. To run the analysis, just run src/cpu/run_part_conc_spt_abc.jl in the following way
+
+julia -p <number_of_cores> <program> <input>
+
+where the parameters (all mandatory) are
+
+- `<number_of_cores>` : number of CPU cores (threads) to utilize
+- `<program>` : path to run_part_conc_spt_abc.jl
+- `<input>` : input file
+
+The file test/test_part_conc_spt_abc.jl generates a simulated example data set
+and calls the analysis program.
 
 ### Instructions: Building \& Running the GPU version
 
@@ -29,7 +40,7 @@ This builds the debug version. An optimized release version can be built via
 $ make -j4 config=release_native
 ```
 
-This should produce the main binary (`accel-<config>.exe`) in the `bin/` 
+This should produce the main binary (`accel-<config>.exe`) in the `bin/`
 directory.
 
 **Running the GPU version:**
@@ -53,7 +64,7 @@ uses the first available GPU with 30 asynchronous queues. For a system with two
 identical GPUs one might use `-g 1/30,2/30`. Work is distributed evently across
 the queues, so simple manual "load-balancing" can be performed by lowering the
 number of queues (e.g., for a system with a GTX1060 + a GTX960, `-g 1/30,2/21`
-turned out to be a good choice). 
+turned out to be a good choice).
 
 Available CUDA GPUs can be listed by using the `--list-devices` command line
 option.
