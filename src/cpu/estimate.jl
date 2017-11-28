@@ -198,15 +198,11 @@ function estimate(model::String,
 						term = 1.0
 						for current_component = 1:number_of_components
 							term = term * normpdf(m_star[current_component, current_abc_sample] - m[current_component, i], 0.0, tau_m[current_component])
-							#println((1, normpdf(m_star[current_component, current_abc_sample] - m[current_component, i], 0.0, tau_m[current_component])))
 							term = term * normpdf(log10c_star[current_component, current_abc_sample] - log10c[current_component, i], 0.0, tau_log10c[current_component])
-							#println((2, normpdf(log10c_star[current_component, current_abc_sample] - log10c[current_component, i], 0.0, tau_log10c[current_component])))
 							term = term * normpdf(az_star[current_component, current_abc_sample] - az[current_component, i], 0.0, tau_az[current_component])
-							#println((3, normpdf(az_star[current_component, current_abc_sample] - az[current_component, i], 0.0, tau_az[current_component])))
 						end
 						w_star[current_abc_sample] = w_star[current_abc_sample] + w[i] * term
 					end
-					#println((1, w_star))
 					w_star[current_abc_sample] = 1.0 / w_star[current_abc_sample]
 				end
 				w = w_star / sum(w_star)
@@ -231,7 +227,6 @@ function estimate(model::String,
 					println((round(gamma, 2), sum(trial_count), round(mean(trial_count), 2), round(mean(m), 2), round(mean(10.^log10c), 2), round(mean(az), 2)))
 				elseif number_of_components == 2
 					println((round(gamma, 2), sum(trial_count), round(mean(trial_count), 2), round(mean(m[1, :]), 2), round(mean(m[2, :]), 2), round(mean(10.^log10c[1, :]), 2), round(mean(10.^log10c[2, :]), 2), round(mean(az[1, :]), 2), round(mean(az[2, :]), 2)))
-					println((mean(w), std(w), minimum(w), maximum(w)))
 				end
 			end
 		end
