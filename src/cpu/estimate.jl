@@ -58,7 +58,7 @@ function estimate(model::String,
 	m = lb_m + (ub_m - lb_m) * rand(number_of_components, number_of_abc_samples)
 	log10c = lb_log10c + (ub_log10c - lb_log10c) * rand(number_of_components, number_of_abc_samples)
 	if model == "discrete-fixed-depth"
-		az = lb_az + (ub_az - lb_az) * repmat(rand(1, number_of_abc_samples), 2)
+		az = lb_az + (ub_az - lb_az) * repmat(rand(1, number_of_abc_samples), number_of_components)
 	elseif model == "discrete-variable-depth"
 		az = lb_az + (ub_az - lb_az) * rand(number_of_components, number_of_abc_samples)
 	end
@@ -227,6 +227,8 @@ function estimate(model::String,
 					println((round(gamma, 2), sum(trial_count), round(mean(trial_count), 2), round(mean(m), 2), round(mean(10.^log10c), 2), round(mean(az), 2)))
 				elseif number_of_components == 2
 					println((round(gamma, 2), sum(trial_count), round(mean(trial_count), 2), round(mean(m[1, :]), 2), round(mean(m[2, :]), 2), round(mean(10.^log10c[1, :]), 2), round(mean(10.^log10c[2, :]), 2), round(mean(az[1, :]), 2), round(mean(az[2, :]), 2)))
+				elseif number_of_components == 3
+					println((round(gamma, 2), sum(trial_count), round(mean(trial_count), 2), round(mean(m[1, :]), 2), round(mean(m[2, :]), 2), round(mean(m[3, :]), 2), round(mean(10.^log10c[1, :]), 2), round(mean(10.^log10c[2, :]), 2), round(mean(10.^log10c[3, :]), 2), round(mean(az[1, :]), 2), round(mean(az[2, :]), 2), round(mean(az[3, :]), 2)))
 				end
 			end
 		end
