@@ -1,6 +1,14 @@
-
 namespace cusim
 {
+	/* In CUDA v9.x, __shfl*_sync() are introduced, and the old __shfl*() are
+	 * immediately deprecated. Unfortunately, the __shfl*_sync() are not 
+	 * available before CUDA v9.
+	 */
+#	if __CUDACC_VER_MAJOR__ < 9
+#		define __shfl_sync( mask, ... ) __shfl( __VA_ARGS__ )
+#		define __shfl_down_sync( mask, ... ) __shfl_down( __VA_ARGS__ )
+#	endif // ~ CUDA before version 9
+	
 	namespace detail
 	{
 		template< typename tCount > __device__ inline
