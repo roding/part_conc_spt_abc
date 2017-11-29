@@ -38,7 +38,7 @@ namespace
 
 		ESimScalar hostScalar   = ESimScalar::doubleType;
 		ESimScalar devScalar    = ESimScalar::floatType;
-		ESimScalar distType     = ESimScalar::doubleType;
+		ESimScalar distType     = ESimScalar::floatType;
 
 		int verbosity           = 0;
 		
