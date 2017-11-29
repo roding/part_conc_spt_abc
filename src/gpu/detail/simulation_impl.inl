@@ -365,33 +365,38 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 #			endif // ~ SIM_KERNEL_TIMINGS
 		}
 
-		// evaluate weighting scheme; this updates mW
-		(this->*mWeightingSchemeFn)();
-
-		// update other state
-		for( std::size_t i = 0; i < mAbcCount; ++i )
-		{
-			auto const& sample = mSamples[i];
-
-			for( std::size_t j = 0; j < mComponentCount; ++j )
-			{
-				mM(j,i) = sample.mBis[j];
-				mC(j,i) = sample.cBis[j];
-			}
-			for( std::size_t j = 0; j < mZCount; ++j )
-			{
-				mAz(j,i) = sample.azBis[j];
-			}
-
-			mDist[i] = sample.distBis;
-		}
-
-		compute_tau_();
 
 		// finished?
+		// If yes, discard this final iteration's results, since it never
+		// really finished. Otherwise update the state and continue.
 		if( trialsAvg >= mAvgTrialCount )
 		{
 			mConverged = true;
+		}
+		else
+		{
+			// evaluate weighting scheme; this updates mW
+			(this->*mWeightingSchemeFn)();
+
+			// update other state
+			for( std::size_t i = 0; i < mAbcCount; ++i )
+			{
+				auto const& sample = mSamples[i];
+
+				for( std::size_t j = 0; j < mComponentCount; ++j )
+				{
+					mM(j,i) = sample.mBis[j];
+					mC(j,i) = sample.cBis[j];
+				}
+				for( std::size_t j = 0; j < mZCount; ++j )
+				{
+					mAz(j,i) = sample.azBis[j];
+				}
+
+				mDist[i] = sample.distBis;
+			}
+
+			compute_tau_();
 		}
 	}
 }
