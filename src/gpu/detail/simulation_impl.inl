@@ -567,6 +567,7 @@ void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aR
 
 		resize( sample.mBis, mComponentCount );
 		resize( sample.cBis, mComponentCount );
+		resize( sample.powCBis, mComponentCount );
 		resize( sample.azBis, mZCount );
 
 		resize( sample.indices, mComponentCount );
