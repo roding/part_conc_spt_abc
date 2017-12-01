@@ -50,6 +50,8 @@ template< typename tEType, std::size_t tASize, class tDSValue > inline
 void resize( std::array<tEType,tASize>& aArray, tDSValue const& aSize )
 {
 	assert( aArray.size() == aSize );
+	(void)aArray;
+	(void)aSize;
 }
 
 template< typename tEType, class tDSValue > inline
