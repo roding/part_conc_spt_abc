@@ -41,6 +41,7 @@
 #include "random.cuh"
 #include "simulation.hpp"
 
+#define SIM_CPU_TIMINGS 4
 #define SIM_KERNEL_TIMINGS 1
 
 #if SIM_KERNEL_TIMINGS
@@ -364,6 +365,9 @@ class SimulationT final : public Simulation
 
 		std::size_t mInfoIterations, mInfoSimulations;
 
+#		if SIM_CPU_TIMINGS >= 4
+		std::uint64_t mInfoTimeQueueData, mInfoTimeQueueKernel, mInfoTimeQueueCB;
+#		endif // ~ SIM_CPU_TIMINGS
 #		if SIM_KERNEL_TIMINGS
 		float timeSimTotal, timeSimCount;
 		float timeDistTotal, timeDistCount;

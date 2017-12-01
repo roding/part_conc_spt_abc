@@ -19,6 +19,9 @@
 #include "../cusim/kernel-distance.cuh"
 #include "../cusim/kernel-simulate.cuh"
 
+#define INSTR_CURRENT_LEVEL SIM_CPU_TIMINGS
+#include "../support/basic_instrument.hpp"
+
 namespace detail
 {
 	// "uncorrected" 1/N variance
@@ -173,11 +176,6 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 {
 	using Clock_ = std::chrono::high_resolution_clock;
 
-	HScalar trialsTotal, trialsAvg;
-	HScalar infoLambdaAcc, infoLambdaCount;
-	Clock_::time_point infoIterStart, infoIterEnd;
-
-
 	mConverged = false;
 	mInfoIterations = mInfoSimulations = 0;
 
@@ -191,9 +189,21 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 		if( mVerbosity >= 0 ) std::printf( "  initial γ = %g\n", mGamma );
 	}
 
+#	if SIM_CPU_TIMINGS >= 1
+	auto infoLastTime = Clock_::now();
+	std::uint64_t infoLastDt = 0;
+#	endif // ~ SIM_CPU_TIMINGS
+
 	if( mVerbosity >= 0 ) std::printf( "Begin main iterations...\n" );
 	while( !mConverged )
 	{
+		{
+			auto const current = Clock_::now();
+			infoLastDt = std::chrono::duration_cast<std::chrono::duration<std::uint32_t,std::micro>>(current-infoLastTime).count();
+			infoLastTime = current;
+		}
+
+		
 		++mInfoIterations;
 
 		if( mMaxIter != 0 && mInfoIterations >= mMaxIter )
@@ -203,7 +213,7 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 		}
 
 		mGamma -= mDeltaGamma;
-		trialsTotal = trialsAvg = HScalar(0);
+		
 
 		std::partial_sum( mW.begin(), mW.end(), mPreW.begin() );
 
@@ -213,24 +223,34 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 		for( auto& sample : mSamples )
 			sample.distBis  = std::numeric_limits<HScalar>::infinity();
 
-		
-		infoIterStart = Clock_::now();
-		infoLambdaAcc = infoLambdaCount = HScalar(0);
+		HScalar trialsTotal = HScalar(0), trialsAvg = HScalar(0);
+		HScalar infoLambdaAcc = HScalar(0), infoLambdaCount = HScalar(0);
 
+		INSTR_LEVEL1( InstrTime instrIter = 0 );
+		INSTR_LEVEL2( InstrTime instrSubmit = 0, instrGather = 0 );
+		INSTR_LEVEL3( InstrTime instrUpdate = 0, instrPrecomp = 0, instrQueue = 0 );
+		INSTR_LEVEL3( InstrTime instrWait = 0, instrPostcomp = 0 );
+		INSTR_LEVEL4( mInfoTimeQueueData = mInfoTimeQueueKernel = mInfoTimeQueueCB = 0 );
+		
 #		if SIM_KERNEL_TIMINGS
 		timeSimCount = timeDistCount = timeTotalCount = 0.0f;
 		timeSimTotal = timeDistTotal = timeTotalTotal = 0.0f;
 #		endif // ~ SIM_KERNEL_COUNT
 
 		std::size_t activeJobs = mAbcCount, pendingJobs = 0;
+
+		INSTR_BLOCK1_BEGIN( iteration );
 		while( activeJobs )
 		{
+			INSTR_BLOCK2_BEGIN( submit );
 			for( auto sidx : waitingSamples )
 			{
 				auto& sample = mSamples[sidx];
 
 				if( sample.distBis > mGamma && trialsAvg < mAvgTrialCount )
 				{
+					INSTR_BLOCK3_BEGIN( update );
+					
 					//XXX-TODO: move this into a separate function (sample_update_()?)
 					auto const idx = detail::wrand_idx_( aRng, mPreW.begin(), mPreW.end() );
 					assert( idx < mAbcCount );
@@ -266,7 +286,6 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 					// convert from log-concentration to concentration
 					for( std::size_t i = 0; i < mComponentCount; ++i )
 						sample.powCBis[i] = std::pow( HScalar(10), sample.cBis[i] );
-					
 
 					//XXX- could be templated on ZCount
 					if( mZCount > 1 )
@@ -277,10 +296,12 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 
 						std::swap( sample.azTmp, sample.azBis );
 					}
+					INSTR_BLOCK3_END( update, instrUpdate );
 
-
+					INSTR_BLOCK3_BEGIN( precomp );
 					HScalar const csum = std::accumulate( sample.powCBis.begin(), sample.powCBis.end(), HScalar(0) );
 					HScalar const lambda = csum * mVolumeFactor;
+
 					std::poisson_distribution<Count> poisson(lambda);
 
 					infoLambdaAcc += lambda;
@@ -306,9 +327,12 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 					{
 						sample.randWalkStddev[i] = DScalar(std::sqrt( HScalar(2)*sample.mBis[i]*mDeltaT ));
 					}
+					INSTR_BLOCK3_END( precomp, instrPrecomp );
 
+					INSTR_BLOCK3_BEGIN( queue );
 					job_queue_( sidx, sample );
 					++pendingJobs;
+					INSTR_BLOCK3_END( queue, instrQueue );
 				}
 				else
 				{
@@ -316,12 +340,18 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 					--activeJobs;
 				}
 			}
-
+			INSTR_BLOCK2_END( submit, instrSubmit );
+			
 			waitingSamples.clear();
 
+			INSTR_BLOCK2_BEGIN( gather );
 			if( pendingJobs )
 			{
+				INSTR_BLOCK3_BEGIN( wait );
 				auto const results = mResults.wait();
+				INSTR_BLOCK3_END( wait, instrWait );
+
+				INSTR_BLOCK3_BEGIN( postcomp );
 				for( auto it = std::get<0>(results); it != std::get<1>(results); ++it )
 				{
 					assert( it->sample );
@@ -344,24 +374,29 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 				}
 
 				trialsAvg = trialsTotal / HScalar(mAbcCount);
+				INSTR_BLOCK3_END( postcomp, instrPostcomp );
 			}
+			INSTR_BLOCK2_END( gather, instrGather );
 		}
-
-		infoIterEnd = Clock_::now();
+		INSTR_BLOCK1_END( iteration, instrIter );
 
 		assert( 0 == activeJobs );
 		assert( mResults.empty() );
 
 		if( mVerbosity >= 0 )
 		{
-			using Fms_ = std::chrono::duration<float,std::milli>;
+			using Fms_ = std::chrono::duration<double,std::milli>;
 		
 			std::printf( "Trials: %4.0f; γ = %.2g, λ̅ = %.1f\n", trialsTotal, mGamma, infoLambdaAcc/infoLambdaCount );
 
-			std::printf( "  Wall time: %6.2f ms for this iteration\n", std::chrono::duration_cast<Fms_>(infoIterEnd-infoIterStart).count() );
+			INSTR_LEVEL1( std::printf( "  This iteration: %6.2fms wall time (%6.2fms since last iter top)\n", instrIter*1e-3, infoLastDt*1e-3 ) );
+			INSTR_LEVEL2( std::printf( "    submit: %6.2fms, gather: %6.2fms\n", instrSubmit*1e-3, instrGather*1e-3 ) );
+			INSTR_LEVEL3( std::printf( "    submit = { update: %6.2fms, precomp: %6.2fms, queue: %6.2fms }\n", instrUpdate*1e-3, instrPrecomp*1e-3, instrQueue*1e-3 ) );
+			INSTR_LEVEL3( std::printf( "    gather = { wait: %6.2fms, postcomp: %6.2fms }\n", instrGather*1e-3, instrPostcomp*1e-3 ) );
+			INSTR_LEVEL4( std::printf( "      queue = { data: %6.2fms, kernel: %6.2fms, %6.2fms CB }\n", mInfoTimeQueueData*1e-3, mInfoTimeQueueKernel*1e-3, mInfoTimeQueueCB*1e-3 ) );
 
 #			if SIM_KERNEL_TIMINGS
-			std::printf( "  GPU: average times: %4.2f ms total (%4.2f sim, %4.2f dist)\n", timeTotalTotal/timeTotalCount, timeSimTotal/timeSimCount, timeDistTotal/timeDistCount );
+			std::printf( "  GPU: average kernel times: %4.2f ms total (%4.2f sim, %4.2f dist)\n", timeTotalTotal/timeTotalCount, timeSimTotal/timeSimCount, timeDistTotal/timeDistCount );
 #			endif // ~ SIM_KERNEL_TIMINGS
 		}
 
@@ -829,9 +864,12 @@ void SimulationT<tArgs...>::job_queue_( std::size_t, Sample_& aSample )
 	auto& queue = mDevQueues[queueIdx];
 	auto& dev = mDevGlobal[queue.devidx];
 
+	INSTR_BLOCK4_BEGIN( data );
 	aSample.device = queue.devidx;
 	sample_dev_init_( aSample, dev, queue );
+	INSTR_BLOCK4_END( data, mInfoTimeQueueData );
 
+	INSTR_BLOCK4_BEGIN( kernel );
 	CUDA_CHECKED cudaSetDevice( dev.device );
 
 	{
@@ -869,17 +907,20 @@ void SimulationT<tArgs...>::job_queue_( std::size_t, Sample_& aSample )
 		cudaEventRecord( aSample.distStop, queue.stream );
 #		endif // ~ SIM_KERNEL_TIMINGS
 	}
+	INSTR_BLOCK4_END( kernel, mInfoTimeQueueKernel );
 
 #	if SIM_KERNEL_TIMINGS
 	cudaEventRecord( aSample.totalStop, queue.stream ); // WARN: stared by dev_init_()
 #	endif // ~ SIM_KERNEL_TIMINGS
 
+	INSTR_BLOCK4_BEGIN( cb );
 	CUDA_CHECKED cudaStreamAddCallback(
 		queue.stream,
 		&SimulationT::cuda_stream_callback_,
 		const_cast<Sample_*>(&aSample),
 		0
 	);
+	INSTR_BLOCK4_END( cb, mInfoTimeQueueCB );
 }
 
 template< typename... tArgs > inline
