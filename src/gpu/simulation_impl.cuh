@@ -7,14 +7,20 @@
  * TODO:
  *   - rename CountType to DeviceCount; probably don't need a HostCount...
  *   - normal distribution via sim_arg ?
+ *
+ * FIXME: this is in dire need of some refactoring + cleanup. Alas, probably
+ * that won't happen for this project.
  */
 /*-***************************************************************** -}}}1- */
 
 #ifndef SIMULATION_IMPL_CUH_FC0DF63C_0AB8_4BBA_A6C8_60BDAC5F91DE
 #define SIMULATION_IMPL_CUH_FC0DF63C_0AB8_4BBA_A6C8_60BDAC5F91DE
 
+#include <mutex>
 #include <tuple>
+#include <atomic>
 #include <random>
+#include <thread>
 #include <type_traits>
 
 #include <cstddef>
@@ -42,7 +48,7 @@
 #include "simulation.hpp"
 
 #define SIM_CPU_TIMINGS 4
-#define SIM_KERNEL_TIMINGS 1
+#define SIM_KERNEL_TIMINGS 2
 
 #if SIM_KERNEL_TIMINGS
 #	include "evpool.cuh"
@@ -184,6 +190,9 @@ class SimulationT final : public Simulation
 			ZCount_, AbcCount_
 		>;
 
+		struct Job_;
+		struct Result_;
+
 		struct Sample_
 		{
 			SimulationT* parent;
@@ -202,25 +211,20 @@ class SimulationT final : public Simulation
 
 			std::vector<Count> particleCounts;
 
-			int device; //TODO: split this off elsewhere???
-
 			SystemRunData sampleRunData;
 			Distance* devResultDistance;
 			Distance* hostResultDistance;
 
-#			if SIM_KERNEL_TIMINGS
-			cudaEvent_t simStart, simStop;
-			cudaEvent_t distStart, distStop;
+			std::size_t devidx;
+
+#			if SIM_KERNEL_TIMINGS >= 1
 			cudaEvent_t totalStart, totalStop;
 #			endif // ~ SIM_KERNEL_TIMINGS
+#			if SIM_KERNEL_TIMINGS >= 2
+			cudaEvent_t simStart, simStop;
+			cudaEvent_t distStart, distStop;
+#			endif // ~ SIM_KERNEL_TIMINGS
 		};
-
-		struct Result_
-		{
-			Sample_* sample;
-			cudaError_t error;
-		};
-
 
 		struct CudaDevGlobal_
 		{
@@ -244,6 +248,10 @@ class SimulationT final : public Simulation
 #			if SIM_KERNEL_TIMINGS
 			EvPool timeEvents;
 #			endif // ~ SIM_KERNEL_TIMINGS
+#			if SIM_CPU_TIMINGS >= 4
+			std::uint64_t infoTimeQueueData, infoTimeQueueKernel, infoTimeQueueCB;
+#			endif // ~ SIM_CPU_TIMINGS
+
 		};
 		struct CudaDevQueue_
 		{
@@ -253,6 +261,19 @@ class SimulationT final : public Simulation
 			cusim::Histogram2D<Count> result;
 			typename DeviceRandom::GlobalData randomState;
 		};
+
+		struct Job_
+		{
+			Sample_* sample;
+			CudaDevQueue_* queue;
+		};
+		struct Result_
+		{
+			Sample_* sample;
+			cudaError_t error;
+		};
+
+
 
 		using WeightingFun_ = void (SimulationT::*)();
 
@@ -313,6 +334,8 @@ class SimulationT final : public Simulation
 		void sample_dev_init_( Sample_&, CudaDevGlobal_&, CudaDevQueue_& );
 		void sample_dev_clean_( Sample_&, CudaDevGlobal_& );
 
+		void dev_worker_( std::size_t );
+
 		static void CUDART_CB cuda_stream_callback_(
 			cudaStream_t,
 			cudaError_t,
@@ -356,6 +379,11 @@ class SimulationT final : public Simulation
 		std::vector<CudaDevGlobal_> mDevGlobal;
 		std::vector<CudaDevQueue_> mDevQueues;
 
+		std::atomic<bool> mDevWorkersStop; //TODO: initialize
+		std::vector<std::mutex> mDevMutexes;
+		std::vector<Queue<Job_>> mDevJobs;
+		std::vector<std::thread> mDevWorkers; //TODO: do
+
 		std::size_t mNextQueue = 0;
 
 		bool mConverged;
@@ -365,13 +393,12 @@ class SimulationT final : public Simulation
 
 		std::size_t mInfoIterations, mInfoSimulations;
 
-#		if SIM_CPU_TIMINGS >= 4
-		std::uint64_t mInfoTimeQueueData, mInfoTimeQueueKernel, mInfoTimeQueueCB;
-#		endif // ~ SIM_CPU_TIMINGS
-#		if SIM_KERNEL_TIMINGS
-		float timeSimTotal, timeSimCount;
-		float timeDistTotal, timeDistCount;
-		float timeTotalTotal, timeTotalCount;
+#		if SIM_KERNEL_TIMINGS >= 1
+		float mInfoTimeTotalTotal, mInfoTimeTotalCount;
+#		endif // ~ SIM_KERNEL_TIMINGS
+#		if SIM_KERNEL_TIMINGS >= 2
+		float mInfoTimeSimTotal, mInfoTimeSimCount;
+		float mInfoTimeDistTotal, mInfoTimeDistCount;
 #		endif // ~ SIM_KERNEL_TIMINGS
 };
 

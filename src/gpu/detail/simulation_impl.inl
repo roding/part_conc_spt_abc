@@ -129,13 +129,20 @@ SimulationT<tArgs...>::SimulationT( input::Parameters const& aPar, HostRng& aRng
 	resize( mTauC, mComponentCount );
 	resize( mTauAz, mZCount );
 
-	//mActiveSamples.reserve( mAbcCount );
-
 	prepare_( aPar, aRng, aCfg );
 }
 template< class... tArgs > inline
 SimulationT<tArgs...>::~SimulationT()
 {
+	// make threads stop
+	mDevWorkersStop = true;
+	for( auto& job : mDevJobs )
+		job.queue( Job_{ nullptr, nullptr } );
+
+	for( auto& worker : mDevWorkers )
+		worker.join();
+
+	// release any potentially allocated resources
 	for( auto& sample : mSamples )
 	{
 		release_host_ptr( sample.sampleRunData.halfAz, sample.halfAz );
@@ -165,7 +172,7 @@ SimulationT<tArgs...>::~SimulationT()
 
 		cudaFree( const_cast<Count*>(dev.devFrameCounts) );
 
-#		if SIM_KERNEL_TIMINGS
+#		if SIM_KERNEL_TIMINGS >= 1
 		dev.timeEvents.free_cuda_resources();
 #		endif // ~ SIM_KERNEL_TIMINGS
 	}
@@ -206,7 +213,7 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 		
 		++mInfoIterations;
 
-		if( mMaxIter != 0 && mInfoIterations >= mMaxIter )
+		if( mMaxIter != 0 && mInfoIterations > mMaxIter )
 		{
 			std::printf( "NOTE: --max-steps reached. stopping.\n" );
 			break;
@@ -230,12 +237,18 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 		INSTR_LEVEL2( InstrTime instrSubmit = 0, instrGather = 0 );
 		INSTR_LEVEL3( InstrTime instrUpdate = 0, instrPrecomp = 0, instrQueue = 0 );
 		INSTR_LEVEL3( InstrTime instrWait = 0, instrPostcomp = 0 );
-		INSTR_LEVEL4( mInfoTimeQueueData = mInfoTimeQueueKernel = mInfoTimeQueueCB = 0 );
+#		if SIM_CPU_TIMINGS >= 4
+		for( auto& dev : mDevGlobal )
+			dev.infoTimeQueueData = dev.infoTimeQueueKernel = dev.infoTimeQueueCB = 0;
+#		endif // SIM_KERNEL_TIMINGS
 		
-#		if SIM_KERNEL_TIMINGS
-		timeSimCount = timeDistCount = timeTotalCount = 0.0f;
-		timeSimTotal = timeDistTotal = timeTotalTotal = 0.0f;
-#		endif // ~ SIM_KERNEL_COUNT
+#		if SIM_KERNEL_TIMINGS >= 1
+		mInfoTimeTotalCount = mInfoTimeTotalTotal = 0.0f;
+#		endif // SIM_KERNEL_TIMINGS
+#		if SIM_KERNEL_TIMINGS >= 2
+		mInfoTimeSimCount = mInfoTimeSimTotal = 0.0f;
+		mInfoTimeDistCount = mInfoTimeDistTotal = 0.0f;
+#		endif // SIM_KERNEL_TIMINGS
 
 		std::size_t activeJobs = mAbcCount, pendingJobs = 0;
 
@@ -250,8 +263,6 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 				if( sample.distBis > mGamma && trialsAvg < mAvgTrialCount )
 				{
 					INSTR_BLOCK3_BEGIN( update );
-					
-					//XXX-TODO: move this into a separate function (sample_update_()?)
 					auto const idx = detail::wrand_idx_( aRng, mPreW.begin(), mPreW.end() );
 					assert( idx < mAbcCount );
 
@@ -265,7 +276,6 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 						sample.azBis[i] = detail::displace_( aRng, mAz(i,idx), mTauAz[i], mLowerAz, mUpperAz );
 					}
 
-					//XXX- could be templated on ComponentCount
 					std::iota( sample.indices.begin(), sample.indices.end(), 0 );
 					std::sort( sample.indices.begin(), sample.indices.end(),
 						[&sample] (std::size_t aX, std::size_t aY) {
@@ -273,7 +283,6 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 						}
 					);
 
-					//XXX- could be templated on ComponentCount
 					for( std::size_t i = 0; i < mComponentCount; ++i )
 					{
 						sample.mTmp[i] = sample.mBis[sample.indices[i]];
@@ -287,7 +296,6 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 					for( std::size_t i = 0; i < mComponentCount; ++i )
 						sample.powCBis[i] = std::pow( HScalar(10), sample.cBis[i] );
 
-					//XXX- could be templated on ZCount
 					if( mZCount > 1 )
 					{
 						assert( mZCount == mComponentCount );
@@ -356,7 +364,7 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 				{
 					assert( it->sample );
 					auto& sample = *it->sample;
-					auto& dev = mDevGlobal[sample.device];
+					auto& dev = mDevGlobal[sample.devidx];
 
 					CUDA_CHECKED it->error;
 
@@ -389,17 +397,24 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 		
 			std::printf( "Trials: %4.0f; γ = %.2g, λ̅ = %.1f\n", trialsTotal, mGamma, infoLambdaAcc/infoLambdaCount );
 
-			INSTR_LEVEL1( std::printf( "  This iteration: %6.2fms wall time (%6.2fms since last iter top)\n", instrIter*1e-3, infoLastDt*1e-3 ) );
+			INSTR_LEVEL1( std::printf( "  This iteration: %6.2fms wall time (previous = %6.2fms top-to-top)\n", instrIter*1e-3, infoLastDt*1e-3 ) );
 			INSTR_LEVEL2( std::printf( "    submit: %6.2fms, gather: %6.2fms\n", instrSubmit*1e-3, instrGather*1e-3 ) );
 			INSTR_LEVEL3( std::printf( "    submit = { update: %6.2fms, precomp: %6.2fms, queue: %6.2fms }\n", instrUpdate*1e-3, instrPrecomp*1e-3, instrQueue*1e-3 ) );
-			INSTR_LEVEL3( std::printf( "    gather = { wait: %6.2fms, postcomp: %6.2fms }\n", instrGather*1e-3, instrPostcomp*1e-3 ) );
-			INSTR_LEVEL4( std::printf( "      queue = { data: %6.2fms, kernel: %6.2fms, %6.2fms CB }\n", mInfoTimeQueueData*1e-3, mInfoTimeQueueKernel*1e-3, mInfoTimeQueueCB*1e-3 ) );
+			INSTR_LEVEL3( std::printf( "    gather = { wait: %6.2fms, postcomp: %6.2fms }\n", instrWait*1e-3, instrPostcomp*1e-3 ) );
+#			if SIM_CPU_TIMINGS >= 4
+			for( auto const& dev : mDevGlobal )
+			{
+				std::printf( "     for device %zu: %6.2fms data, %6.2fms kernel, %6.2fms CB\n", &dev-mDevGlobal.data(), dev.infoTimeQueueData*1e-3, dev.infoTimeQueueKernel*1e-3, dev.infoTimeQueueCB*1e-3 );
+			}
+#			endif // ~ SIM_CPU_TIMINGS
 
-#			if SIM_KERNEL_TIMINGS
-			std::printf( "  GPU: average kernel times: %4.2f ms total (%4.2f sim, %4.2f dist)\n", timeTotalTotal/timeTotalCount, timeSimTotal/timeSimCount, timeDistTotal/timeDistCount );
+#			if SIM_KERNEL_TIMINGS >= 1
+			std::printf( "  GPU: average per sample total: %4.2f ms total\n", mInfoTimeTotalTotal/mInfoTimeTotalCount );
+#			endif // ~ SIM_KERNEL_TIMINGS
+#			if SIM_KERNEL_TIMINGS >= 2
+			std::printf( "    average sim: %4.2f, average dist: %4.2f\n", mInfoTimeSimTotal/mInfoTimeSimCount, mInfoTimeDistTotal/mInfoTimeDistCount );
 #			endif // ~ SIM_KERNEL_TIMINGS
 		}
-
 
 		// finished?
 		// If yes, discard this final iteration's results, since it never
@@ -696,6 +711,20 @@ void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aR
 
 	if( mDevQueues.empty() )
 		detail::throw_invalid_gpuspec_( "No GPU queues were created! Check gpuspec." );
+
+	// start device worker threads
+	mDevWorkersStop = false;
+
+	std::vector<std::mutex> mutexes(mDevGlobal.size());
+	mDevMutexes.swap( mutexes );
+
+	std::vector<Queue<Job_>> jobs(mDevGlobal.size());
+	mDevJobs.swap( jobs );
+
+	for( std::size_t i = 0; i < mDevGlobal.size(); ++i )
+	{
+		mDevWorkers.emplace_back( [this,i] () { this->dev_worker_(i); } );
+	}
 }
 
 template< typename... tArgs > inline
@@ -772,7 +801,7 @@ auto SimulationT<tArgs...>::compute_initial_gamma_( HostRng& aRng ) -> HScalar
 		{
 			assert( it->sample );
 			auto& sample = *it->sample;
-			auto& dev = mDevGlobal[sample.device];
+			auto& dev = mDevGlobal[sample.devidx];
 
 			CUDA_CHECKED it->error;
 
@@ -863,77 +892,21 @@ void SimulationT<tArgs...>::job_queue_( std::size_t, Sample_& aSample )
 		mNextQueue = 0;
 
 	auto& queue = mDevQueues[queueIdx];
-	auto& dev = mDevGlobal[queue.devidx];
 
-	INSTR_BLOCK4_BEGIN( data );
-	aSample.device = queue.devidx;
-	sample_dev_init_( aSample, dev, queue );
-	INSTR_BLOCK4_END( data, mInfoTimeQueueData );
-
-	INSTR_BLOCK4_BEGIN( kernel );
-	CUDA_CHECKED cudaSetDevice( dev.device );
-
-	{
-#		if SIM_KERNEL_TIMINGS
-		cudaEventRecord( aSample.simStart, queue.stream );
-#		endif // ~ SIM_KERNEL_TIMINGS
-
-		cusim::K_simulate_system<<<dev.blocks,dev.threads,0,queue.stream>>>(
-			mSystemSetup,
-			aSample.sampleRunData,
-			cusim::HistogramRecorder<Count,DScalar>(queue.result,mDEBinWidth),
-			queue.randomState
-		);
-
-#		if SIM_KERNEL_TIMINGS
-		cudaEventRecord( aSample.simStop, queue.stream );
-#		endif // ~ SIM_KERNEL_TIMINGS
-	}
-
-	{
-#		if SIM_KERNEL_TIMINGS
-		cudaEventRecord( aSample.distStart, queue.stream );
-#		endif // ~ SIM_KERNEL_TIMINGS
-
-		dim3 const bl(1,1,1), th(32,32,1);
-		cusim::K_distance<<<bl,th,0,queue.stream>>>(
-			aSample.devResultDistance,
-			int_cast<unsigned>(mKMax),
-			int_cast<unsigned>(mDEBinCount),
-			queue.result.device_ptr(),
-			dev.reference.device_ptr()
-		);
-
-#		if SIM_KERNEL_TIMINGS
-		cudaEventRecord( aSample.distStop, queue.stream );
-#		endif // ~ SIM_KERNEL_TIMINGS
-	}
-	INSTR_BLOCK4_END( kernel, mInfoTimeQueueKernel );
-
-#	if SIM_KERNEL_TIMINGS
-	cudaEventRecord( aSample.totalStop, queue.stream ); // WARN: stared by dev_init_()
-#	endif // ~ SIM_KERNEL_TIMINGS
-
-	INSTR_BLOCK4_BEGIN( cb );
-	CUDA_CHECKED cudaStreamAddCallback(
-		queue.stream,
-		&SimulationT::cuda_stream_callback_,
-		const_cast<Sample_*>(&aSample),
-		0
-	);
-	INSTR_BLOCK4_END( cb, mInfoTimeQueueCB );
+	aSample.devidx = queue.devidx;
+	mDevJobs[queue.devidx].queue( Job_{ &aSample, &queue } );
 }
 
 template< typename... tArgs > inline
 void SimulationT<tArgs...>::sample_dev_init_( Sample_& aSample, CudaDevGlobal_& aDev, CudaDevQueue_& aQueue )
 {
-	CUDA_CHECKED cudaSetDevice( aDev.device );
-
-#	if SIM_KERNEL_TIMINGS
+#	if SIM_KERNEL_TIMINGS >= 2
 	aSample.simStart = aDev.timeEvents.alloc();
 	aSample.simStop = aDev.timeEvents.alloc();
 	aSample.distStart = aDev.timeEvents.alloc();
 	aSample.distStop = aDev.timeEvents.alloc();
+#	endif // ~ SIM_KERNEL_TIMINGS
+#	if SIM_KERNEL_TIMINGS >= 1
 	aSample.totalStart = aDev.timeEvents.alloc();
 	aSample.totalStop = aDev.timeEvents.alloc();
 
@@ -985,43 +958,152 @@ void SimulationT<tArgs...>::sample_dev_init_( Sample_& aSample, CudaDevGlobal_& 
 template< typename... tArgs > inline
 void SimulationT<tArgs...>::sample_dev_clean_( Sample_& aSample, CudaDevGlobal_& aDev )
 {
+	assert( aSample.devidx == std::distance( mDevGlobal.data(), &aDev ) );
 	CUDA_CHECKED cudaSetDevice( aDev.device );
 
-	aDev.particleCountPool.free( aSample.sampleRunData.particles );
-	aDev.resultDistancePool.free( aSample.hostResultDistance, aSample.devResultDistance );
-
-	clean_gpu_cache(
-		aSample.sampleRunData.halfAz,
-		[&aDev] (DScalar* aPtr) { aDev.halfAzPool.free( aPtr ); }
-	);
-	clean_gpu_cache(
-		aSample.sampleRunData.preCompProb,
-		[&aDev] (DScalar* aPtr) { aDev.preCompProbPool.free( aPtr ); }
-	);
-	clean_gpu_cache(
-		aSample.sampleRunData.randWalkStddev,
-		[&aDev] (DScalar* aPtr) { aDev.randWalkStddevPool.free( aPtr ); }
-	);
-
-#	if SIM_KERNEL_TIMINGS
+#	if SIM_KERNEL_TIMINGS >= 1
 	{
-		float sim, dist, tot;
-		CUDA_CHECKED cudaEventElapsedTime( &sim, aSample.simStart, aSample.simStop );
-		CUDA_CHECKED cudaEventElapsedTime( &dist, aSample.distStart, aSample.distStop );
+		float tot;
 		CUDA_CHECKED cudaEventElapsedTime( &tot, aSample.totalStart, aSample.totalStop );
 
-		timeSimTotal += sim; timeSimCount += 1;
-		timeDistTotal += dist; timeDistCount += 1;
-		timeTotalTotal += tot; timeTotalCount += 1;
+		mInfoTimeTotalTotal += tot;
+		mInfoTimeTotalCount += 1;
+	}
+#	endif // SIM_KERNEL_TIMINGS
+#	if SIM_KERNEL_TIMINGS >= 2
+	{
+		float sim, dist;
+		CUDA_CHECKED cudaEventElapsedTime( &sim, aSample.simStart, aSample.simStop );
+		CUDA_CHECKED cudaEventElapsedTime( &dist, aSample.distStart, aSample.distStop );
 
+		mInfoTimeSimTotal += sim;
+		mInfoTimeSimCount += 1;
+		mInfoTimeDistTotal += dist;
+		mInfoTimeDistCount += 1;
+	}
+#	endif // ~ SIM_KERNEL_TIMINGS
+
+	auto& mut = mDevMutexes[aSample.devidx];
+
+	{
+		std::unique_lock<std::mutex> lock(mut);
+
+		aDev.particleCountPool.free( aSample.sampleRunData.particles );
+		aDev.resultDistancePool.free( aSample.hostResultDistance, aSample.devResultDistance );
+
+		clean_gpu_cache(
+			aSample.sampleRunData.halfAz,
+			[&aDev] (DScalar* aPtr) { aDev.halfAzPool.free( aPtr ); }
+		);
+		clean_gpu_cache(
+			aSample.sampleRunData.preCompProb,
+			[&aDev] (DScalar* aPtr) { aDev.preCompProbPool.free( aPtr ); }
+		);
+		clean_gpu_cache(
+			aSample.sampleRunData.randWalkStddev,
+			[&aDev] (DScalar* aPtr) { aDev.randWalkStddevPool.free( aPtr ); }
+		);
+
+#		if SIM_KERNEL_TIMINGS >= 1
+		aDev.timeEvents.free( aSample.totalStart );
+		aDev.timeEvents.free( aSample.totalStop );
+#		endif // SIM_KERNEL_TIMINGS
+#		if SIM_KERNEL_TIMINGS >= 2
 		aDev.timeEvents.free( aSample.simStart );
 		aDev.timeEvents.free( aSample.simStop );
 		aDev.timeEvents.free( aSample.distStart );
 		aDev.timeEvents.free( aSample.distStop );
-		aDev.timeEvents.free( aSample.totalStart );
-		aDev.timeEvents.free( aSample.totalStop );
+#		endif // ~ SIM_KERNEL_TIMINGS
 	}
-#	endif // ~ SIM_KERNEL_TIMINGS
+}
+
+template< typename... tArgs > inline
+void SimulationT<tArgs...>::dev_worker_( std::size_t aDevIdx )
+{
+	auto& dev = mDevGlobal[aDevIdx];
+	auto& mut = mDevMutexes[aDevIdx];
+	auto& djobs = mDevJobs[aDevIdx];
+
+	CUDA_CHECKED cudaSetDevice( dev.device );
+
+	while( !mDevWorkersStop )
+	{
+		auto jobs = djobs.wait();
+		for( auto job = std::get<0>(jobs); job != std::get<1>(jobs); ++job )
+		{
+			// This is a hack: to stop, insert an element with sample equal to
+			// null to get out of the wait and re-check the stop flag.
+			if( !job->sample )
+				continue;
+
+			// aliases
+			auto& queue = *job->queue;
+			auto& sample = *job->sample;
+
+			assert( queue.devidx == aDevIdx );
+			assert( sample.devidx == aDevIdx );
+
+			// initialize sample
+			{
+				INSTR_BLOCK4_BEGIN( data );
+				std::unique_lock<std::mutex> lock(mut);
+				sample_dev_init_( sample, dev, queue );
+				INSTR_BLOCK4_END( data, dev.infoTimeQueueData );
+			}
+
+			// queue job
+			INSTR_BLOCK4_BEGIN( kernel );
+			{
+#				if SIM_KERNEL_TIMINGS >= 2
+				CUDA_CHECKED cudaEventRecord( sample.simStart, queue.stream );
+#				endif // ~ SIM_KERNEL_TIMINGS
+
+				cusim::K_simulate_system<<<dev.blocks,dev.threads,0,queue.stream>>>(
+					mSystemSetup,
+					sample.sampleRunData,
+					cusim::HistogramRecorder<Count,DScalar>(queue.result,mDEBinWidth),
+					queue.randomState
+				);
+
+#				if SIM_KERNEL_TIMINGS >= 2
+				CUDA_CHECKED cudaEventRecord( sample.simStop, queue.stream );
+#				endif // ~ SIM_KERNEL_TIMINGS
+			}
+
+			{
+#				if SIM_KERNEL_TIMINGS >= 2
+				CUDA_CHECKED cudaEventRecord( sample.distStart, queue.stream );
+#				endif // ~ SIM_KERNEL_TIMINGS
+
+				dim3 const bl(1,1,1), th(32,32,1);
+				cusim::K_distance<<<bl,th,0,queue.stream>>>(
+					sample.devResultDistance,
+					int_cast<unsigned>(mKMax),
+					int_cast<unsigned>(mDEBinCount),
+					queue.result.device_ptr(),
+					dev.reference.device_ptr()
+				);
+
+#				if SIM_KERNEL_TIMINGS >= 2
+				CUDA_CHECKED cudaEventRecord( sample.distStop, queue.stream );
+#				endif // ~ SIM_KERNEL_TIMINGS
+			}
+
+#			if SIM_KERNEL_TIMINGS >= 1
+			CUDA_CHECKED cudaEventRecord( sample.totalStop, queue.stream ); // WARN: stared by dev_init_()
+#			endif // ~ SIM_KERNEL_TIMINGS
+			INSTR_BLOCK4_END( kernel, dev.infoTimeQueueKernel );
+
+			INSTR_BLOCK4_BEGIN( callback );
+			CUDA_CHECKED cudaStreamAddCallback(
+				queue.stream,
+				&SimulationT::cuda_stream_callback_,
+				const_cast<Sample_*>(&sample),
+				0
+			);
+			INSTR_BLOCK4_END( callback, dev.infoTimeQueueCB );
+		}
+	}
 }
 
 template< typename... tArgs > inline
