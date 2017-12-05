@@ -31,7 +31,7 @@ namespace cusim
 		Count jobCount;
 		Count kmin;
 
-		Scalar deltaT; // TODO 4*deltaT
+		Scalar fourDeltaT;
 
 		Scalar halfLx, halfLy, halfLz;
 		Scalar halfAx, halfAy;

@@ -569,7 +569,7 @@ void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aR
 	mSystemSetup.jobCount = int_cast<Count>(aPar.frameCounts.size());
 	mSystemSetup.kmin = int_cast<Count>(aPar.kmin);
 
-	mSystemSetup.deltaT = DScalar(aPar.deltaT);
+	mSystemSetup.fourDeltaT = DScalar(4) * DScalar(aPar.deltaT);
 
 	mSystemSetup.halfLx = DScalar(0.5) * DScalar(aPar.Lx);
 	mSystemSetup.halfLy = DScalar(0.5) * DScalar(aPar.Ly);

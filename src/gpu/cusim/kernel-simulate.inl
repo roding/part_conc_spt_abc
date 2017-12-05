@@ -76,7 +76,7 @@ namespace cusim
 				{
 					if( detectionCount >= aSetup.kmin )
 					{
-						aOutput.record( detectionCount, de / ((detectionCount-1) * Real_(4) * aSetup.deltaT) );
+						aOutput.record( detectionCount, de / ((detectionCount-1) * aSetup.fourDeltaT) );
 					}
 
 					detectionCount = Count_(0);
@@ -86,7 +86,7 @@ namespace cusim
 
 			if( detectionCount >= aSetup.kmin )
 			{
-				aOutput.record( detectionCount, de / ((detectionCount-1) * Real_(4) * aSetup.deltaT) );
+				aOutput.record( detectionCount, de / ((detectionCount-1) * aSetup.fourDeltaT) );
 			}
 		}
 
