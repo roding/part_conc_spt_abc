@@ -10,12 +10,25 @@ namespace curng
 		__device__ inline
 		void sincos_(float aX, float* aSin, float* aCos)
 		{
-			sincosf(aX, aSin, aCos);
+			//sincosf(aX, aSin, aCos);
+			__sincosf( aX, aSin, aCos );
 		}
 		__device__ inline
 		void sincos_(double aX, double* aSin, double* aCos)
 		{
 			sincos(aX, aSin, aCos);
+		}
+
+		__device__ inline
+		float log_( float aX )
+		{
+			//return logf( aX );
+			return __logf( aX );
+		}
+		__device__ inline
+		double log_( double aX )
+		{
+			return log( aX );
 		}
 	}
 
@@ -45,9 +58,9 @@ namespace curng
 			u1 = generate_canonical<tReal,digits_>( aRng, aTid, aEngData );
 		} while (u1 <= eps);
 
-		tReal const lu2 = std::sqrt(tReal(-2) * std::log(u1));
+		tReal const lu2 = std::sqrt(tReal(-2) * detail::log_(u1));
 		
-		tReal u2 = generate_canonical<tReal,digits_>( aRng, aTid, aEngData );
+		tReal const u2 = generate_canonical<tReal,digits_>( aRng, aTid, aEngData );
 
 		tReal s, c;
 		detail::sincos_(pi2 * u2, &s, &c);
