@@ -1061,12 +1061,21 @@ void SimulationT<tArgs...>::dev_worker_( std::size_t aDevIdx )
 				CUDA_CHECKED cudaEventRecord( sample.simStart, queue.stream );
 #				endif // ~ SIM_KERNEL_TIMINGS
 
+#				if SIM_USE_UNROLLED
+				cusim::K_simulate_system_unr<<<dev.blocks,dev.threads,0,queue.stream>>>(
+					mSystemSetup,
+					sample.sampleRunData,
+					cusim::HistogramRecorder<Count,DScalar>(queue.result,mDEBinWidth),
+					queue.randomState
+				);
+#				else // !USE_UNROLLED
 				cusim::K_simulate_system<<<dev.blocks,dev.threads,0,queue.stream>>>(
 					mSystemSetup,
 					sample.sampleRunData,
 					cusim::HistogramRecorder<Count,DScalar>(queue.result,mDEBinWidth),
 					queue.randomState
 				);
+#				endif // ~ USE_UNROLLED
 
 #				if SIM_KERNEL_TIMINGS >= 2
 				CUDA_CHECKED cudaEventRecord( sample.simStop, queue.stream );

@@ -2,16 +2,19 @@
 
 namespace cusim
 {
-	template< typename tReal > __device__ inline
-	tReal periodic_bounds_( tReal aVal, tReal aMax )
+	namespace detail
 	{
-		// Note: assumes that a particle moves much less than 2*aMax per iteration!
-		if( std::abs(aVal) > aMax ) 
-			aVal -= tReal(2)*std::copysign( aMax, aVal );
+		template< typename tReal > __device__ inline
+		tReal periodic_bounds_( tReal aVal, tReal aMax )
+		{
+			// Note: assumes that a particle moves much less than 2*aMax per iteration!
+			if( std::abs(aVal) > aMax )
+				aVal -= tReal(2)*std::copysign( aMax, aVal );
 
-		return aVal;
+			return aVal;
+		}
 	}
-	
+
 	template< 
 		class tSimulateSetup,
 		class tSimulateRun,
@@ -57,13 +60,13 @@ namespace cusim
 				auto const rwsd = rand_walk_stddev( part, aSetup, aRunData );
 
 				auto const dx = rwsd * ran.normal01( gtid, aRandData );
-				part.x = periodic_bounds_( part.x + dx, aSetup.halfLx );
+				part.x = detail::periodic_bounds_( part.x + dx, aSetup.halfLx );
 				
 				auto const dy = rwsd * ran.normal01( gtid, aRandData );
-				part.y = periodic_bounds_( part.y + dy, aSetup.halfLy );
+				part.y = detail::periodic_bounds_( part.y + dy, aSetup.halfLy );
 
 				auto const dz = rwsd * ran.normal01( gtid, aRandData );
-				part.z = periodic_bounds_( part.z + dz, aSetup.halfLz );
+				part.z = detail::periodic_bounds_( part.z + dz, aSetup.halfLz );
 
 				if( detected( part, aSetup, aRunData ) )
 				{

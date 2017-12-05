@@ -56,6 +56,8 @@
 #	include "evpool.cuh"
 #endif // ~ SIM_KERNEL_TIMINGS
 
+#define SIM_USE_UNROLLED 1
+
 namespace sim_arg
 {
 	/** Aspect: Simulation model

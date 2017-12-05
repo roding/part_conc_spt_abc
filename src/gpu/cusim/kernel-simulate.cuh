@@ -71,7 +71,18 @@ namespace cusim
 	>
 	__global__
 	void K_simulate_system( tSimulateSetup, tSimulateRun, tOutput, tRandData );
+
+
+	template<
+		class tSimulateSetup,
+		class tSimulateRun,
+		class tOutput,
+		class tRandData
+	>
+	__global__
+	void K_simulate_system_unr( tSimulateSetup, tSimulateRun, tOutput, tRandData );
 }
 
 #include "kernel-simulate.inl"
+#include "kernel-simulate-unroll.inl"
 #endif // KERNEL_SIMULATE_CUH_AD83D236_3F02_4617_ACE4_A8BAEAB08009
