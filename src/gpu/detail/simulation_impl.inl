@@ -328,6 +328,12 @@ void SimulationT<tArgs...>::run( SimHostRNG& aRng )
 						sample.preCompProb[i] = DScalar(acc);
 					}
 
+					// HACK: ensure that the last preCompProb > 1.0. This
+					// avoids the case where we draw a random number that's
+					// larger than the final preCompProb (which should be =
+					// 1.0) doe to numerical issues
+					sample.preCompProb[mComponentCount-1] = DScalar(2);
+
 					for( std::size_t i = 0; i < mComponentCount; ++i )
 					{
 						sample.randWalkStddev[i] = DScalar(std::sqrt( HScalar(2)*sample.mBis[i]*mDeltaT ));
