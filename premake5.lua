@@ -72,6 +72,7 @@ workspace "part_conc_accel"
 	
 		buildmessage "CUDA: %{file.relpath}"
 		buildcommands {
+			"mkdir -p \"%{cfg.objdir}\"",
 			"nvcc -std c++11 -g -O2 " .. cudaFlagStr .. cudaCodeStr .. makeIPATH .. makeDEFS .. makeCCOM .. " -c -o \"%{cfg.objdir}/%{file.basename}.o\" \"%{file.relpath}\""
 		}
 		buildoutputs { "%{cfg.objdir}/%{file.basename}.o" }
@@ -158,6 +159,13 @@ workspace "part_conc_accel"
 
 		files{ "src/gpu/shared/**.cpp" }
 
+	project "cusim"
+		kind "StaticLib"
+
+		includedirs "external"
+
+		files{ "src/gpu/cusim/*.cu" }
+
 	project "accel"
 		kind "ConsoleApp"
 
@@ -165,6 +173,8 @@ workspace "part_conc_accel"
 		includedirs "src"
 
 		files{ "src/gpu/*.cpp", "external/**.cpp", "src/gpu/*.cu" }
+
+		links "cusim"
 		links "shared"
 		links "support"
 
