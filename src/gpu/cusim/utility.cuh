@@ -9,16 +9,16 @@ namespace cusim
 	unsigned wrand_index( tReal aValue, tCompCount, DSInline<tReal,tCompCount> const& );
 
 
-	template< class tSystemSetup, class tRunData, class tRand, class tRandData > __device__
-	auto make_particle( tSystemSetup const&, tRunData const&, unsigned, tRand&, tRandData& )
-		-> typename tSystemSetup::Particle;
+	template< class tSimSetup, class tSimRun, class tRand, class tRandData > __device__
+	auto make_particle( tSimSetup const&, tSimRun const&, unsigned, tRand&, tRandData& )
+		-> typename tSimSetup::Particle;
 
-	template< class tSystemSetup, class tRunData > __device__
-	bool detected( typename tSystemSetup::Particle const&, tSystemSetup const&, tRunData const& );
+	template< class tSimSetup, class tSimRun > __device__
+	bool detected( typename tSimSetup::Particle const&, tSimSetup const&, tSimRun const& );
 
-	template< class tSystemSetup, class tRunData > __device__
-	auto rand_walk_stddev( typename tSystemSetup::Particle const&, tSystemSetup const&, tRunData const& )
-		-> typename tSystemSetup::value_type;
+	template< class tSimSetup, class tSimRun, class tPart = typename tSimSetup::Particle > __device__
+	auto rand_walk_stddev( tPart const&, tSimSetup const&, tSimRun const& )
+		-> typename tSimSetup::Scalar;
 }
 
 #include "utility.inl"

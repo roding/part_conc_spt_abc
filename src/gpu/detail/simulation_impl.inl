@@ -16,9 +16,6 @@
 
 #include "../support/cuda_error.hpp"
 
-#include "../cusim/kernel-distance.cuh"
-#include "../cusim/kernel-simulate.cuh"
-
 #define INSTR_CURRENT_LEVEL SIM_CPU_TIMINGS
 #include "../support/basic_instrument.hpp"
 
@@ -155,7 +152,7 @@ SimulationT<tArgs...>::~SimulationT()
 		CUDA_CHECKED cudaSetDevice( mDevGlobal[queue.devidx].device );
 
 		queue.result.free_cuda_resources();
-		DeviceRandom::cleanup( queue.randomState );
+		DeviceRandom_::cleanup( queue.randomState );
 
 		CUDA_CHECKED cudaStreamDestroy( queue.stream );
 	}
@@ -699,7 +696,7 @@ void SimulationT<tArgs...>::prepare_( input::Parameters const& aPar, HostRng& aR
 				j,
 				stream,
 				cusim::Histogram2D<Count>( mKMax, mDEBinCount ),
-				DeviceRandom::initialize( devGlobal.totalThreads, aRng ),
+				DeviceRandom_::initialize( devGlobal.totalThreads, aRng ),
 			} );
 
 			mDevQueues.back().result.clear();

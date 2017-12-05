@@ -13,19 +13,19 @@ namespace cusim
 	}
 	
 	template< 
-		class tSystemSetup,
-		class tRunData,
+		class tSimulateSetup,
+		class tSimulateRun,
 		class tOutput,
-		class tRandData, 
-		class tReal,
-		class tCount,
-		class tRandomFactory
+		class tRandData
 	> 
 	__global__
-	void /*__launch_bounds__(256,8)*/ K_simulate_system( tSystemSetup aSystem, tRunData aRunData, tOutput aOutput, tRandData aRandData )
+	void /*__launch_bounds__(256,8)*/ K_simulate_system( tSimulateSetup aSetup, tSimulateRun aRunData, tOutput aOutput, tRandData aRandData )
 	{
-		static_assert( std::is_same<tReal,typename tRandData::result_type>::value, "System real number type and random generator real number type mismatch" );
-		static_assert( std::is_same<tCount,typename tOutput::value_type>::value, "System count_type and output type mismatch" );
+		using Real_ = typename tSimulateSetup::Scalar;
+		using Count_ = typename tSimulateSetup::Count;
+
+		static_assert( std::is_same<Real_,typename tRandData::result_type>::value, "tSimulateSetup::Scalar and random number generator result type mismatch" );
+		static_assert( std::is_same<Count_,typename tOutput::value_type>::value, "tSimulateSetup::Count and output type mismatch" );
 
 		constexpr unsigned kWarpSize = 32u; /* WARNING: warp size assumption */
 		
@@ -33,62 +33,60 @@ namespace cusim
 		unsigned const warp = gtid / kWarpSize; /* WARNING: layout assumption */
 		unsigned const wtid = gtid % kWarpSize; /* WARNING: layout assumption */
 
-		if( warp >= aSystem.jobCount )
+		if( warp >= aSetup.jobCount )
 			return;
 
-		auto ran = typename tRandomFactory::Instance( gtid, aRandData );
+		using RandomFactory_ = typename tRandData::Factory;
+		auto ran = typename RandomFactory_::Instance( gtid, aRandData );
 
 		auto const frames = aRunData.frames[warp];
 		auto const particles = aRunData.particles[warp];
 
-		//TODO: maybe cache aSystem.{Lx,Ly,Lz} locally; other aSystem stuff?
-		//TODO-check: register usage with/without caching
-
-		for( tCount particle = wtid; particle < particles; particle += kWarpSize )
+		for( Count_ particle = wtid; particle < particles; particle += kWarpSize )
 		{
-			auto part = make_particle( aSystem, aRunData, gtid, ran, aRandData );
+			auto part = make_particle( aSetup, aRunData, gtid, ran, aRandData );
 			
-			tReal de = tReal(0);
-			tCount detectionCount = detected( part, aSystem, aRunData )
-				? tCount(1) 
-				: tCount(0)
+			Real_ de = Real_(0);
+			Count_ detectionCount = detected( part, aSetup, aRunData )
+				? Count_(1)
+				: Count_(0)
 			;
 
-			for( tCount frame = 1; frame < frames; ++frame )
+			for( Count_ frame = 1; frame < frames; ++frame )
 			{
-				auto const rwsd = rand_walk_stddev( part, aSystem, aRunData );
+				auto const rwsd = rand_walk_stddev( part, aSetup, aRunData );
 
 				auto const dx = rwsd * ran.normal01( gtid, aRandData );
-				part.x = periodic_bounds_( part.x + dx, aSystem.halfLx );
+				part.x = periodic_bounds_( part.x + dx, aSetup.halfLx );
 				
 				auto const dy = rwsd * ran.normal01( gtid, aRandData );
-				part.y = periodic_bounds_( part.y + dy, aSystem.halfLy );
+				part.y = periodic_bounds_( part.y + dy, aSetup.halfLy );
 
 				auto const dz = rwsd * ran.normal01( gtid, aRandData );
-				part.z = periodic_bounds_( part.z + dz, aSystem.halfLz );
+				part.z = periodic_bounds_( part.z + dz, aSetup.halfLz );
 
-				if( detected( part, aSystem, aRunData ) )
+				if( detected( part, aSetup, aRunData ) )
 				{
 					++detectionCount;
 
-					if( detectionCount >= tCount(2) )
+					if( detectionCount >= Count_(2) )
 						de += dx*dx + dy*dy;
 				}
 				else
 				{
-					if( detectionCount >= aSystem.kmin )
+					if( detectionCount >= aSetup.kmin )
 					{
-						aOutput.record( detectionCount, de / ((detectionCount-1) * tReal(4) * aSystem.deltaT) );
+						aOutput.record( detectionCount, de / ((detectionCount-1) * Real_(4) * aSetup.deltaT) );
 					}
 
-					detectionCount = tCount(0);
-					de = tReal(0);
+					detectionCount = Count_(0);
+					de = Real_(0);
 				}
 			}
 
-			if( detectionCount >= aSystem.kmin )
+			if( detectionCount >= aSetup.kmin )
 			{
-				aOutput.record( detectionCount, de / ((detectionCount-1) * tReal(4) * aSystem.deltaT) );
+				aOutput.record( detectionCount, de / ((detectionCount-1) * Real_(4) * aSetup.deltaT) );
 			}
 		}
 

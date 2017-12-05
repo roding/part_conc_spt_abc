@@ -63,8 +63,8 @@ namespace cusim
 		template< class tCompCount >
 		struct MakeParticleImpl_
 		{
-			template< class tSystem, class tRunData, class tRand, class tRandData > static __device__
-			auto enact( tSystem const& aSystem, tRunData const& aRunData, unsigned aTid, tRand& aRan, tRandData& aRanData ) -> typename tSystem::Particle
+			template< class tSystem, class tSimRun, class tRand, class tRandData > static __device__
+			auto enact( tSystem const& aSystem, tSimRun const& aRunData, unsigned aTid, tRand& aRan, tRandData& aRanData ) -> typename tSystem::Particle
 			{
 				typename tSystem::Particle ret;
 				ret.x = aSystem.halfLx * (2*aRan.uniform01( aTid, aRanData )-1);
@@ -80,8 +80,8 @@ namespace cusim
 		template<>
 		struct MakeParticleImpl_< StaticValue<unsigned,1> >
 		{
-			template< class tSystem, class tRunData, class tRand, class tRandData > static __device__
-			auto enact( tSystem const& aSystem, tRunData const&, unsigned aTid, tRand& aRan, tRandData& aRanData ) -> typename tSystem::Particle
+			template< class tSystem, class tSimRun, class tRand, class tRandData > static __device__
+			auto enact( tSystem const& aSystem, tSimRun const&, unsigned aTid, tRand& aRan, tRandData& aRanData ) -> typename tSystem::Particle
 			{
 				typename tSystem::Particle ret;
 				ret.x = aSystem.halfLx * (2*aRan.uniform01( aTid, aRanData )-1);
@@ -92,10 +92,10 @@ namespace cusim
 		};
 	}
 
-	template< class tSystemSetup, class tRunData, class tRand, class tRandData > __device__
-	auto make_particle( tSystemSetup const& aSystem, tRunData const& aRunData, unsigned aTid, tRand& aRan, tRandData& aRanData ) -> typename tSystemSetup::Particle
+	template< class tSimSetup, class tSimRun, class tRand, class tRandData > __device__
+	auto make_particle( tSimSetup const& aSystem, tSimRun const& aRunData, unsigned aTid, tRand& aRan, tRandData& aRanData ) -> typename tSimSetup::Particle
 	{
-		return detail::MakeParticleImpl_<typename tSystemSetup::CompCount>::enact( aSystem, aRunData, aTid, aRan, aRanData );
+		return detail::MakeParticleImpl_<typename tSimSetup::CompCount>::enact( aSystem, aRunData, aTid, aRan, aRanData );
 	}
 
 
@@ -108,8 +108,8 @@ namespace cusim
 		template< class tCompCount >
 		struct DetectedImpl_< EModel::discreteFixedZ, tCompCount >
 		{
-			template< class tSystemSetup, class tRunData > static __device__
-			bool enact( typename tSystemSetup::Particle const& aParticle, tSystemSetup const& aSystem, tRunData const& aRunData )
+			template< class tSimSetup, class tSimRun > static __device__
+			bool enact( typename tSimSetup::Particle const& aParticle, tSimSetup const& aSystem, tSimRun const& aRunData )
 			{
 				return std::abs(aParticle.z) <= aRunData.halfAz.value
 					&& std::abs(aParticle.x) <= aSystem.halfAx
@@ -120,8 +120,8 @@ namespace cusim
 		template< class tCompCount >
 		struct DetectedImpl_< EModel::discreteVariableZ, tCompCount >
 		{
-			template< class tSystemSetup, class tRunData > static __device__
-			bool enact( typename tSystemSetup::Particle const& aParticle, tSystemSetup const& aSystem, tRunData const& aRunData )
+			template< class tSimSetup, class tSimRun > static __device__
+			bool enact( typename tSimSetup::Particle const& aParticle, tSimSetup const& aSystem, tSimRun const& aRunData )
 			{
 				return std::abs(aParticle.z) <= aRunData.halfAz.values[aParticle.index]
 					&& std::abs(aParticle.x) <= aSystem.halfAx
@@ -132,8 +132,8 @@ namespace cusim
 		template<>
 		struct DetectedImpl_< EModel::discreteVariableZ, StaticValue<unsigned,1> >
 		{
-			template< class tSystemSetup, class tRunData > static __device__
-			bool enact( typename tSystemSetup::Particle const& aParticle, tSystemSetup const& aSystem, tRunData const& aRunData)
+			template< class tSimSetup, class tSimRun > static __device__
+			bool enact( typename tSimSetup::Particle const& aParticle, tSimSetup const& aSystem, tSimRun const& aRunData)
 			{
 				return std::abs(aParticle.z) <= aRunData.halfAz.value
 					&& std::abs(aParticle.x) <= aSystem.halfAx
@@ -143,12 +143,12 @@ namespace cusim
 		};
 	}
 
-	template< class tSystemSetup, class tRunData > __device__ inline
-	bool detected( typename tSystemSetup::Particle const& aParticle, tSystemSetup const& aSystem, tRunData const& aRunData )
+	template< class tSimSetup, class tSimRun > __device__ inline
+	bool detected( typename tSimSetup::Particle const& aParticle, tSimSetup const& aSystem, tSimRun const& aRunData )
 	{
 		return detail::DetectedImpl_<
-			tSystemSetup::kModel,
-			typename tSystemSetup::CompCount
+			tSimSetup::kModel,
+			typename tSimSetup::CompCount
 		>::enact( aParticle, aSystem, aRunData );
 	}
 
@@ -158,8 +158,8 @@ namespace cusim
 		template< class tCompCount >
 		struct RandWalkStddevImpl_
 		{
-			template< class tSystemSetup, class tRunData > static __device__
-			auto enact( typename tSystemSetup::Particle const& aParticle, tSystemSetup const&, tRunData const& aRunData ) -> typename tSystemSetup::value_type
+			template< class tSimSetup, class tSimRun, class tPart > static __device__
+			auto enact( tPart const& aParticle, tSimSetup const&, tSimRun const& aRunData ) -> typename tSimSetup::Scalar
 			{
 				return aRunData.randWalkStddev.values[aParticle.index];
 			}
@@ -168,19 +168,19 @@ namespace cusim
 		template<>
 		struct RandWalkStddevImpl_<StaticValue<unsigned,1>>
 		{
-			template< class tSystemSetup, class tRunData > static __device__
-			auto enact( typename tSystemSetup::Particle const&, tSystemSetup const&, tRunData const& aRunData ) -> typename tSystemSetup::value_type
+			template< class tSimSetup, class tSimRun, class tPart > static __device__
+			auto enact( tPart const&, tSimSetup const&, tSimRun const& aRunData ) -> typename tSimSetup::Scalar
 			{
 				return aRunData.randWalkStddev.value;
 			}
 		};
 	}
 
-	template< class tSystemSetup, class tRunData > __device__ inline
-	auto rand_walk_stddev( typename tSystemSetup::Particle const& aParticle, tSystemSetup const& aSystem, tRunData const& aRunData ) -> typename tSystemSetup::value_type
+	template< class tSimSetup, class tSimRun, class tPart > __device__ inline
+	auto rand_walk_stddev( tPart const& aParticle, tSimSetup const& aSystem, tSimRun const& aRunData ) -> typename tSimSetup::Scalar
 	{
 		return detail::RandWalkStddevImpl_<
-			typename tSystemSetup::CompCount
+			typename tSimSetup::CompCount
 		>::enact( aParticle, aSystem, aRunData );
 	}
 }

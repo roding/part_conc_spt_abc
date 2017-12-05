@@ -38,6 +38,8 @@
 #include "cusim/particle.cuh"
 #include "cusim/dsinline.cuh"
 #include "cusim/histogram2d.cuh"
+#include "cusim/kernel-distance.cuh"
+#include "cusim/kernel-simulate.cuh"
 
 #include "curng/uniform.cuh"
 #include "curng/engine-lcg.cuh"
@@ -143,15 +145,6 @@ class SimulationT final : public Simulation
 		using DevRng = named::get_type_t<sim_arg::DeviceRng, tArgs...>;
 		using HostRng = named::get_type_t<sim_arg::HostRng, tArgs...>;
 
-		using DeviceRandom = Random<
-			DevRng,
-			DScalar,
-			curng::NormalBoxMuller,
-			curng::UniformReal
-		>;
-
-		struct SystemSetup;
-		struct SystemRunData;
 
 	public:
 		SimulationT( input::Parameters const&, HostRng&, SimulationConfig const& );
@@ -190,6 +183,27 @@ class SimulationT final : public Simulation
 			ZCount_, AbcCount_
 		>;
 
+		using DeviceRandom_ = Random<
+			DevRng,
+			DScalar,
+			curng::NormalBoxMuller,
+			curng::UniformReal
+		>;
+
+		using SimulateSetup = cusim::SimulateSetup<
+			Count,
+			DScalar,
+			kModel,
+			CCount_
+		>;
+
+		using SimulateRun = cusim::SimulateRun<
+			Count,
+			DScalar,
+			ZCount_,
+			CCount_
+		>;
+
 		struct Job_;
 		struct Result_;
 
@@ -211,7 +225,7 @@ class SimulationT final : public Simulation
 
 			std::vector<Count> particleCounts;
 
-			SystemRunData sampleRunData;
+			SimulateRun sampleRunData;
 			Distance* devResultDistance;
 			Distance* hostResultDistance;
 
@@ -259,7 +273,7 @@ class SimulationT final : public Simulation
 			cudaStream_t stream;
 
 			cusim::Histogram2D<Count> result;
-			typename DeviceRandom::GlobalData randomState;
+			typename DeviceRandom_::GlobalData randomState;
 		};
 
 		struct Job_
@@ -273,52 +287,7 @@ class SimulationT final : public Simulation
 			cudaError_t error;
 		};
 
-
-
 		using WeightingFun_ = void (SimulationT::*)();
-
-	public:
-		/* CUDA/NVCC needs these to be public: "A type that is defined inside a
-		 * class and has private or protected access ("...") cannot be used in
-		 * the template argument type of a __global__ function template
-		 * instantiation, unless the class is local to a __device__ or
-		 * __global__ function."
-		 */
-		struct SystemSetup
-		{
-			using value_type = DScalar;
-			using count_type = Count;
-
-			using CompCount = CCount_;
-			using Particle = cusim::Particle<value_type,CompCount>;
-
-			static constexpr EModel kModel = SimulationT::kModel;
-
-			CompCount compCount;
-
-			count_type jobCount;
-			count_type kmin;
-
-			value_type deltaT; //TODO: 4*deltaT??
-
-			value_type halfLx, halfLy, halfLz;
-
-			value_type halfAx;
-			value_type halfAy;
-		};
-
-		struct SystemRunData
-		{
-			using value_type = DScalar;
-			using count_type = Count;
-			
-			count_type const* frames; //TODO: could be SystemSetup. :-/
-			count_type const* particles;
-			
-			cusim::DSInline<value_type,ZCount_> halfAz;
-			cusim::DSInline<value_type,CCount_> preCompProb;
-			cusim::DSInline<value_type,CCount_> randWalkStddev;
-		};
 
 	private:
 		void prepare_( input::Parameters const&, HostRng&, SimulationConfig const& );
@@ -347,7 +316,7 @@ class SimulationT final : public Simulation
 		CCount_ mComponentCount;
 		ZCount_ mZCount;
 
-		SystemSetup mSystemSetup;
+		SimulateSetup mSystemSetup;
 
 		std::size_t mKMax;
 		std::size_t mDEBinCount;
