@@ -81,13 +81,18 @@ namespace cusim
 	template< typename tReal, typename tCount > __global__
 	void /*__launch_bounds__(1024,1)*/ K_distance( tReal* aDistance, unsigned aN, unsigned aM, tCount* aCur, tCount const* aRef )
 	{
-		__shared__ tReal totals[32]; //XXX-FIXME: number of warps in block.
+		__shared__ tReal totals[32];
 
 		auto const warp = threadIdx.y;
 		auto const wtid = threadIdx.x;
 
+#		if 0
 		auto const n32 = (aN+32-1)/32*32;
 		auto const m32 = (aM+32-1)/32*32;
+#		endif
+
+		auto const n32lo = aN/32*32;
+		auto const m32lo = aM/32*32;
 
 		// init
 		if( 0 == warp )
@@ -101,6 +106,8 @@ namespace cusim
 		for( auto row = warp; row < aN; row += blockDim.y )
 		{
 			tCount base = 0;
+
+#			if 0
 			for( auto col = wtid; col < m32; col += 32 )
 			{
 				tCount const val = col < aM
@@ -115,6 +122,29 @@ namespace cusim
 
 				base = __shfl_sync( ~0u, sum, 31 );
 			}
+#			else
+			auto col = wtid;
+			for( ; col < m32lo; col += 32 )
+			{
+				tCount const val = aCur[row*aM+col];
+				tCount const sum = base + detail::warp_prefix( wtid, val );
+
+				aCur[row*aM+col] = sum;
+
+				base = __shfl_sync( ~0u, sum, 31 );
+			}
+
+			// last iteration, where not all threads participate
+			tCount const val = col < aM ?
+				aCur[row*aM+col]
+				: 0
+			;
+
+			tCount const sum = base + detail::warp_prefix( wtid, val );
+
+			if( col < aM )
+				aCur[row*aM+col] = sum;
+#			endif
 		}
 
 		__syncthreads();
@@ -125,6 +155,8 @@ namespace cusim
 		{
 			tCount base = 0;
 			tReal a2 = tReal(0);
+
+#			if 0
 			for( auto row = wtid; row < n32; row += 32 )
 			{
 				tCount const val = row < aN
@@ -142,6 +174,35 @@ namespace cusim
 					a2 += dd*dd;
 				}
 			}
+#			else
+			auto row = wtid;
+			for( ; row < n32lo; row += 32 )
+			{
+				tCount const val = aCur[row*aM+col];
+				tCount const sum = base + detail::warp_prefix( wtid, val );
+
+				base = __shfl_sync( ~0u, sum, 31 );
+
+				tCount const ref = aRef[row*aM+col];
+				tReal const dd = tReal(sum) - ref;
+				a2 += dd*dd;
+			}
+
+			// last iteration where not all threads participate
+			tCount const val = row < aN
+				? aCur[row*aM+col]
+				: 0
+			;
+
+			tCount const sum = base + detail::warp_prefix( wtid, val );
+
+			if( row < aN )
+			{
+				tCount const ref = aRef[row*aM+col];
+				tReal const dd = tReal(sum) - ref;
+				a2 += dd*dd;
+			}
+#			endif
 
 			acc += a2;
 		}
@@ -156,7 +217,7 @@ namespace cusim
 		// have one warp reduce the per-warp sums to the final sum
 		if( 0 == warp )
 		{
-			tReal const tsum = wtid < 32 //XXX
+			tReal const tsum = wtid < 32
 				? totals[wtid]
 				: 0
 			;
@@ -170,10 +231,12 @@ namespace cusim
 		// zero out the histogram for the next invocation
 		for( auto row = warp; row < aN; row += blockDim.y )
 		{
-			for( auto col = wtid; col < aM; col += 32 )
-			{
+			auto col = wtid;
+			for( ; col < m32lo; col += 32 )
 				aCur[row*aM+col] = 0;
-			}
+
+			if( col < aM )
+				aCur[row*aM+col] = 0;
 		}
 	}
 }

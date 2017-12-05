@@ -15,6 +15,9 @@ namespace cusim
 	 * small: a single block of \f$32\times32\f$ performs the computation. 32
 	 * columns/rows are handled in parallel while 32 threads iterate over the
 	 * elements of the column/row.
+	 *
+	 * \warning Assumes a warp size of 32 and assumes that the kernel is
+	 * launched in a single 32xN block.
 	 */
 	template< 
 		typename tReal,
@@ -28,6 +31,11 @@ namespace cusim
 		tCount* aCur, // !NOTE! reset to zero by the kernel
 		tCount const* aSATReference
 	);
+
+	extern template __global__
+	void K_distance<float,unsigned>( float*, unsigned, unsigned, unsigned*, unsigned const* );
+	extern template __global__
+	void K_distance<double,unsigned>( double*, unsigned, unsigned, unsigned*, unsigned const* );
 }
 
 #include "kernel-distance.inl"
