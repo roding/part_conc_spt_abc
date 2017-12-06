@@ -37,7 +37,7 @@ namespace cusim
 			static __device__
 			unsigned enact( tReal aValue, StaticValue<unsigned,2>, DSInline<tReal,StaticValue<unsigned,2>> const& aPreWeights )
 			{
-				if( aPreWeights.values[0] < aValue )
+				if( aPreWeights.values[0] >= aValue )
 					return 0;
 				
 				return 1;
