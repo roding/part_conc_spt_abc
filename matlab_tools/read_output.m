@@ -23,9 +23,11 @@ function [  model, ...
     az = read_key(file_string, 'az', 'array');
     if numel(az) == number_of_components * number_of_abc_samples
         az = reshape(az, [number_of_components, number_of_abc_samples]);
+        disp('ff')
     else
         az = az(:);
-        az = repmat(az, [3 1]);
+        numel(az)
+        az = repmat(az, [number_of_components 1]);
         az = reshape(az, [number_of_components, number_of_abc_samples]);
     end
 	
