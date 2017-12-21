@@ -26,7 +26,6 @@ function [  model, ...
         disp('ff')
     else
         az = az(:);
-        numel(az)
         az = repmat(az, [number_of_components 1]);
         az = reshape(az, [number_of_components, number_of_abc_samples]);
     end
